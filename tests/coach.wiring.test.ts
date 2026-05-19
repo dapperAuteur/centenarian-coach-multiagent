@@ -1,8 +1,9 @@
 // tests/coach.wiring.test.ts
 // Key-free wiring test: the LLM and retrieval are mocked, so this runs in CI
 // with no API keys. It verifies graph topology and state-passing — supervisor
-// routing, the fan-out conditional edge, and the SpecialistFinding shape.
-// Live behaviour is covered by coach.day1.test.ts and coach.workout.test.ts.
+// routing, the fan-out conditional edge, the synthesizer fan-in, and the
+// SpecialistFinding / FinalAnswer shapes. Live behaviour is covered by
+// coach.day1.test.ts and coach.workout.test.ts.
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
@@ -32,6 +33,8 @@ vi.mock("@/lib/llm", () => ({
             return { progressionArgs: null, mobilityArgs: null };
           case "compose_finding":
             return { text: "Mock specialist finding.\n\nSecond paragraph." };
+          case "synthesize_answer":
+            return { text: "Mock synthesized answer.\n\nSecond paragraph." };
           default:
             throw new Error(`unexpected structured-output name: ${String(opts?.name)}`);
         }
@@ -61,22 +64,23 @@ describe("coach graph wiring (mocked — no API keys)", () => {
     ctl.routeTo = ["nutrition"];
   });
 
-  it("routes a nutrition-only question through the Nutrition specialist", async () => {
+  it("routes a nutrition-only question and synthesizes an answer", async () => {
     const result = await coachGraph.invoke({
       sessionId: "wiring-session",
       userQuery: "How much protein should an older adult eat?",
     });
 
     expect(result.routing?.agents).toEqual(["nutrition"]);
-    const finding = result.findings.nutrition;
-    expect(finding).toBeDefined();
-    expect(finding?.agent).toBe("nutrition");
-    expect(finding?.citations).toHaveLength(2);
-    expect((finding?.citations ?? []).every((c) => c.agent === "nutrition")).toBe(true);
+    expect(result.findings.nutrition?.agent).toBe("nutrition");
+    expect(result.findings.nutrition?.citations).toHaveLength(2);
     expect(result.findings.workout).toBeUndefined();
+
+    expect(result.finalAnswer?.text.length ?? 0).toBeGreaterThan(0);
+    expect(result.finalAnswer?.consultedAgents).toEqual(["nutrition"]);
+    expect(result.finalAnswer?.citations).toHaveLength(2);
   });
 
-  it("routes a workout-only question through the Workout specialist", async () => {
+  it("routes a workout-only question and synthesizes an answer", async () => {
     ctl.routeTo = ["workout"];
     const result = await coachGraph.invoke({
       sessionId: "wiring-session",
@@ -84,15 +88,15 @@ describe("coach graph wiring (mocked — no API keys)", () => {
     });
 
     expect(result.routing?.agents).toEqual(["workout"]);
-    const finding = result.findings.workout;
-    expect(finding).toBeDefined();
-    expect(finding?.agent).toBe("workout");
-    expect(finding?.citations).toHaveLength(2);
-    expect((finding?.citations ?? []).every((c) => c.agent === "workout")).toBe(true);
+    expect(result.findings.workout?.agent).toBe("workout");
+    expect(result.findings.workout?.citations).toHaveLength(2);
     expect(result.findings.nutrition).toBeUndefined();
+
+    expect(result.finalAnswer?.consultedAgents).toEqual(["workout"]);
+    expect(result.finalAnswer?.citations).toHaveLength(2);
   });
 
-  it("fans out to both specialists on a cross-domain question", async () => {
+  it("fans out to both specialists, then fans in to the synthesizer", async () => {
     ctl.routeTo = ["nutrition", "workout"];
     const result = await coachGraph.invoke({
       sessionId: "wiring-session",
@@ -103,7 +107,10 @@ describe("coach graph wiring (mocked — no API keys)", () => {
     // Both specialists ran in parallel and the findings merged.
     expect(result.findings.nutrition?.agent).toBe("nutrition");
     expect(result.findings.workout?.agent).toBe("workout");
-    expect(result.findings.nutrition?.citations).toHaveLength(2);
-    expect(result.findings.workout?.citations).toHaveLength(2);
+
+    // The synthesizer fanned in over both findings.
+    expect(result.finalAnswer?.text.length ?? 0).toBeGreaterThan(0);
+    expect(result.finalAnswer?.consultedAgents).toEqual(["nutrition", "workout"]);
+    expect(result.finalAnswer?.citations).toHaveLength(4);
   });
 });
