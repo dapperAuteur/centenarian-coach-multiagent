@@ -8,8 +8,10 @@ import { z } from "zod";
 export const CalorieInputSchema = z.object({
   sex: z.enum(["male", "female"]),
   ageYears: z.number().int().min(1).max(120),
-  weightKg: z.number().positive().max(400),
-  heightCm: z.number().positive().max(260),
+  // Inclusive .min() (not .positive()) — Gemini's structured-output schema
+  // subset rejects the `exclusiveMinimum` keyword that .positive() emits.
+  weightKg: z.number().min(1).max(400),
+  heightCm: z.number().min(1).max(260),
   activityLevel: z.enum([
     "sedentary",
     "light",

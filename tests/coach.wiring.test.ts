@@ -12,9 +12,7 @@ const ctl = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/llm", () => ({
-  SUPERVISOR_MODEL: "mock-supervisor",
-  COMPOSER_MODEL: "mock-composer",
-  buildChatAnthropic: () => ({
+  buildChatModel: () => ({
     withStructuredOutput: (_schema: unknown, opts?: { name?: string }) => ({
       invoke: async (): Promise<unknown> => {
         switch (opts?.name) {
