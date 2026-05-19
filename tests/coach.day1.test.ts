@@ -48,7 +48,7 @@ const SAMPLE_QUESTIONS = [
 
 const hasLiveKeys =
   Boolean(process.env.ANTHROPIC_API_KEY) &&
-  Boolean(process.env.GOOGLE_GEMINI_API_KEY);
+  Boolean(process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GEMINI_API_KEY);
 
 describe.skipIf(!hasLiveKeys)("supervisor + Nutrition (live)", () => {
   it.each(SAMPLE_QUESTIONS)(

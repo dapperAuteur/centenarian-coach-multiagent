@@ -39,11 +39,15 @@ async function embed(text, apiKey) {
 
 async function main() {
   const dbUrl = process.env.STORAGE_DATABASE_URL ?? process.env.DATABASE_URL;
-  const geminiKey = process.env.GOOGLE_GEMINI_API_KEY;
-  if (!dbUrl || !geminiKey) {
+  const geminiKey =
+    process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GEMINI_API_KEY;
+  const missing = [];
+  if (!dbUrl) missing.push("STORAGE_DATABASE_URL (or DATABASE_URL)");
+  if (!geminiKey) missing.push("GEMINI_API_KEY (or GOOGLE_GEMINI_API_KEY)");
+  if (missing.length > 0) {
     throw new Error(
-      "Set STORAGE_DATABASE_URL (or DATABASE_URL) and GOOGLE_GEMINI_API_KEY " +
-        "(run with: pnpm kb:seed).",
+      `Missing env var(s): ${missing.join(", ")}. ` +
+        "They must be present in .env.local (run with: pnpm kb:seed).",
     );
   }
 
