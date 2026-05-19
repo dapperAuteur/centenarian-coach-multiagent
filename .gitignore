@@ -31,3 +31,4 @@ yarn-debug.log*
 
 # local planning docs (witus ecosystem rule)
 plans/
+node_modules

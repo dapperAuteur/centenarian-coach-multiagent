@@ -37,6 +37,9 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     testTimeout: 60_000,
     hookTimeout: 60_000,
+    // Run test files sequentially so the opt-in live tests don't burst
+    // parallel API calls into provider rate limits.
+    fileParallelism: false,
     env: loadEnvLocal(),
   },
   resolve: {
