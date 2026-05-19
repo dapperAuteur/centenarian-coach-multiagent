@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/bam/Code_NOiCloud/ai-builds/gemini/witus -type f -name \"README*\" -o -name \"RULES*\" -o -name \"CONVENTIONS*\" -o -name \"AGENTS*\" -o -name \"CLAUDE.md\" | head -20)",
+      "Read(//Users/bam/Code_NOiCloud/ai-builds/gemini/witus/**)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
+    ]
+  }
+}
