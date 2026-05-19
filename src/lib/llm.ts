@@ -11,19 +11,21 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 export type LlmProvider = "anthropic" | "google";
-export type LlmRole = "supervisor" | "composer";
+export type LlmRole = "supervisor" | "composer" | "synthesizer";
 
 const MODELS: Record<LlmProvider, Record<LlmRole, string>> = {
   anthropic: {
     supervisor: "claude-sonnet-4-6",
     composer: "claude-haiku-4-5-20251001",
+    synthesizer: "claude-sonnet-4-6",
   },
   google: {
     // gemini-2.5-pro has little/no free-tier quota (429s); flash works on the
-    // free tier and routes well. Move supervisor to "gemini-2.5-pro" once on a
-    // paid Gemini tier.
+    // free tier and routes well. Move supervisor/synthesizer to
+    // "gemini-2.5-pro" once on a paid Gemini tier.
     supervisor: "gemini-2.5-flash",
     composer: "gemini-2.5-flash",
+    synthesizer: "gemini-2.5-flash",
   },
 };
 
