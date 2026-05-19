@@ -70,18 +70,15 @@ This repo demonstrates three LangGraph patterns. Each has a companion lesson und
 
 ### 1. Supervisor routing
 
-A typed routing decision before any specialist runs. The supervisor returns a `RoutingDecision` object with explicit booleans for each specialist, plus optional sub-questions if it wants to rewrite the user's query for a specialist.
+A typed routing decision before any specialist runs. The supervisor returns a `RoutingDecision` — which specialists to consult, the primary one, an optional rewritten sub-question per specialist, and a rationale. It is produced with a Zod schema via `withStructuredOutput`, so an invalid route is unrepresentable.
 
 ```ts
+type Agent = 'nutrition' | 'workout' | 'recovery';
+
 type RoutingDecision = {
-  consultNutrition: boolean;
-  consultWorkout: boolean;
-  consultRecovery: boolean;
-  subQuestions: {
-    nutrition?: string;
-    workout?: string;
-    recovery?: string;
-  };
+  agents: Agent[];                          // specialists to consult
+  primaryAgent: Agent;                      // the most relevant one
+  subQuestions: Partial<Record<Agent, string>>;
   rationale: string;
 };
 ```
@@ -95,12 +92,12 @@ Full supervisor: [`src/agents/supervisor/`](./src/agents/supervisor/)
 Each specialist has its own pgvector namespace. Nutrition does not see workout docs. Workout does not see recovery docs. This is the difference between three specialists and one generalist with a fancy prompt.
 
 ```ts
-export async function retrieveNutritionContext(query: string) {
-  return await pgvector.search({
-    namespace: 'nutrition_kb',
-    query,
-    limit: 5,
-  });
+export async function retrieveNutritionKb(query: string, k = 5) {
+  const embedding = await geminiEmbed(query);             // Gemini, 768-dim
+  const matches = await matchCoachKb(embedding, 'nutrition_kb', k);
+  return matches.map((m) => ({
+    source: m.source, snippet: m.content, agent: 'nutrition' as const,
+  }));
 }
 ```
 
@@ -115,7 +112,6 @@ The shared `CoachState` carries the user query, the routing decision, each speci
 ```ts
 type CoachState = {
   sessionId: string;
-  userId: string;
   userQuery: string;
   routing?: RoutingDecision;
   findings: {
@@ -137,7 +133,7 @@ Full state shape: [`src/state.ts`](./src/state.ts)
 
 ## Quick start
 
-You need Node 20+, a Supabase project with pgvector enabled, an Anthropic API key, a Google API key (for Gemini embeddings), and a LangSmith account.
+You need Node 20+, a Postgres database with pgvector (Neon's free tier works), an Anthropic API key, a Gemini API key (for embeddings), and optionally a LangSmith account for tracing.
 
 ```bash
 # 1. Clone
@@ -148,11 +144,11 @@ cd centenarian-coach-multiagent
 pnpm install
 
 # 3. Configure
-cp .env.example .env
-# Fill in ANTHROPIC_API_KEY, GOOGLE_API_KEY, SUPABASE_URL,
-# SUPABASE_SERVICE_ROLE_KEY, LANGSMITH_API_KEY
+cp .env.example .env.local
+# Fill in ANTHROPIC_API_KEY, GEMINI_API_KEY, STORAGE_DATABASE_URL,
+# and (optional) LANGSMITH_API_KEY
 
-# 4. Migrate schema
+# 4. Migrate schema (applies src/db/migrations to your database)
 pnpm db:migrate
 
 # 5. Seed knowledge bases (sample nutrition + workout corpora)
@@ -164,9 +160,9 @@ pnpm dev
 
 Open `http://localhost:3000/coach` and try these three sample questions to see routing in action:
 
-1. "How many grams of protein should I eat after a heavy squat session?" → routes to **Nutrition + Workout**.
-2. "I slept 5 hours last night, should I do legs today?" → routes to **Workout + Recovery** (or all three in v2).
-3. "What is creatine and how does it work?" → routes to **Nutrition only**.
+1. "How much protein should a 70-year-old eat to preserve muscle?" → routes to **Nutrition**.
+2. "How should I progress my squat once I can hit all my reps?" → routes to **Workout**.
+3. "I want to build muscle — how should I combine eating and training?" → routes to **Nutrition + Workout**.
 
 Watch each trace in LangSmith to see the supervisor decision, the specialist subgraphs, and the synthesizer working in sequence.
 
@@ -192,21 +188,19 @@ Lessons use a different sample domain (a fictional customer support desk with th
 
 | Layer            | Choice                                      |
 |------------------|---------------------------------------------|
-| Runtime          | Node 20+, Next.js 14 (existing app)         |
+| Runtime          | Node 20+, Next.js 16 (standalone, App Router)|
 | Language         | TypeScript strict                           |
-| Agent framework  | `@langchain/langgraph` ^0.2                 |
-| LLM SDK          | `@langchain/anthropic`                      |
-| Models           | Sonnet 4.6 (supervisor + synthesizer), Haiku 4.5 (specialist composers) |
-| Embeddings       | Gemini `text-embedding-004`                 |
-| Vector store     | Supabase pgvector                           |
-| Auth             | Supabase Auth                               |
-| Observability    | LangSmith                                   |
-| UI streaming     | Vercel AI SDK                               |
+| Agent framework  | `@langchain/langgraph` ^1.x                 |
+| LLM SDK          | `@langchain/anthropic` / `@langchain/google-genai` |
+| Models           | Claude Sonnet 4.6 + Haiku 4.5, or Gemini 2.5 Flash — switchable |
+| Embeddings       | Gemini `gemini-embedding-001` (768-dim)     |
+| ORM + vector     | Drizzle ORM · Postgres + pgvector (Neon)    |
+| Auth             | None — demo mode, single-tenant             |
+| Observability    | LangSmith (fail-soft)                       |
+| UI streaming     | NDJSON stream from a Next.js route handler  |
 | Testing          | Vitest                                      |
 
-Why two LLM providers in one stack: Gemini's embeddings are cheap, fast, and good. Claude's reasoning is best-in-class for routing decisions and synthesis. Use each where it earns its place.
-
-For a Gemini-only version of this same agent, see Appendix A in the PRD. The all-Gemini variant ships with retry logic on each specialist because structured-output reliability is a real concern when three specialists produce typed findings in one run.
+Why two providers: Gemini's embeddings are cheap and good; Claude's reasoning is strong for routing and synthesis. The chat model is switchable — set `COACH_LLM_PROVIDER` to `anthropic` (Claude Sonnet 4.6 / Haiku 4.5) or `google` (Gemini 2.5 Flash) to A/B answer quality. Embeddings are always Gemini.
 
 ---
 
@@ -245,32 +239,32 @@ centenarian-coach-multiagent/
 ## Configuration
 
 ```env
-ANTHROPIC_API_KEY=
-GOOGLE_API_KEY=                  # for Gemini embeddings only
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-LANGSMITH_API_KEY=
+ANTHROPIC_API_KEY=               # Claude — supervisor, synthesizer, specialists
+GEMINI_API_KEY=                  # Gemini — embeddings (and the optional Gemini provider)
+STORAGE_DATABASE_URL=            # Postgres connection string (Neon)
+COACH_LLM_PROVIDER=anthropic     # 'anthropic' (Claude) or 'google' (Gemini)
+LANGSMITH_API_KEY=               # optional — tracing
 LANGSMITH_PROJECT=centenarian-coach-multiagent
 LANGSMITH_TRACING=true
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=http://localhost:3000
 ```
 
-LangSmith is on by default. Project will run without it (with a console warning).
+See `.env.example` for the annotated list. LangSmith tracing is on by default but
+fail-soft — the app runs fine without `LANGSMITH_API_KEY`.
 
 ---
 
 ## Testing
 
 ```bash
-pnpm test                       # all tests
-pnpm test:supervisor            # routing decisions
-pnpm test:specialists           # individual specialist subgraphs
-pnpm test:integration           # full graph end-to-end
-pnpm test:eval                  # routing accuracy on 10 hand-labeled questions
+pnpm test                       # deterministic suite — unit + mocked graph wiring
+RUN_LIVE_TESTS=1 pnpm test       # also runs the live supervisor+specialist tests
+pnpm review                      # 10-question manual quality review (needs the dev server)
 ```
 
-The eval target measures whether the supervisor consulted the right specialists for each of 10 hand-labeled questions. Acceptance criterion: 90% or better. Latest measured number is in `EVAL.md`.
+`pnpm test` runs with no API keys and no network: pure-function unit tests plus
+mocked wiring tests that verify supervisor routing, fan-out, and the synthesizer
+fan-in. The live tests (opt-in via `RUN_LIVE_TESTS=1`) run real questions through
+the graph and assert that citations are non-empty.
 
 ---
 
@@ -288,13 +282,11 @@ For a representative trace from a real cross-domain question, see the pinned run
 
 ## A real bug I caught
 
-The first time I ran the system against 10 cross-domain test questions, the supervisor over-routed. It consulted all three specialists on questions that only needed one. The trace showed the routing rationale was vague — "the question might involve multiple domains" — without committing to a decision.
+Running the specialists on the Gemini provider, every structured-output call failed with a 400: `Unknown name "exclusiveMinimum"`. The cause was subtle. The calorie-calculator tool's Zod schema used `.positive()`, which compiles to JSON Schema's `exclusiveMinimum` keyword. Gemini's structured-output schema subset does not support `exclusiveMinimum` — only inclusive `minimum`. The exact same schema worked fine on Claude.
 
-The fix was two-part. First, I tightened the routing prompt to require the supervisor to default to one specialist and only escalate to two or three when there was clear evidence in the question. Second, I added a `singleSpecialistConfidence` field to the `RoutingDecision` schema — if the supervisor was over 0.8 confident the question was single-domain, it had to pick exactly one specialist and explain why.
+The fix was to swap `.positive()` for an inclusive `.min(1)` on the affected numeric fields. The lesson generalizes: a Zod schema that round-trips through one provider's structured-output API will not necessarily survive another's — provider schema subsets differ, and the mismatch surfaces only at call time, not at compile time.
 
-Token usage dropped 40% on the single-domain evals after that fix. The trace caught it before any user saw a slow response.
-
-Lesson 2 walks through this in detail.
+Two more provider-shaped bugs showed up the same week: `gemini-2.5-pro` has no free-tier quota (constant 429s — the fix was to pin the Gemini path to `gemini-2.5-flash`), and a too-clever `db:migrate` script tried to run a shell wrapper through `node`. All three are the kind of bug that only appears when you actually run the thing across providers.
 
 ---
 
