@@ -12,7 +12,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "node --env-file=.env.local node_modules/.bin/drizzle-kit migrate",
     "kb:seed": "node --env-file=.env.local scripts/seed-kb.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
