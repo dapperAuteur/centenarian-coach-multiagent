@@ -22,6 +22,7 @@ interface StreamEvent {
   finding?: SpecialistFinding;
   finalAnswer?: FinalAnswer;
   message?: string;
+  langsmithRunId?: string | null;
 }
 
 // Specialists with an implemented node (recovery is v2).
@@ -35,6 +36,7 @@ export default function CoachPage() {
   const [answer, setAnswer] = useState<FinalAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCitations, setShowCitations] = useState(false);
+  const [runId, setRunId] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -47,6 +49,7 @@ export default function CoachPage() {
     setAnswer(null);
     setError(null);
     setShowCitations(false);
+    setRunId(null);
 
     try {
       const res = await fetch("/api/coach/query", {
@@ -79,6 +82,8 @@ export default function CoachPage() {
             setAnswer(event.finalAnswer);
           } else if (event.type === "error") {
             setError(event.message ?? "Unknown error");
+          } else if (event.type === "done" && event.langsmithRunId) {
+            setRunId(event.langsmithRunId);
           }
         }
       }
@@ -187,14 +192,24 @@ export default function CoachPage() {
             </div>
           )}
 
-          <a
-            href="https://smith.langchain.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-block text-xs text-gray-500 hover:underline"
-          >
-            Open in LangSmith ↗
-          </a>
+          {runId ? (
+            <p className="mt-3 text-xs text-gray-500">
+              LangSmith run{" "}
+              <a
+                href="https://smith.langchain.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-gray-600 hover:underline"
+              >
+                {runId}
+              </a>{" "}
+              ↗
+            </p>
+          ) : (
+            <p className="mt-3 text-xs text-gray-400">
+              LangSmith tracing off — set LANGSMITH_API_KEY to trace runs.
+            </p>
+          )}
         </section>
       )}
     </main>

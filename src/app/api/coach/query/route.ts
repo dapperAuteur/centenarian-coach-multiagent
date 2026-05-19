@@ -5,10 +5,16 @@
 //   { type: "routing", routing }          — which specialists will be consulted
 //   { type: "finding", finding }           — one per specialist as it completes
 //   { type: "answer",  finalAnswer }       — the synthesized answer + citations
-//   { type: "done" } | { type: "error", message }
+//   { type: "done", langsmithRunId } | { type: "error", message }
+//
+// The graph run is named "centenarian-coach" and tagged for LangSmith. When
+// tracing is enabled, the root run id is captured and returned so the UI can
+// link to the trace.
 
 import { randomUUID } from "node:crypto";
+import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
 import { coachGraph } from "@/graph";
+import { configureLangSmith } from "@/lib/langsmith";
 import type { CoachState } from "@/state";
 
 export const runtime = "nodejs";
@@ -35,6 +41,8 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const sessionId = randomUUID();
+  const tracingEnabled = configureLangSmith().enabled;
+  const runCollector = new RunCollectorCallbackHandler();
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
@@ -46,7 +54,13 @@ export async function POST(req: Request): Promise<Response> {
 
         const events = await coachGraph.stream(
           { sessionId, userQuery },
-          { streamMode: "updates" },
+          {
+            streamMode: "updates",
+            callbacks: [runCollector],
+            runName: "centenarian-coach",
+            tags: ["coach"],
+            metadata: { sessionId },
+          },
         );
         for await (const chunk of events) {
           for (const [node, value] of Object.entries(
@@ -65,7 +79,13 @@ export async function POST(req: Request): Promise<Response> {
             }
           }
         }
-        send({ type: "done" });
+
+        // The root run is the named "centenarian-coach" run. Only meaningful
+        // as a LangSmith link when tracing is enabled.
+        const langsmithRunId = tracingEnabled
+          ? (runCollector.tracedRuns[0]?.id ?? null)
+          : null;
+        send({ type: "done", langsmithRunId });
       } catch (err) {
         send({
           type: "error",
