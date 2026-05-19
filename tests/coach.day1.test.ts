@@ -46,11 +46,14 @@ const SAMPLE_QUESTIONS = [
   "Are there longevity benefits to time-restricted eating?",
 ];
 
-const hasLiveKeys =
+// Live tests are opt-in (RUN_LIVE_TESTS=1) so `pnpm test` stays fast, free,
+// and free of provider rate limits. They also need the API keys present.
+const runLive =
+  process.env.RUN_LIVE_TESTS === "1" &&
   Boolean(process.env.ANTHROPIC_API_KEY) &&
   Boolean(process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GEMINI_API_KEY);
 
-describe.skipIf(!hasLiveKeys)("supervisor + Nutrition (live)", () => {
+describe.skipIf(!runLive)("supervisor + Nutrition (live)", () => {
   it.each(SAMPLE_QUESTIONS)(
     'routes to Nutrition and returns a cited finding: "%s"',
     async (question) => {
