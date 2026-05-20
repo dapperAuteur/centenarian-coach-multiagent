@@ -1,6 +1,6 @@
 # Centenarian Coach Multi-Agent
 
-> **This is a portfolio + course artifact.** The demo runs without authentication.
+> **This is a portfolio + course artifact.** The live demo is gated to a single admin email — anyone else can join a paid-access waitlist.
 
 A LangGraph supervisor with specialist subgraphs. You ask one question. A coordinator decides which specialists to consult. Each specialist has its own retrieval store and its own tools. The coordinator weaves the findings into one answer with citations.
 
@@ -195,7 +195,7 @@ Lessons use a different sample domain (a fictional customer support desk with th
 | Models           | Claude Sonnet 4.6 + Haiku 4.5, or Gemini 2.5 Flash — switchable |
 | Embeddings       | Gemini `gemini-embedding-001` (768-dim)     |
 | ORM + vector     | Drizzle ORM · Postgres + pgvector (Neon)    |
-| Auth             | None — demo mode, single-tenant             |
+| Auth             | Auth.js v5 email magic link (Mailgun) — single-admin gate, waitlist for everyone else |
 | Observability    | LangSmith (fail-soft)                       |
 | UI streaming     | NDJSON stream from a Next.js route handler  |
 | Testing          | Vitest                                      |
@@ -246,6 +246,14 @@ COACH_LLM_PROVIDER=anthropic     # 'anthropic' (Claude) or 'google' (Gemini)
 LANGSMITH_API_KEY=               # optional — tracing
 LANGSMITH_PROJECT=centenarian-coach-multiagent
 LANGSMITH_TRACING=true
+
+# Email-link admin auth (Auth.js v5)
+NEXTAUTH_SECRET=                 # cookie/JWT signing — openssl rand -hex 32
+ADMIN_EMAIL=                     # the only address allowed to sign in
+NEXT_PUBLIC_ADMIN_EMAIL=         # same value, exposed to /signin for the
+                                 #   admin-vs-waitlist bifurcation
+EMAIL_SERVER=                    # Mailgun SMTP connection string
+EMAIL_FROM="WitUS Inbox <forms@mg.witus.online>"
 ```
 
 See `.env.example` for the annotated list. LangSmith tracing is on by default but
