@@ -104,11 +104,21 @@ export default function CoachPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <h1 className="text-2xl font-bold">Centenarian Coach</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        A multi-agent coach — a supervisor routes your question to nutrition and
-        workout specialists, each with its own retrieval and tools.
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Centenarian Coach</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            A multi-agent coach — a supervisor routes your question to nutrition
+            and workout specialists, each with its own retrieval and tools.
+          </p>
+        </div>
+        <a
+          href="/api/auth/signout?callbackUrl=/"
+          className="shrink-0 text-xs text-gray-500 hover:text-gray-800 hover:underline"
+        >
+          Sign out
+        </a>
+      </div>
 
       <form onSubmit={onSubmit} className="mt-6 flex gap-2">
         <input
