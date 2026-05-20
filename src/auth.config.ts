@@ -12,7 +12,9 @@ export const authConfig = {
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
       const isProtected =
-        pathname.startsWith("/coach") || pathname.startsWith("/api/coach");
+        pathname.startsWith("/coach") ||
+        pathname.startsWith("/api/coach") ||
+        pathname.startsWith("/admin");
       if (isProtected) return Boolean(auth?.user);
       return true;
     },
