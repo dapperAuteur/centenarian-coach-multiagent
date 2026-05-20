@@ -249,9 +249,9 @@ LANGSMITH_TRACING=true
 
 # Email-link admin auth (Auth.js v5)
 NEXTAUTH_SECRET=                 # cookie/JWT signing — openssl rand -hex 32
-ADMIN_EMAIL=                     # the only address allowed to sign in
-NEXT_PUBLIC_ADMIN_EMAIL=         # same value, exposed to /signin for the
-                                 #   admin-vs-waitlist bifurcation
+ADMIN_EMAIL=                     # the only address allowed to sign in; the
+                                 #   admin-vs-waitlist bifurcation runs
+                                 #   server-side in /api/access-request
 EMAIL_SERVER=                    # Mailgun SMTP connection string
 EMAIL_FROM="WitUS Inbox <forms@mg.witus.online>"
 ```

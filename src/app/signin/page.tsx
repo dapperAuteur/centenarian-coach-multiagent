@@ -1,13 +1,24 @@
 "use client";
 
 // src/app/signin/page.tsx
-// Custom sign-in page. The admin email gets a magic-link sign-in; any other
-// address is offered a paid-access waitlist instead — NextAuth's default
-// "check your email" UI never fires for non-admin addresses, and **no magic
-// link is ever sent** to a non-admin.
+// Single-form sign-in. The admin/waitlist bifurcation happens server-side at
+// /api/access-request — there is no client-side ADMIN_EMAIL knowledge here,
+// so a missing NEXT_PUBLIC_* env var can no longer lock the admin out.
+//
+// Flow:
+//   1. User submits an email.
+//   2. POST /api/access-request — server checks ADMIN_EMAIL:
+//        - admin   -> server triggers NextAuth Nodemailer signIn (the
+//                     magic-link email is sent in the background) and
+//                     returns { outcome: "magic_link_sent" }.
+//        - other   -> returns { outcome: "needs_waitlist_confirm" } and
+//                     nothing else happens server-side.
+//   3. On "needs_waitlist_confirm", the page shows the consent UI. The
+//      "Notify me" button posts to /api/waitlist, which inserts into the
+//      waitlist table and mirrors the signup to the WitUS Inbox.
+// No magic link is ever sent to a non-admin email.
 
 import { useState, type FormEvent } from "react";
-import { signIn } from "next-auth/react";
 
 type Status =
   | "idle"
@@ -18,51 +29,47 @@ type Status =
   | "waitlisted"
   | "error";
 
-// Public so the signin page can bifurcate before triggering NextAuth.
-// The server-side ADMIN_EMAIL is the source of truth (auth.ts signIn callback).
-const ADMIN_EMAIL = (process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "")
-  .trim()
-  .toLowerCase();
-
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
   const normalized = email.trim().toLowerCase();
-  const isAdminEmail = ADMIN_EMAIL.length > 0 && normalized === ADMIN_EMAIL;
+  const busy = status === "sending" || status === "joining";
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!normalized || status === "sending" || status === "joining") return;
+    if (!normalized || busy) return;
     setError(null);
-
-    if (isAdminEmail) {
-      setStatus("sending");
-      try {
-        const result = await signIn("nodemailer", {
-          email: normalized,
-          redirect: false,
-          callbackUrl: "/coach",
-        });
-        if (result?.error) {
-          throw new Error(result.error);
-        }
-        setStatus("sent");
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to send sign-in link.",
-        );
-        setStatus("error");
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/access-request", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: normalized }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        outcome?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.error ?? `Request failed (${res.status})`);
       }
-    } else {
-      // Not the admin — no magic link is sent. Offer the waitlist UX.
-      setStatus("waitlist");
+      if (data.outcome === "magic_link_sent") {
+        setStatus("sent");
+      } else if (data.outcome === "needs_waitlist_confirm") {
+        setStatus("waitlist");
+      } else {
+        throw new Error("Unexpected response from the server.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Request failed.");
+      setStatus("error");
     }
   }
 
   async function joinWaitlist() {
-    if (!normalized || status === "joining") return;
+    if (!normalized || busy) return;
     setError(null);
     setStatus("joining");
     try {
@@ -72,10 +79,10 @@ export default function SignInPage() {
         body: JSON.stringify({ email: normalized }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as {
+        const data = (await res.json().catch(() => ({}))) as {
           error?: string;
         };
-        throw new Error(body.error ?? `Request failed (${res.status})`);
+        throw new Error(data.error ?? `Request failed (${res.status})`);
       }
       setStatus("waitlisted");
     } catch (err) {
@@ -108,13 +115,13 @@ export default function SignInPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            disabled={status === "sending" || status === "joining"}
+            disabled={busy}
             placeholder="you@example.com"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
           <button
             type="submit"
-            disabled={!normalized || status === "sending" || status === "joining"}
+            disabled={!normalized || busy}
             className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
           >
             {status === "sending" ? "Sending…" : "Continue"}
@@ -126,8 +133,9 @@ export default function SignInPage() {
         <section className="mt-8 rounded-lg border border-sky-200 bg-sky-50 p-5 text-sm">
           <p className="font-semibold text-gray-900">Check your email</p>
           <p className="mt-1 text-gray-700">
-            We sent a sign-in link to <span className="font-mono">{normalized}</span>.
-            The link expires shortly. You can close this tab once you've signed in.
+            We sent a sign-in link to{" "}
+            <span className="font-mono">{normalized}</span>. The link expires
+            shortly. You can close this tab once you've signed in.
           </p>
         </section>
       )}
@@ -145,7 +153,7 @@ export default function SignInPage() {
           <button
             type="button"
             onClick={joinWaitlist}
-            disabled={status !== "waitlist"}
+            disabled={busy}
             className="mt-4 w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
           >
             Notify me when paid access is available
