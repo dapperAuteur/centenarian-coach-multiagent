@@ -54,12 +54,20 @@ export async function POST(req: Request): Promise<Response> {
     });
     return NextResponse.json({ outcome: "magic_link_sent" });
   } catch (err) {
-    return NextResponse.json(
-      {
-        error:
-          err instanceof Error ? err.message : "Failed to send sign-in link.",
-      },
-      { status: 500 },
-    );
+    // Auth.js wraps the underlying error as { name: "AdapterError", cause },
+    // and `err.message` is the bare class name — useless on its own. Unwrap
+    // the cause so the failure mode (missing table, SMTP refused, etc.)
+    // actually appears in both server logs and the client response.
+    const errorObj = err as Error & { cause?: unknown };
+    const cause = errorObj?.cause;
+    const causeMessage = cause instanceof Error ? cause.message : undefined;
+    const detail =
+      errorObj instanceof Error
+        ? causeMessage
+          ? `${errorObj.message}: ${causeMessage}`
+          : errorObj.message
+        : "Failed to send sign-in link.";
+    console.error("[access-request] sign-in failed:", errorObj, cause);
+    return NextResponse.json({ error: detail }, { status: 500 });
   }
 }
