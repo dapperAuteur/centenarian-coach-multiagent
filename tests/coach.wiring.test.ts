@@ -1,9 +1,9 @@
 // tests/coach.wiring.test.ts
 // Key-free wiring test: the LLM and retrieval are mocked, so this runs in CI
-// with no API keys. It verifies graph topology and state-passing — supervisor
+// with no API keys. It verifies graph topology and state-passing: supervisor
 // routing, the fan-out conditional edge, the synthesizer fan-in, and the
 // SpecialistFinding / FinalAnswer shapes. Live behaviour is covered by
-// coach.day1.test.ts and coach.workout.test.ts.
+// coach.day1 / coach.workout / coach.recovery tests.
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
@@ -31,6 +31,8 @@ vi.mock("@/lib/llm", () => ({
             return { needsCalorieTool: false, calorieArgs: null };
           case "assess_workout_tools":
             return { progressionArgs: null, mobilityArgs: null };
+          case "assess_recovery_tools":
+            return { sleepArgs: null, hrvArgs: null };
           case "compose_finding":
             return { text: "Mock specialist finding.\n\nSecond paragraph." };
           case "synthesize_answer":
@@ -57,6 +59,13 @@ vi.mock("@/agents/workout/retrieval", () => ({
   ],
 }));
 
+vi.mock("@/agents/recovery/retrieval", () => ({
+  retrieveRecoveryKb: async () => [
+    { source: "Mock Recovery Source A", snippet: "Mock recovery snippet A.", agent: "recovery" },
+    { source: "Mock Recovery Source B", snippet: "Mock recovery snippet B.", agent: "recovery" },
+  ],
+}));
+
 const { coachGraph } = await import("@/graph");
 
 describe("coach graph wiring (mocked — no API keys)", () => {
@@ -74,43 +83,51 @@ describe("coach graph wiring (mocked — no API keys)", () => {
     expect(result.findings.nutrition?.agent).toBe("nutrition");
     expect(result.findings.nutrition?.citations).toHaveLength(2);
     expect(result.findings.workout).toBeUndefined();
+    expect(result.findings.recovery).toBeUndefined();
 
     expect(result.finalAnswer?.text.length ?? 0).toBeGreaterThan(0);
     expect(result.finalAnswer?.consultedAgents).toEqual(["nutrition"]);
     expect(result.finalAnswer?.citations).toHaveLength(2);
   });
 
-  it("routes a workout-only question and synthesizes an answer", async () => {
-    ctl.routeTo = ["workout"];
+  it("routes a recovery-only question and synthesizes an answer", async () => {
+    ctl.routeTo = ["recovery"];
     const result = await coachGraph.invoke({
       sessionId: "wiring-session",
-      userQuery: "How do I progress my squat?",
+      userQuery: "How much sleep do I need to recover?",
     });
 
-    expect(result.routing?.agents).toEqual(["workout"]);
-    expect(result.findings.workout?.agent).toBe("workout");
-    expect(result.findings.workout?.citations).toHaveLength(2);
+    expect(result.routing?.agents).toEqual(["recovery"]);
+    expect(result.findings.recovery?.agent).toBe("recovery");
+    expect(result.findings.recovery?.citations).toHaveLength(2);
     expect(result.findings.nutrition).toBeUndefined();
+    expect(result.findings.workout).toBeUndefined();
 
-    expect(result.finalAnswer?.consultedAgents).toEqual(["workout"]);
+    expect(result.finalAnswer?.consultedAgents).toEqual(["recovery"]);
     expect(result.finalAnswer?.citations).toHaveLength(2);
   });
 
-  it("fans out to both specialists, then fans in to the synthesizer", async () => {
-    ctl.routeTo = ["nutrition", "workout"];
+  it("fans out to all three specialists, then fans in to the synthesizer", async () => {
+    ctl.routeTo = ["nutrition", "workout", "recovery"];
     const result = await coachGraph.invoke({
       sessionId: "wiring-session",
-      userQuery: "Should I eat more and lift heavier to gain muscle?",
+      userQuery:
+        "I slept 5 hours, want to build muscle, and have legs planned today. What should I do?",
     });
 
-    expect(result.routing?.agents).toEqual(["nutrition", "workout"]);
-    // Both specialists ran in parallel and the findings merged.
+    expect(result.routing?.agents).toEqual(["nutrition", "workout", "recovery"]);
+    // All three specialists ran in parallel and the findings merged.
     expect(result.findings.nutrition?.agent).toBe("nutrition");
     expect(result.findings.workout?.agent).toBe("workout");
+    expect(result.findings.recovery?.agent).toBe("recovery");
 
-    // The synthesizer fanned in over both findings.
+    // The synthesizer fanned in over all three findings.
     expect(result.finalAnswer?.text.length ?? 0).toBeGreaterThan(0);
-    expect(result.finalAnswer?.consultedAgents).toEqual(["nutrition", "workout"]);
-    expect(result.finalAnswer?.citations).toHaveLength(4);
+    expect(result.finalAnswer?.consultedAgents).toEqual([
+      "nutrition",
+      "workout",
+      "recovery",
+    ]);
+    expect(result.finalAnswer?.citations).toHaveLength(6);
   });
 });
