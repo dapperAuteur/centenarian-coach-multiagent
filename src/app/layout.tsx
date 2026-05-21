@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Centenarian Coach Multi-Agent",
   description:
-    "A LangGraph supervisor with specialist subgraphs — Nutrition and Workout — that route, retrieve, and synthesize one cited answer.",
+    "A LangGraph supervisor with specialist subgraphs (Nutrition and Workout) that route, retrieve, and synthesize one cited answer.",
 };
 
 export default function RootLayout({

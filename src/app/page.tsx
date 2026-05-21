@@ -17,7 +17,7 @@ export default function HomePage() {
 
       <p className="mt-8 leading-relaxed text-gray-800">
         A LangGraph supervisor with specialist subgraphs. You ask one question;
-        a coordinator decides which specialists to consult — a{" "}
+        a coordinator decides which specialists to consult: a{" "}
         <span className="font-medium">Nutrition</span> specialist with its own
         knowledge base and a calorie tool, and a{" "}
         <span className="font-medium">Workout</span> specialist with its own
