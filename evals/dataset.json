@@ -1,0 +1,22 @@
+[
+  { "id": "n1", "question": "How much protein should a 70-year-old eat to preserve muscle?", "expectedAgents": ["nutrition"] },
+  { "id": "n2", "question": "What kinds of foods make a moderate calorie deficit easier to sustain?", "expectedAgents": ["nutrition"] },
+  { "id": "n3", "question": "Are there real longevity benefits to time-restricted eating?", "expectedAgents": ["nutrition"] },
+  { "id": "n4", "question": "Is the Mediterranean eating pattern a good default for healthy aging?", "expectedAgents": ["nutrition"] },
+  { "id": "w1", "question": "How should I progress my back squat once I can complete every prescribed rep?", "expectedAgents": ["workout"] },
+  { "id": "w2", "question": "How many strength training sessions per week should I do to keep getting stronger?", "expectedAgents": ["workout"] },
+  { "id": "w3", "question": "Why does mobility work matter for training safely as I age?", "expectedAgents": ["workout"] },
+  { "id": "w4", "question": "What is a deload week and when should I take one?", "expectedAgents": ["workout"] },
+  { "id": "r1", "question": "How much sleep do I actually need to recover from hard training?", "expectedAgents": ["recovery"] },
+  { "id": "r2", "question": "My HRV has been trending below my baseline. What does that mean?", "expectedAgents": ["recovery"] },
+  { "id": "r3", "question": "Should I take a rest day when I feel run down, or push through it?", "expectedAgents": ["recovery"] },
+  { "id": "r4", "question": "How does morning light exposure affect my sleep quality?", "expectedAgents": ["recovery"] },
+  { "id": "nw1", "question": "I want to build muscle. How should I combine my eating and my training?", "expectedAgents": ["nutrition", "workout"] },
+  { "id": "nw2", "question": "Should I eat before or after lifting, and what should that meal look like?", "expectedAgents": ["nutrition", "workout"] },
+  { "id": "wr1", "question": "I slept five hours last night. Should I still do a heavy leg session today?", "expectedAgents": ["workout", "recovery"] },
+  { "id": "wr2", "question": "I keep feeling exhausted mid-workout. Is it my training volume or my rest?", "expectedAgents": ["workout", "recovery"] },
+  { "id": "nr1", "question": "Does eating in a calorie deficit hurt my recovery between workouts?", "expectedAgents": ["nutrition", "recovery"] },
+  { "id": "nwr1", "question": "I slept six hours, want to build muscle, and have a heavy session planned. What should I eat, how should I train, and should I rest?", "expectedAgents": ["nutrition", "workout", "recovery"] },
+  { "id": "nwr2", "question": "I am 70 and want to stay strong for decades. What should my diet, training, and recovery look like?", "expectedAgents": ["nutrition", "workout", "recovery"] },
+  { "id": "nwr3", "question": "After a hard training week, how should I adjust my eating, my workouts, and my sleep?", "expectedAgents": ["nutrition", "workout", "recovery"] }
+]
