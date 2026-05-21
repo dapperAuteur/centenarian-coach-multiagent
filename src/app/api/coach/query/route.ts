@@ -15,7 +15,13 @@ import { randomUUID } from "node:crypto";
 import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
 import { coachGraph } from "@/graph";
 import { configureLangSmith } from "@/lib/langsmith";
-import type { CoachState } from "@/state";
+import { persistSession } from "@/lib/sessions";
+import type {
+  CoachState,
+  FinalAnswer,
+  FindingsMap,
+  RoutingDecision,
+} from "@/state";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -52,6 +58,12 @@ export async function POST(req: Request): Promise<Response> {
       try {
         send({ type: "session", sessionId });
 
+        // Accumulated as the stream runs, then persisted once it completes so
+        // the run can be reviewed later at /coach/history.
+        let routing: RoutingDecision | undefined;
+        const findings: FindingsMap = {};
+        let finalAnswer: FinalAnswer | undefined;
+
         const events = await coachGraph.stream(
           { sessionId, userQuery },
           {
@@ -67,14 +79,21 @@ export async function POST(req: Request): Promise<Response> {
             chunk as Record<string, Partial<CoachState>>,
           )) {
             if (node === "supervisor" && value.routing) {
+              routing = value.routing;
               send({ type: "routing", routing: value.routing });
             } else if (
-              (node === "nutrition" || node === "workout") &&
+              (node === "nutrition" ||
+                node === "workout" ||
+                node === "recovery") &&
               value.findings
             ) {
               const finding = value.findings[node];
-              if (finding) send({ type: "finding", finding });
+              if (finding) {
+                findings[node] = finding;
+                send({ type: "finding", finding });
+              }
             } else if (node === "synthesize" && value.finalAnswer) {
+              finalAnswer = value.finalAnswer;
               send({ type: "answer", finalAnswer: value.finalAnswer });
             }
           }
@@ -85,6 +104,22 @@ export async function POST(req: Request): Promise<Response> {
         const langsmithRunId = tracingEnabled
           ? (runCollector.tracedRuns[0]?.id ?? null)
           : null;
+
+        // Persist the completed run. Best-effort: a DB failure must not break
+        // the response the user already received.
+        try {
+          await persistSession({
+            sessionId,
+            query: userQuery,
+            routing: routing ?? null,
+            findings,
+            finalAnswer: finalAnswer ?? null,
+            langsmithRunId,
+          });
+        } catch (persistErr) {
+          console.error("Failed to persist coach session:", persistErr);
+        }
+
         send({ type: "done", langsmithRunId });
       } catch (err) {
         send({
