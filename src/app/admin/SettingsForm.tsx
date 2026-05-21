@@ -21,6 +21,30 @@ const ROLES: { role: LlmRole; label: string; hint: string }[] = [
   { role: "synthesizer", label: "Synthesizer", hint: "Weaves the answer." },
 ];
 
+// Sentinel <select> value: "let me type an ID the list does not have".
+const CUSTOM = "__custom__";
+
+// Curated, known-good model IDs per provider, offered as a dropdown so the
+// common case needs no typing. "Custom model ID" stays available for models
+// not yet in this list.
+const MODEL_OPTIONS: Record<LlmProvider, { id: string; label: string }[]> = {
+  anthropic: [
+    { id: "claude-opus-4-7", label: "Claude Opus 4.7 (most capable)" },
+    { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6 (balanced)" },
+    {
+      id: "claude-haiku-4-5-20251001",
+      label: "Claude Haiku 4.5 (fast, low cost)",
+    },
+  ],
+  google: [
+    { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro (most capable)" },
+    { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash (fast, free tier)" },
+  ],
+};
+
+const FIELD_CLASS =
+  "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500";
+
 type Status =
   | { kind: "idle" }
   | { kind: "saving" }
@@ -85,9 +109,6 @@ export function SettingsForm({
     }
   }
 
-  const fieldClass =
-    "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500";
-
   return (
     <div className="space-y-6">
       {/* Provider */}
@@ -122,23 +143,19 @@ export function SettingsForm({
           Model IDs · {provider}
         </h3>
         <p className="mt-1 text-xs text-gray-500">
-          The model used for each role on the selected provider. Blank falls
-          back to the built-in default.
+          Pick a model for each role on the selected provider. Choose
+          &ldquo;Custom model ID&rdquo; to enter one not in the list.
         </p>
         <div className="mt-2 space-y-3">
           {ROLES.map(({ role, label, hint }) => (
-            <label key={role} className="block">
-              <span className="text-xs font-medium text-gray-700">
-                {label}{" "}
-                <span className="font-normal text-gray-400">· {hint}</span>
-              </span>
-              <input
-                type="text"
-                value={settings.models[provider][role]}
-                onChange={(e) => setModel(role, e.target.value)}
-                className={`mt-1 ${fieldClass} font-mono`}
-              />
-            </label>
+            <ModelField
+              key={role}
+              provider={provider}
+              label={label}
+              hint={hint}
+              value={settings.models[provider][role]}
+              onChange={(value) => setModel(role, value)}
+            />
           ))}
         </div>
       </div>
@@ -165,7 +182,7 @@ export function SettingsForm({
               onChange={(e) =>
                 patch({ temperature: Number(e.target.value) })
               }
-              className={`mt-1 ${fieldClass}`}
+              className={`mt-1 ${FIELD_CLASS}`}
             />
           </label>
           <label className="block">
@@ -179,7 +196,7 @@ export function SettingsForm({
               step={64}
               value={settings.maxTokens}
               onChange={(e) => patch({ maxTokens: Number(e.target.value) })}
-              className={`mt-1 ${fieldClass}`}
+              className={`mt-1 ${FIELD_CLASS}`}
             />
           </label>
         </div>
@@ -222,6 +239,62 @@ export function SettingsForm({
           <span className="text-sm text-red-700">{status.message}</span>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * One role's model picker: a dropdown of curated model IDs for the active
+ * provider, plus a "Custom" option that reveals a free-text input for any ID
+ * not in the list. The custom state is derived from the value itself — a
+ * value absent from the curated list is treated as custom.
+ */
+function ModelField({
+  provider,
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  provider: LlmProvider;
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const options = MODEL_OPTIONS[provider];
+  const isCustom = !options.some((option) => option.id === value);
+
+  return (
+    <div>
+      <span className="text-xs font-medium text-gray-700">
+        {label} <span className="font-normal text-gray-400">· {hint}</span>
+      </span>
+      <select
+        value={isCustom ? CUSTOM : value}
+        onChange={(e) =>
+          onChange(e.target.value === CUSTOM ? "" : e.target.value)
+        }
+        className={`mt-1 ${FIELD_CLASS}`}
+        aria-label={`${label} model`}
+      >
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+        <option value={CUSTOM}>Custom model ID…</option>
+      </select>
+      {isCustom && (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Exact model ID, e.g. claude-sonnet-4-6"
+          aria-label={`${label} custom model ID`}
+          className={`mt-2 ${FIELD_CLASS} font-mono`}
+        />
+      )}
     </div>
   );
 }
