@@ -61,10 +61,12 @@ const AssessSchema = z.object({
 
 /** Decide whether the calorie_calculator tool should run. */
 async function assessNode(state: NutritionState): Promise<NutritionUpdate> {
-  const model = buildChatModel({
-    role: "composer",
-    temperature: 0,
-  }).withStructuredOutput(AssessSchema, { name: "assess_tools" });
+  const model = (
+    await buildChatModel({
+      role: "composer",
+      temperature: 0,
+    })
+  ).withStructuredOutput(AssessSchema, { name: "assess_tools" });
   const result = await model.invoke([
     { role: "system", content: NUTRITION_ASSESS_SYSTEM },
     { role: "user", content: state.subQuestion },
@@ -113,11 +115,13 @@ async function composeNode(state: NutritionState): Promise<NutritionUpdate> {
 
   // Extra token headroom: the structured-output block carries the full
   // 2-3 paragraph answer.
-  const model = buildChatModel({
-    role: "composer",
-    temperature: 0.2,
-    maxTokens: 2048,
-  }).withStructuredOutput(ComposeSchema, { name: "compose_finding" });
+  const model = (
+    await buildChatModel({
+      role: "composer",
+      temperature: 0.2,
+      maxTokens: 2048,
+    })
+  ).withStructuredOutput(ComposeSchema, { name: "compose_finding" });
   const result = await model.invoke([
     { role: "system", content: NUTRITION_COMPOSE_SYSTEM },
     {

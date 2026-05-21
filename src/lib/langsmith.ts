@@ -10,6 +10,22 @@ export interface LangSmithStatus {
   enabled: boolean;
 }
 
+/**
+ * Apply a runtime tracing on/off decision (the /admin dashboard toggle).
+ * Tracing only actually runs when a LANGSMITH_API_KEY is present, so
+ * `enabled: true` with no key resolves to off. Returns whether tracing is
+ * now effectively on. Call this per request, before running the graph.
+ */
+export function setTracing(enabled: boolean): boolean {
+  const on = enabled && Boolean(process.env.LANGSMITH_API_KEY);
+  process.env.LANGSMITH_TRACING = on ? "true" : "false";
+  process.env.LANGCHAIN_TRACING_V2 = on ? "true" : "false";
+  if (on && !process.env.LANGSMITH_PROJECT) {
+    process.env.LANGSMITH_PROJECT = "centenarian-coach-multiagent";
+  }
+  return on;
+}
+
 export function configureLangSmith(): LangSmithStatus {
   if (!configured) {
     configured = true;

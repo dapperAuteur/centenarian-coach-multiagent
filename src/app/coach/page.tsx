@@ -6,6 +6,7 @@
 // Functional, not pretty (PRD §10).
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type {
   Agent,
@@ -114,12 +115,12 @@ export default function CoachPage() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3 text-xs">
-          <a
-            href="/coach/history"
-            className="text-sky-700 hover:underline"
-          >
+          <Link href="/coach/history" className="text-sky-700 hover:underline">
             History
-          </a>
+          </Link>
+          <Link href="/admin" className="text-sky-700 hover:underline">
+            Admin
+          </Link>
           <a
             href="/api/auth/signout?callbackUrl=/"
             className="text-gray-500 hover:text-gray-800 hover:underline"

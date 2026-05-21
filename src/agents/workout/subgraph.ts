@@ -64,10 +64,12 @@ const AssessSchema = z.object({
 
 /** Decide which workout tools (if any) should run. */
 async function assessNode(state: WorkoutState): Promise<WorkoutUpdate> {
-  const model = buildChatModel({
-    role: "composer",
-    temperature: 0,
-  }).withStructuredOutput(AssessSchema, { name: "assess_workout_tools" });
+  const model = (
+    await buildChatModel({
+      role: "composer",
+      temperature: 0,
+    })
+  ).withStructuredOutput(AssessSchema, { name: "assess_workout_tools" });
   const result = await model.invoke([
     { role: "system", content: WORKOUT_ASSESS_SYSTEM },
     { role: "user", content: state.subQuestion },
@@ -124,11 +126,13 @@ async function composeNode(state: WorkoutState): Promise<WorkoutUpdate> {
           .join("\n")
       : "(no tools used)";
 
-  const model = buildChatModel({
-    role: "composer",
-    temperature: 0.2,
-    maxTokens: 2048,
-  }).withStructuredOutput(ComposeSchema, { name: "compose_finding" });
+  const model = (
+    await buildChatModel({
+      role: "composer",
+      temperature: 0.2,
+      maxTokens: 2048,
+    })
+  ).withStructuredOutput(ComposeSchema, { name: "compose_finding" });
   const result = await model.invoke([
     { role: "system", content: WORKOUT_COMPOSE_SYSTEM },
     {

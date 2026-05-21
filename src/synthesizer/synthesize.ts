@@ -50,11 +50,13 @@ export async function synthesizeNode(state: CoachState): Promise<CoachUpdate> {
     .map((f) => `### ${f.agent} specialist\n${f.text}`)
     .join("\n\n");
 
-  const model = buildChatModel({
-    role: "synthesizer",
-    temperature: 0.3,
-    maxTokens: 2048,
-  }).withStructuredOutput(SynthesizeSchema, { name: "synthesize_answer" });
+  const model = (
+    await buildChatModel({
+      role: "synthesizer",
+      temperature: 0.3,
+      maxTokens: 2048,
+    })
+  ).withStructuredOutput(SynthesizeSchema, { name: "synthesize_answer" });
 
   const result = await model.invoke([
     { role: "system", content: SYNTHESIZE_SYSTEM },

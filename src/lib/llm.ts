@@ -1,19 +1,27 @@
 // src/lib/llm.ts
 // Provider-agnostic chat-model factory. The coach can run on Anthropic Claude
-// or Google Gemini, selected at runtime by the COACH_LLM_PROVIDER env var
-// (default: anthropic). This lets us A/B the answer quality of each provider.
+// or Google Gemini, with per-role model IDs. Which provider and models are
+// active is runtime configuration (src/lib/settings.ts), editable from the
+// /admin dashboard — no redeploy needed.
 //
-// Two roles: "supervisor" uses the stronger model (routing accuracy matters);
-// "composer" uses the cheaper model for specialist answer composition.
+// Two roles, three slots: "supervisor" routes (accuracy matters), "composer"
+// writes specialist findings (cheaper model), "synthesizer" weaves the final
+// answer.
 
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { getSettings } from "@/lib/settings";
 
 export type LlmProvider = "anthropic" | "google";
 export type LlmRole = "supervisor" | "composer" | "synthesizer";
 
-const MODELS: Record<LlmProvider, Record<LlmRole, string>> = {
+/**
+ * Built-in model matrix. The fallback when the DB has no app_settings row
+ * (e.g. before the migration runs) or a model slot is left blank. The /admin
+ * dashboard overrides these per provider and role.
+ */
+export const DEFAULT_MODELS: Record<LlmProvider, Record<LlmRole, string>> = {
   anthropic: {
     supervisor: "claude-sonnet-4-6",
     composer: "claude-haiku-4-5-20251001",
@@ -29,25 +37,28 @@ const MODELS: Record<LlmProvider, Record<LlmRole, string>> = {
   },
 };
 
-/** Active provider, from COACH_LLM_PROVIDER (default: anthropic). */
-export function getLlmProvider(): LlmProvider {
-  return (process.env.COACH_LLM_PROVIDER ?? "").toLowerCase() === "google"
-    ? "google"
-    : "anthropic";
-}
-
 export interface BuildChatOptions {
   role: LlmRole;
+  /** Overrides the settings-level temperature default for this call. */
   temperature?: number;
+  /** Overrides the settings-level max-tokens default for this call. */
   maxTokens?: number;
 }
 
-/** Build the chat model for a role, using the active provider. */
-export function buildChatModel(options: BuildChatOptions): BaseChatModel {
-  const provider = getLlmProvider();
-  const model = MODELS[provider][options.role];
-  const temperature = options.temperature ?? 0;
-  const maxTokens = options.maxTokens ?? 1024;
+/**
+ * Build the chat model for a role, using the active runtime settings (cached;
+ * see getSettings). Async because settings may come from the database.
+ */
+export async function buildChatModel(
+  options: BuildChatOptions,
+): Promise<BaseChatModel> {
+  const settings = await getSettings();
+  const provider = settings.provider;
+  const model =
+    settings.models[provider]?.[options.role] ||
+    DEFAULT_MODELS[provider][options.role];
+  const temperature = options.temperature ?? settings.temperature;
+  const maxTokens = options.maxTokens ?? settings.maxTokens;
 
   if (provider === "google") {
     const apiKey =
@@ -56,7 +67,7 @@ export function buildChatModel(options: BuildChatOptions): BaseChatModel {
       process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       throw new Error(
-        "GEMINI_API_KEY is not set (required for COACH_LLM_PROVIDER=google)",
+        "GEMINI_API_KEY is not set (required for the Google provider)",
       );
     }
     return new ChatGoogleGenerativeAI({
@@ -72,5 +83,11 @@ export function buildChatModel(options: BuildChatOptions): BaseChatModel {
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY is not set");
   }
-  return new ChatAnthropic({ apiKey, model, temperature, maxTokens, maxRetries: 2 });
+  return new ChatAnthropic({
+    apiKey,
+    model,
+    temperature,
+    maxTokens,
+    maxRetries: 2,
+  });
 }
