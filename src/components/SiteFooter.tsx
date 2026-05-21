@@ -164,7 +164,7 @@ function RiseWellnessCallout() {
 
       <p className="text-gray-700 leading-relaxed">
         Rise Wellness of Indiana provides compassionate, personalized,
-        holistic mental health care — evidence-based medicine, trauma-informed
+        holistic mental health care: evidence-based medicine, trauma-informed
         care, and a whole-person approach to help you heal, grow, and thrive
         in mind, body, and spirit.
       </p>
@@ -227,7 +227,7 @@ function RiseWellnessCallout() {
         guided by the belief that healing is personal, holistic, and rooted
         in compassion.&rdquo;
         <span className="block not-italic mt-1 text-gray-500">
-          — Rise Wellness of Indiana
+          Rise Wellness of Indiana
         </span>
       </blockquote>
 
