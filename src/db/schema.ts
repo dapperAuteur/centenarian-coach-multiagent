@@ -5,10 +5,12 @@
 // session, verificationToken. Plus a waitlist table for non-admin emails.
 
 import {
+  boolean,
   integer,
   jsonb,
   pgTable,
   primaryKey,
+  real,
   text,
   timestamp,
   uuid,
@@ -54,6 +56,29 @@ export const coachKb = pgTable("coach_kb", {
   content: text("content").notNull(),
   embedding: vector("embedding", { dimensions: 768 }),
   createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * Single-row runtime configuration managed from the /admin dashboard:
+ * which LLM provider and per-role models the coach uses, generation
+ * defaults, and the LangSmith tracing toggle. Always exactly one row,
+ * `id = 'singleton'`. If the row is absent (e.g. before this migration
+ * runs) the app falls back to env-var defaults — see src/lib/settings.ts.
+ */
+export const appSettings = pgTable("app_settings", {
+  id: text("id").primaryKey().default("singleton"),
+  // 'anthropic' | 'google'. A COACH_LLM_PROVIDER env var, if set, overrides
+  // this at runtime (keeps `pnpm eval` pinned to Gemini).
+  provider: text("provider").notNull().default("anthropic"),
+  // Record<provider, Record<role, modelId>>. Empty/partial slots fall back
+  // to the built-in DEFAULT_MODELS map.
+  models: jsonb("models").notNull().default({}),
+  temperature: real("temperature").notNull().default(0),
+  maxTokens: integer("max_tokens").notNull().default(1024),
+  tracingEnabled: boolean("tracing_enabled").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });

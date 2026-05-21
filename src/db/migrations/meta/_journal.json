@@ -15,6 +15,13 @@
       "when": 1779239611858,
       "tag": "0001_messy_jack_power",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779357908693,
+      "tag": "0002_talented_slipstream",
+      "breakpoints": true
     }
   ]
 }

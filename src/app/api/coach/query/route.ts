@@ -14,7 +14,8 @@
 import { randomUUID } from "node:crypto";
 import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
 import { coachGraph } from "@/graph";
-import { configureLangSmith } from "@/lib/langsmith";
+import { setTracing } from "@/lib/langsmith";
+import { getSettings } from "@/lib/settings";
 import { persistSession } from "@/lib/sessions";
 import type {
   CoachState,
@@ -47,7 +48,9 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const sessionId = randomUUID();
-  const tracingEnabled = configureLangSmith().enabled;
+  // Tracing follows the dashboard toggle (and only runs with an API key).
+  const settings = await getSettings();
+  const tracingEnabled = setTracing(settings.tracingEnabled);
   const runCollector = new RunCollectorCallbackHandler();
   const encoder = new TextEncoder();
 

@@ -14,7 +14,8 @@ export const authConfig = {
       const isProtected =
         pathname.startsWith("/coach") ||
         pathname.startsWith("/api/coach") ||
-        pathname.startsWith("/admin");
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/api/admin");
       if (isProtected) return Boolean(auth?.user);
       return true;
     },
