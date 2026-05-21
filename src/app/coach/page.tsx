@@ -25,8 +25,8 @@ interface StreamEvent {
   langsmithRunId?: string | null;
 }
 
-// Specialists with an implemented node (recovery is v2).
-const IMPLEMENTED: Agent[] = ["nutrition", "workout"];
+// Specialists with an implemented node — all three as of v2.
+const IMPLEMENTED: Agent[] = ["nutrition", "workout", "recovery"];
 
 export default function CoachPage() {
   const [query, setQuery] = useState("");
@@ -108,16 +108,25 @@ export default function CoachPage() {
         <div>
           <h1 className="text-2xl font-bold">Centenarian Coach</h1>
           <p className="mt-1 text-sm text-gray-500">
-            A multi-agent coach: a supervisor routes your question to nutrition
-            and workout specialists, each with its own retrieval and tools.
+            A multi-agent coach: a supervisor routes your question to
+            nutrition, workout, and recovery specialists, each with its own
+            retrieval and tools.
           </p>
         </div>
-        <a
-          href="/api/auth/signout?callbackUrl=/"
-          className="shrink-0 text-xs text-gray-500 hover:text-gray-800 hover:underline"
-        >
-          Sign out
-        </a>
+        <div className="flex shrink-0 items-center gap-3 text-xs">
+          <a
+            href="/coach/history"
+            className="text-sky-700 hover:underline"
+          >
+            History
+          </a>
+          <a
+            href="/api/auth/signout?callbackUrl=/"
+            className="text-gray-500 hover:text-gray-800 hover:underline"
+          >
+            Sign out
+          </a>
+        </div>
       </div>
 
       <form onSubmit={onSubmit} className="mt-6 flex gap-2">
