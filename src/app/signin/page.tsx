@@ -173,7 +173,7 @@ export default function SignInPage() {
         <section className="mt-8 rounded-lg border border-emerald-200 bg-emerald-50 p-5 text-sm">
           <p className="font-semibold text-gray-900">You're on the list</p>
           <p className="mt-1 text-gray-700">
-            Thanks — we'll email <span className="font-mono">{normalized}</span>{" "}
+            Thanks, we'll email <span className="font-mono">{normalized}</span>{" "}
             when paid access opens. Nothing else needed from you.
           </p>
         </section>

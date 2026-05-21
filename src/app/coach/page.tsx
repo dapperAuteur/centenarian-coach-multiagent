@@ -108,7 +108,7 @@ export default function CoachPage() {
         <div>
           <h1 className="text-2xl font-bold">Centenarian Coach</h1>
           <p className="mt-1 text-sm text-gray-500">
-            A multi-agent coach — a supervisor routes your question to nutrition
+            A multi-agent coach: a supervisor routes your question to nutrition
             and workout specialists, each with its own retrieval and tools.
           </p>
         </div>
@@ -125,7 +125,7 @@ export default function CoachPage() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="e.g. I slept 6 hours — should I still train legs today?"
+          placeholder="e.g. I slept 6 hours, should I still train legs today?"
           className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           disabled={running}
         />
@@ -217,7 +217,7 @@ export default function CoachPage() {
             </p>
           ) : (
             <p className="mt-3 text-xs text-gray-400">
-              LangSmith tracing off — set LANGSMITH_API_KEY to trace runs.
+              LangSmith tracing is off. Set LANGSMITH_API_KEY to trace runs.
             </p>
           )}
         </section>
@@ -247,7 +247,7 @@ function CitationList({ citations }: { citations: Citation[] }) {
                 className="rounded border border-gray-200 px-2 py-1 text-xs text-gray-700"
               >
                 <span className="font-medium">{c.source}</span>
-                <span className="text-gray-500"> — {c.snippet}</span>
+                <span className="text-gray-500">: {c.snippet}</span>
               </li>
             ))}
           </ul>

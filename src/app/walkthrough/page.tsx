@@ -8,7 +8,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Walkthrough — Centenarian Coach Multi-Agent",
+  title: "Walkthrough | Centenarian Coach Multi-Agent",
   description:
     "An 8-minute tour of the supervisor + specialist architecture and a live cross-domain query.",
 };

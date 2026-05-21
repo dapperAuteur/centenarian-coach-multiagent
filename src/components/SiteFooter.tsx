@@ -55,7 +55,7 @@ export default function SiteFooter() {
           </span>
           <p className="font-extrabold text-gray-900">Centenarian Coach Multi-Agent</p>
           <p className="text-xs text-gray-500">
-            A multi-agent longevity coach — supervisor + specialist subgraphs
+            A multi-agent longevity coach: supervisor + specialist subgraphs
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export default function SiteFooter() {
                   className={linkClasses}
                 >
                   Rise Wellness
-                  <span className="sr-only"> (mental-health partner — opens in new tab)</span>
+                  <span className="sr-only"> (mental-health partner, opens in new tab)</span>
                 </a>
                 <p className="text-xs text-gray-400 leading-tight">Mental-health partner</p>
               </li>
@@ -121,7 +121,7 @@ export default function SiteFooter() {
 
         <div className="mt-8 pt-6 border-t border-gray-100 text-xs text-gray-500 text-center">
           <p>
-            © {year} B4C LLC — A{" "}
+            © {year} B4C LLC, an{" "}
             <a
               href="https://awesomewebstore.com"
               target="_blank"
