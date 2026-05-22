@@ -43,10 +43,11 @@ graph TD
     USER([User question]) --> SUPERVISOR[Supervisor: classify + route]
     SUPERVISOR -->|nutrition path| NUTRITION[Nutrition specialist]
     SUPERVISOR -->|workout path| WORKOUT[Workout specialist]
-    SUPERVISOR -->|recovery path v2| RECOVERY[Recovery specialist]
+    %% all three specialists ship; the supervisor routes to one, two, or all three
+    SUPERVISOR -->|recovery path| RECOVERY[Recovery specialist]
     NUTRITION --> SYNTHESIZE[Synthesize answer]
     WORKOUT --> SYNTHESIZE
-    RECOVERY -.-> SYNTHESIZE
+    RECOVERY --> SYNTHESIZE
     SYNTHESIZE --> ANSWER([Final answer with citations])
 ```
 
@@ -151,7 +152,7 @@ cp .env.example .env.local
 # 4. Migrate schema (applies src/db/migrations to your database)
 pnpm db:migrate
 
-# 5. Seed knowledge bases (sample nutrition + workout corpora)
+# 5. Seed knowledge bases (sample nutrition + workout + recovery corpora)
 pnpm kb:seed
 
 # 6. Run the dev server
@@ -165,6 +166,8 @@ Open `http://localhost:3000/coach` and try these three sample questions to see r
 3. "I want to build muscle — how should I combine eating and training?" → routes to **Nutrition + Workout**.
 
 Watch each trace in LangSmith to see the supervisor decision, the specialist subgraphs, and the synthesizer working in sequence.
+
+Two more pages: `/coach/history` browses past sessions with fuzzy search, and `/admin` is a runtime dashboard for picking the provider and per-role models without a redeploy.
 
 If clone-to-running takes longer than 20 minutes, that is a bug. Open an issue.
 
@@ -217,12 +220,14 @@ centenarian-coach-multiagent/
 │   │   ├── supervisor/             <- routing logic
 │   │   ├── nutrition/              <- specialist subgraph + tools
 │   │   ├── workout/                <- specialist subgraph + tools
-│   │   └── recovery/               <- v2
+│   │   └── recovery/               <- specialist subgraph + tools
 │   ├── synthesizer/                <- weaves findings into final answer
 │   ├── state.ts                    <- typed state object
 │   ├── app/
 │   │   ├── api/coach/              <- streaming REST routes
-│   │   └── coach/                  <- chat-style UI
+│   │   ├── api/admin/              <- runtime settings (provider + models)
+│   │   ├── coach/                  <- chat-style UI + /coach/history
+│   │   └── admin/                  <- runtime model-config dashboard
 │   ├── db/
 │   │   └── migrations/
 │   └── lib/
@@ -230,7 +235,7 @@ centenarian-coach-multiagent/
 │       ├── embeddings.ts
 │       └── pgvector.ts
 ├── tests/                          <- unit + graph tests
-├── kb-fixtures/                    <- sample nutrition + workout corpora
+├── kb-fixtures/                    <- sample nutrition + workout + recovery corpora
 └── package.json
 ```
 
@@ -266,6 +271,7 @@ fail-soft — the app runs fine without `LANGSMITH_API_KEY`.
 ```bash
 pnpm test                       # deterministic suite — unit + mocked graph wiring
 RUN_LIVE_TESTS=1 pnpm test       # also runs the live supervisor+specialist tests
+pnpm eval                        # 20-question routing + citation eval -> scored summary
 pnpm review                      # 10-question manual quality review (needs the dev server)
 ```
 
@@ -300,11 +306,11 @@ Two more provider-shaped bugs showed up the same week: `gemini-2.5-pro` has no f
 
 ## Roadmap
 
-This repo ships v1 with two specialists. The visible roadmap:
+This repo ships v2 — three specialists and a 20-question eval. The visible roadmap:
 
+- [x] v2 — Recovery specialist with sleep + HRV tools.
+- [x] v2.1 — LangSmith eval dataset (20 questions).
 - [ ] v1.1 — Streaming improvements. Show partial specialist findings as they arrive.
-- [ ] v2 — Recovery specialist with sleep + HRV tools.
-- [ ] v2.1 — LangSmith eval dataset (20 questions) running in CI.
 - [ ] v3 — Conversation memory across sessions (with user opt-in).
 - [ ] v3.1 — Custom specialist plugin API for adding domain experts without touching core.
 
