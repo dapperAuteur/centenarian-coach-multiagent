@@ -181,7 +181,9 @@ function cleanPage(text, repeated) {
 async function extractPdf(filePath) {
   const buffer = readFileSync(filePath);
   const data = new Uint8Array(buffer);
-  const pdf = await getDocumentProxy(data);
+  // verbosity: 0 silences pdfjs's per-page font warnings like
+  // "TT: undefined function: 32" — noisy and not actionable.
+  const pdf = await getDocumentProxy(data, { verbosity: 0 });
   const result = await extractText(pdf, { mergePages: false });
   if (Array.isArray(result.text)) return result.text;
   return [result.text ?? ""];
@@ -200,6 +202,10 @@ function findPdfs(dir) {
       continue;
     }
     for (const name of entries) {
+      // Skip hidden files. The important case is macOS AppleDouble
+      // sidecars (e.g. `._foo.pdf`) — they have a .pdf extension but are
+      // metadata blobs that crash unpdf with "Invalid PDF structure".
+      if (name.startsWith(".")) continue;
       const full = join(d, name);
       let st;
       try {
