@@ -31,4 +31,10 @@ yarn-debug.log*
 
 # local planning docs (witus ecosystem rule)
 plans/
+
+# private knowledge base fixtures — proprietary or copyrighted content
+# the operator owns a personal-use license for; seeded into coach_kb at
+# pnpm kb:seed time. Never committed.
+kb-fixtures/private/
+
 node_modules
