@@ -26,6 +26,12 @@ const EMBED_BATCH = 100;
 const FIXTURES_DIR = resolve(process.cwd(), "kb-fixtures");
 const PRIVATE_DIR = resolve(FIXTURES_DIR, "private");
 
+// C0 control chars Postgres rejects in `text` columns (most importantly
+// the NUL byte 0x00, which pdfjs sometimes emits from quirky embedded
+// fonts). Keep TAB, LF, CR.
+const C0_NOISE = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
+const sanitize = (s) => (typeof s === "string" ? s.replace(C0_NOISE, "") : s);
+
 /** Discover all fixture files. Private overrides public for a given
  * namespace. Returns Map<namespace, { path, source }>. */
 function discoverFixtures() {
@@ -122,7 +128,10 @@ async function main() {
     await sql`DELETE FROM coach_kb WHERE namespace = ${namespace}`;
 
     for (let i = 0; i < docs.length; i += EMBED_BATCH) {
-      const batch = docs.slice(i, i + EMBED_BATCH);
+      const batch = docs.slice(i, i + EMBED_BATCH).map((d) => ({
+        source: sanitize(d.source),
+        content: sanitize(d.content),
+      }));
       const embeddings = await embedBatch(
         batch.map((d) => d.content),
         geminiKey,
