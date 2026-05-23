@@ -160,8 +160,14 @@ function detectRepeatedLines(pages) {
   return repeated;
 }
 
+// C0 control chars Postgres rejects in `text` columns (most importantly
+// 0x00, which pdfjs sometimes emits from quirky embedded fonts). Keep
+// TAB, LF, CR.
+const C0_NOISE = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
+
 function cleanPage(text, repeated) {
   return text
+    .replace(C0_NOISE, "")
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => {
