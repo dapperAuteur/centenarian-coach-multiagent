@@ -6,7 +6,9 @@ eval harness. Assumes the viewer has seen the v1 walkthrough.
 
 ## Before you record
 
-- `pnpm dev` running, KB seeded including `recovery_kb` (`pnpm kb:seed`).
+- `pnpm dev` running, the coach KB seeded with your own corpus including a
+  `recovery_kb` namespace (`pnpm kb:seed` — see `kb-fixtures/README.md` for
+  the file shape; the repo ships `kb-fixtures/` empty).
 - Tabs ready: `/coach`, the editor with `src/agents/recovery/subgraph.ts`,
   `src/graph.ts`, `evals/dataset.json`, and `evals/rubric.ts` open.
 - A cross-domain demo question that pulls all three specialists, for example:
