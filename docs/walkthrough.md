@@ -10,9 +10,11 @@ sit; ~8 minutes total.
   GitHub repo, the editor with key files pre-opened (`src/graph.ts`,
   `src/agents/supervisor/supervisor.node.ts`, `src/agents/nutrition/subgraph.ts`,
   `src/state.ts`).
-- The KB is seeded (`pnpm kb:seed`), the DB migration is applied, and
-  `ANTHROPIC_API_KEY` (or `COACH_LLM_PROVIDER=google` + `GEMINI_API_KEY`) is set
-  in `.env.local`.
+- The DB migration is applied (`pnpm db:migrate`), the coach KB is seeded
+  with your own corpus (`pnpm kb:seed` — the repo ships `kb-fixtures/`
+  empty; see `kb-fixtures/README.md`), and
+  `ANTHROPIC_API_KEY` (or `COACH_LLM_PROVIDER=google` + `GEMINI_API_KEY`) is
+  set in `.env.local`.
 - Pick one **cross-domain** demo question so the routing fan-out is visible. I
   use: *"I want to build muscle in my 60s — how should I combine eating and
   training?"*

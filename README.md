@@ -32,7 +32,7 @@ A single-agent coach conflates domains. Ask "I slept 5 hours, should I do legs t
 
 The right architecture is a coordinator that knows when to consult one specialist (a pure nutrition question), when to consult two (cross-domain like the legs example), and when to consult all three.
 
-Built originally for CentenarianOS — my personal "live to 100 in good shape" operating system — but architected so the same supervisor + specialist pattern works anywhere. The sample knowledge bases shipped with this repo are health and fitness; swap in your own corpora and the routing logic stays the same.
+Built originally for CentenarianOS — my personal "live to 100 in good shape" operating system — but architected so the same supervisor + specialist pattern works anywhere. The repo ships an **empty `kb-fixtures/` directory**: bring your own corpus (any domain), seed it, and the routing logic is unchanged.
 
 ---
 
@@ -152,7 +152,8 @@ cp .env.example .env.local
 # 4. Migrate schema (applies src/db/migrations to your database)
 pnpm db:migrate
 
-# 5. Seed knowledge bases (sample nutrition + workout + recovery corpora)
+# 5. Drop your own corpus into kb-fixtures/ (see kb-fixtures/README.md
+#    for the file shape) and seed it into the coach_kb table
 pnpm kb:seed
 
 # 6. Run the dev server
@@ -235,7 +236,7 @@ centenarian-coach-multiagent/
 │       ├── embeddings.ts
 │       └── pgvector.ts
 ├── tests/                          <- unit + graph tests
-├── kb-fixtures/                    <- sample nutrition + workout + recovery corpora
+├── kb-fixtures/                    <- empty by design; drop your own corpus here, then `pnpm kb:seed`
 └── package.json
 ```
 

@@ -77,7 +77,7 @@ their own slot without overwriting one another. Defined in
 | `src/lib/`               | LLM factory, embeddings, pgvector, LangSmith gate |
 | `src/app/api/coach/`     | Streaming query route |
 | `src/app/coach/`         | The `/coach` UI |
-| `kb-fixtures/`           | Sample knowledge bases, seeded into `coach_kb` |
+| `kb-fixtures/`           | Empty by design; drop your own corpus here, then `pnpm kb:seed` writes to `coach_kb` |
 
 The design decisions behind this are walked through in
 [`docs/lessons/`](./lessons/README.md).
