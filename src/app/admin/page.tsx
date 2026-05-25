@@ -9,6 +9,7 @@ import { desc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { waitlist } from "@/db/schema";
 import { getStoredSettings, providerOverride } from "@/lib/settings";
+import { COACH_PROVIDERS, type LlmProvider } from "@/lib/llm-config";
 import { SettingsForm } from "./SettingsForm";
 
 // Always render fresh — settings and waitlist rows both change at any time.
@@ -36,6 +37,7 @@ export default async function AdminPage() {
   ]);
   const envProviderOverride = providerOverride();
   const hasLangsmithKey = Boolean(process.env.LANGSMITH_API_KEY);
+  const providerKeyPresent = computeProviderKeyPresent();
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
@@ -74,6 +76,7 @@ export default async function AdminPage() {
             initialSettings={settings}
             envProviderOverride={envProviderOverride}
             hasLangsmithKey={hasLangsmithKey}
+            providerKeyPresent={providerKeyPresent}
           />
         </div>
       </section>
@@ -137,4 +140,28 @@ export default async function AdminPage() {
       </section>
     </main>
   );
+}
+
+/**
+ * Map provider → whether a credential is configured for it. Ollama needs no
+ * API key (just a reachable base URL), so it is always treated as available.
+ */
+function computeProviderKeyPresent(): Record<LlmProvider, boolean> {
+  const map: Record<LlmProvider, boolean> = {
+    ollama: true,
+    cerebras: Boolean(process.env.CEREBRAS_API_KEY),
+    openrouter: Boolean(process.env.OPENROUTER_API_KEY),
+    mistral: Boolean(process.env.MISTRAL_API_KEY),
+    together: Boolean(process.env.TOGETHER_API_KEY),
+    anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
+    google: Boolean(
+      process.env.GEMINI_API_KEY ??
+        process.env.GOOGLE_GEMINI_API_KEY ??
+        process.env.GOOGLE_API_KEY,
+    ),
+  };
+  for (const p of COACH_PROVIDERS) {
+    if (!(p in map)) throw new Error(`Missing key-presence entry for ${p}`);
+  }
+  return map;
 }

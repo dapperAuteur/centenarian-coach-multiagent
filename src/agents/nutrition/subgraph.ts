@@ -8,7 +8,7 @@
 
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { z } from "zod";
-import { buildChatModel } from "@/lib/llm";
+import { buildChatModelWithFallback } from "@/lib/with-fallback";
 import type {
   Citation,
   CoachState,
@@ -62,7 +62,7 @@ const AssessSchema = z.object({
 /** Decide whether the calorie_calculator tool should run. */
 async function assessNode(state: NutritionState): Promise<NutritionUpdate> {
   const model = (
-    await buildChatModel({
+    await buildChatModelWithFallback({
       role: "composer",
       temperature: 0,
     })
@@ -116,7 +116,7 @@ async function composeNode(state: NutritionState): Promise<NutritionUpdate> {
   // Extra token headroom: the structured-output block carries the full
   // 2-3 paragraph answer.
   const model = (
-    await buildChatModel({
+    await buildChatModelWithFallback({
       role: "composer",
       temperature: 0.2,
       maxTokens: 2048,

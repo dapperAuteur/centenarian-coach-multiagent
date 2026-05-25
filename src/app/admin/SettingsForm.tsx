@@ -4,22 +4,36 @@
 // The coach-configuration form on the /admin dashboard: LLM provider,
 // per-role model IDs, generation defaults, and the tracing toggle. Saves to
 // PUT /api/admin/settings; a save takes effect on the next coach run.
+//
+// Cost-class UX: the provider <select> groups Free and Paid options with
+// <optgroup>, each option's label carries the cost class, and a persistent
+// banner above the form is amber when a paid provider is active — so a
+// switch to a billed provider is never invisible.
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { LlmProvider, LlmRole } from "@/lib/llm";
+import {
+  COACH_PROVIDERS,
+  COACH_ROLES,
+  PROVIDER_COST_CLASS,
+  PROVIDER_LABELS,
+  type LlmProvider,
+  type LlmRole,
+} from "@/lib/llm-config";
 import type { CoachSettings } from "@/lib/settings";
 
-const PROVIDERS: { value: LlmProvider; label: string }[] = [
-  { value: "anthropic", label: "Anthropic (Claude)" },
-  { value: "google", label: "Google (Gemini)" },
-];
+const FREE_PROVIDERS = COACH_PROVIDERS.filter(
+  (p) => PROVIDER_COST_CLASS[p] === "free",
+);
+const PAID_PROVIDERS = COACH_PROVIDERS.filter(
+  (p) => PROVIDER_COST_CLASS[p] === "paid",
+);
 
-const ROLES: { role: LlmRole; label: string; hint: string }[] = [
-  { role: "supervisor", label: "Supervisor", hint: "Routes the question." },
-  { role: "composer", label: "Composer", hint: "Writes each finding." },
-  { role: "synthesizer", label: "Synthesizer", hint: "Weaves the answer." },
-];
+const ROLE_META: Record<LlmRole, { label: string; hint: string }> = {
+  supervisor: { label: "Supervisor", hint: "Routes the question." },
+  composer: { label: "Composer", hint: "Writes each finding." },
+  synthesizer: { label: "Synthesizer", hint: "Weaves the answer." },
+};
 
 // Sentinel <select> value: "let me type an ID the list does not have".
 const CUSTOM = "__custom__";
@@ -28,6 +42,37 @@ const CUSTOM = "__custom__";
 // common case needs no typing. "Custom model ID" stays available for models
 // not yet in this list.
 const MODEL_OPTIONS: Record<LlmProvider, { id: string; label: string }[]> = {
+  ollama: [
+    { id: "llama3.1:8b", label: "Llama 3.1 8B (laptop-friendly)" },
+    { id: "llama3.1:70b", label: "Llama 3.1 70B (heavy local)" },
+    { id: "qwen2.5:14b", label: "Qwen 2.5 14B" },
+  ],
+  cerebras: [
+    { id: "llama-3.3-70b", label: "Llama 3.3 70B (fast)" },
+    { id: "llama3.1-8b", label: "Llama 3.1 8B" },
+  ],
+  openrouter: [
+    { id: "deepseek/deepseek-chat:free", label: "DeepSeek Chat (free)" },
+    {
+      id: "meta-llama/llama-3.3-70b-instruct:free",
+      label: "Llama 3.3 70B Instruct (free)",
+    },
+    {
+      id: "qwen/qwen-2.5-72b-instruct:free",
+      label: "Qwen 2.5 72B Instruct (free)",
+    },
+  ],
+  mistral: [
+    { id: "mistral-small-latest", label: "Mistral Small" },
+    { id: "mistral-large-latest", label: "Mistral Large" },
+  ],
+  together: [
+    {
+      id: "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+      label: "Llama 3.3 70B Turbo (free)",
+    },
+    { id: "deepseek-ai/DeepSeek-V3", label: "DeepSeek V3" },
+  ],
   anthropic: [
     { id: "claude-opus-4-7", label: "Claude Opus 4.7 (most capable)" },
     { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6 (balanced)" },
@@ -56,17 +101,30 @@ interface Props {
   /** COACH_LLM_PROVIDER, when set, overrides the stored provider at runtime. */
   envProviderOverride: LlmProvider | null;
   hasLangsmithKey: boolean;
+  /** Which providers have an API key configured server-side. */
+  providerKeyPresent: Record<LlmProvider, boolean>;
+}
+
+function providerOptionLabel(
+  p: LlmProvider,
+  hasKey: boolean,
+): string {
+  const cost = PROVIDER_COST_CLASS[p] === "free" ? "Free" : "Paid";
+  const base = `${PROVIDER_LABELS[p]} · ${cost}`;
+  return hasKey ? base : `${base} · no API key set`;
 }
 
 export function SettingsForm({
   initialSettings,
   envProviderOverride,
   hasLangsmithKey,
+  providerKeyPresent,
 }: Props) {
   const [settings, setSettings] = useState<CoachSettings>(initialSettings);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
   const provider = settings.provider;
+  const activeCostClass = PROVIDER_COST_CLASS[provider];
 
   function patch(partial: Partial<CoachSettings>) {
     setSettings((s) => ({ ...s, ...partial }));
@@ -111,22 +169,66 @@ export function SettingsForm({
 
   return (
     <div className="space-y-6">
+      {/* Cost-class banner — amber when paid so a switch is never invisible. */}
+      <div
+        role="status"
+        aria-live="polite"
+        className={
+          "rounded-md border px-3 py-2 text-sm " +
+          (activeCostClass === "paid"
+            ? "border-amber-300 bg-amber-50 text-amber-900"
+            : "border-emerald-300 bg-emerald-50 text-emerald-900")
+        }
+      >
+        <strong>{PROVIDER_LABELS[provider]}</strong>{" "}
+        {activeCostClass === "paid"
+          ? "— billed per token. A paid provider is active."
+          : "— $0 in the normal case (rate-limited free tier or local)."}
+      </div>
+
       {/* Provider */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">LLM provider</h3>
-        <div className="mt-2 flex gap-4">
-          {PROVIDERS.map((p) => (
-            <label key={p.value} className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="provider"
-                checked={provider === p.value}
-                onChange={() => patch({ provider: p.value })}
-              />
-              {p.label}
-            </label>
-          ))}
-        </div>
+        <label
+          htmlFor="provider-select"
+          className="text-sm font-semibold text-gray-900"
+        >
+          LLM provider
+        </label>
+        <p className="mt-1 text-xs text-gray-500">
+          Free providers are rate-limited but cost nothing. Paid providers are
+          billed per token and listed separately.
+        </p>
+        <select
+          id="provider-select"
+          value={provider}
+          onChange={(e) =>
+            patch({ provider: e.target.value as LlmProvider })
+          }
+          className={`mt-2 ${FIELD_CLASS}`}
+        >
+          <optgroup label="Free (rate-limited, $0)">
+            {FREE_PROVIDERS.map((p) => (
+              <option key={p} value={p}>
+                {providerOptionLabel(p, providerKeyPresent[p])}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Paid (billed per token)">
+            {PAID_PROVIDERS.map((p) => (
+              <option key={p} value={p}>
+                {providerOptionLabel(p, providerKeyPresent[p])}
+              </option>
+            ))}
+          </optgroup>
+        </select>
+        {!providerKeyPresent[provider] && (
+          <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            No API key is configured for{" "}
+            <strong>{PROVIDER_LABELS[provider]}</strong>. Saving still records
+            this choice, but runs will fail until the key is set in{" "}
+            <code>.env.local</code>.
+          </p>
+        )}
         {envProviderOverride && (
           <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
             The <code>COACH_LLM_PROVIDER</code> env var is set to{" "}
@@ -140,19 +242,19 @@ export function SettingsForm({
       {/* Per-role model IDs */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900">
-          Model IDs · {provider}
+          Model IDs · {PROVIDER_LABELS[provider]}
         </h3>
         <p className="mt-1 text-xs text-gray-500">
           Pick a model for each role on the selected provider. Choose
           &ldquo;Custom model ID&rdquo; to enter one not in the list.
         </p>
         <div className="mt-2 space-y-3">
-          {ROLES.map(({ role, label, hint }) => (
+          {COACH_ROLES.map((role) => (
             <ModelField
               key={role}
               provider={provider}
-              label={label}
-              hint={hint}
+              label={ROLE_META[role].label}
+              hint={ROLE_META[role].hint}
               value={settings.models[provider][role]}
               onChange={(value) => setModel(role, value)}
             />

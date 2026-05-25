@@ -16,7 +16,12 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { appSettings } from "@/db/schema";
-import { DEFAULT_MODELS, type LlmProvider, type LlmRole } from "@/lib/llm";
+import {
+  COACH_PROVIDERS,
+  DEFAULT_MODELS,
+  type LlmProvider,
+  type LlmRole,
+} from "@/lib/llm-config";
 
 const SETTINGS_ID = "singleton";
 const CACHE_TTL_MS = 10_000;
@@ -33,6 +38,23 @@ export interface CoachSettings {
 
 type RawRow = typeof appSettings.$inferSelect;
 
+const VALID_PROVIDERS: ReadonlySet<LlmProvider> = new Set(COACH_PROVIDERS);
+
+/**
+ * Build the per-provider model map by spreading the built-in defaults under
+ * whatever the stored row has for that provider. Slots a row doesn't carry
+ * fall back to DEFAULT_MODELS[provider][role].
+ */
+function mergedModels(
+  stored: Partial<Record<LlmProvider, Partial<Record<LlmRole, string>>>>,
+): Record<LlmProvider, Record<LlmRole, string>> {
+  const out = {} as Record<LlmProvider, Record<LlmRole, string>>;
+  for (const provider of COACH_PROVIDERS) {
+    out[provider] = { ...DEFAULT_MODELS[provider], ...stored[provider] };
+  }
+  return out;
+}
+
 /**
  * Build the stored settings from an app_settings row (or built-in defaults
  * when the row is absent). Pure — does NOT apply the env-var override; see
@@ -45,12 +67,14 @@ export function resolveSettings(
   const stored = (row?.models ?? {}) as Partial<
     Record<LlmProvider, Partial<Record<LlmRole, string>>>
   >;
+  const storedProvider = row?.provider as LlmProvider | undefined;
+  const provider =
+    storedProvider && VALID_PROVIDERS.has(storedProvider)
+      ? storedProvider
+      : "anthropic";
   return {
-    provider: row?.provider === "google" ? "google" : "anthropic",
-    models: {
-      anthropic: { ...DEFAULT_MODELS.anthropic, ...stored.anthropic },
-      google: { ...DEFAULT_MODELS.google, ...stored.google },
-    },
+    provider,
+    models: mergedModels(stored),
     temperature: row?.temperature ?? DEFAULT_TEMPERATURE,
     maxTokens: row?.maxTokens ?? DEFAULT_MAX_TOKENS,
     tracingEnabled: row ? row.tracingEnabled : Boolean(opts.hasLangsmithKey),
@@ -60,7 +84,9 @@ export function resolveSettings(
 /** The COACH_LLM_PROVIDER override, or null when unset/invalid. */
 export function providerOverride(): LlmProvider | null {
   const value = (process.env.COACH_LLM_PROVIDER ?? "").toLowerCase();
-  return value === "google" || value === "anthropic" ? value : null;
+  return VALID_PROVIDERS.has(value as LlmProvider)
+    ? (value as LlmProvider)
+    : null;
 }
 
 async function readRow(): Promise<RawRow | null> {

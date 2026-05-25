@@ -9,6 +9,7 @@ import {
   providerOverride,
   updateSettings,
 } from "@/lib/settings";
+import { COACH_PROVIDERS } from "@/lib/llm-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,9 +20,17 @@ const roleModelsSchema = z.object({
   synthesizer: z.string().trim().min(1),
 });
 
+// Build the seven-key models object schema from COACH_PROVIDERS so adding a
+// new provider in one place propagates here automatically.
+const modelsSchema = z.object(
+  Object.fromEntries(
+    COACH_PROVIDERS.map((p) => [p, roleModelsSchema]),
+  ) as Record<(typeof COACH_PROVIDERS)[number], typeof roleModelsSchema>,
+);
+
 const settingsSchema = z.object({
-  provider: z.enum(["anthropic", "google"]),
-  models: z.object({ anthropic: roleModelsSchema, google: roleModelsSchema }),
+  provider: z.enum(COACH_PROVIDERS),
+  models: modelsSchema,
   temperature: z.number().min(0).max(2),
   maxTokens: z.number().int().min(64).max(8192),
   tracingEnabled: z.boolean(),
