@@ -12,19 +12,26 @@
 // Run:
 //   pnpm kb:seed                          # all namespaces
 //   pnpm kb:seed nutrition_kb workout_kb  # only the listed namespaces
+//   pnpm kb:seed --fresh                  # delete + re-seed (default
+//                                         #   is resume from where DB left off)
 //
 // Requires: STORAGE_DATABASE_URL (or DATABASE_URL), GOOGLE_GEMINI_API_KEY.
 //
-// Idempotent: deletes a namespace's rows before re-inserting them.
+// Resume: by default the script counts existing coach_kb rows for the
+// namespace and skips the first N docs in the JSON, so a run interrupted
+// by a daily quota wall picks up where it left off the next day. Pass
+// --fresh to force a DELETE + re-seed. Resume assumes the JSON file has
+// not changed since the partial run; pass --fresh if you re-ingested.
 //
-// Pacing: each item in a Gemini batchEmbedContents call counts against the
-// per-minute embed quota, so a single 100-item batch consumes 100 RPM.
-// We track every sent batch in a sliding 60-second window and never let
-// the window's total exceed EFFECTIVE_RPM (75% of EMBED_RPM by default,
-// to absorb timing slop / clock skew / unrelated app traffic on the same
-// key). On 429 we wait at least 60s (a full window) and clear our local
-// counter — Gemini's "retry in N seconds" hint is often too optimistic
-// after a burst.
+// Pacing: each item in a Gemini batchEmbedContents call counts against
+// the per-minute embed quota, so a single 100-item batch consumes 100
+// RPM. We track every sent batch in a sliding 60-second window and never
+// let the window's total exceed EFFECTIVE_RPM (75% of EMBED_RPM by
+// default, to absorb timing slop / clock skew / unrelated app traffic on
+// the same key). On a per-minute 429 we wait at least 60s and clear our
+// local counter. On a per-DAY 429 (free tier caps embed at ~1000 RPD)
+// we fail fast with a clear message — no amount of pacing helps; the
+// quota resets at midnight Pacific.
 //
 // Defaults are tuned for the free tier (100 RPM cap). Set EMBED_RPM=<n>
 // in .env.local once you upgrade to a paid plan to get full throughput.
@@ -62,10 +69,11 @@ const sanitize = (s) => (typeof s === "string" ? s.replace(C0_NOISE, "") : s);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 class GeminiRateLimitError extends Error {
-  /** @param {string} message @param {number} retryAfterMs */
-  constructor(message, retryAfterMs) {
+  /** @param {string} message @param {number} retryAfterMs @param {"minute"|"daily"|"unknown"} kind */
+  constructor(message, retryAfterMs, kind) {
     super(message);
     this.retryAfterMs = retryAfterMs;
+    this.kind = kind;
   }
 }
 
@@ -92,6 +100,28 @@ function discoverFixtures() {
     }
   }
   return map;
+}
+
+/** Classify a Gemini 429 by quota window. Free tier embed has both a
+ * per-minute (100 RPM) and per-day (~1000 RPD) cap; the script needs to
+ * react differently to each — the daily wall is not waitable. */
+function parseQuotaKind(body) {
+  try {
+    const json = JSON.parse(body);
+    const details = json?.error?.details ?? [];
+    for (const d of details) {
+      const t = d?.["@type"];
+      if (typeof t !== "string" || !/QuotaFailure/.test(t)) continue;
+      for (const v of d?.violations ?? []) {
+        const qid = String(v?.quotaId ?? "");
+        if (/PerDay/i.test(qid)) return "daily";
+        if (/PerMinute/i.test(qid)) return "minute";
+      }
+    }
+  } catch {
+    // body wasn't JSON
+  }
+  return "unknown";
 }
 
 /** Parse a Gemini 429 response body for the recommended retry delay (ms).
@@ -135,9 +165,11 @@ async function embedBatch(texts, apiKey) {
     const body = await res.text();
     if (res.status === 429) {
       const wait = parseRetryDelayMs(body);
+      const kind = parseQuotaKind(body);
       throw new GeminiRateLimitError(
-        `Gemini rate limit hit (429); suggested retry in ~${Math.ceil(wait / 1000)}s`,
+        `Gemini rate limit hit (429, ${kind} quota); suggested retry in ~${Math.ceil(wait / 1000)}s`,
         wait,
+        kind,
       );
     }
     throw new Error(`Gemini batch embedding failed (${res.status}): ${body}`);
@@ -195,7 +227,9 @@ function recordSend(count) {
   recentSends.push({ at: Date.now(), count });
 }
 
-/** embedBatch + capacity reservation + 429 retry. */
+/** embedBatch + capacity reservation + 429 retry. Per-minute 429s back off
+ * one window and retry. Per-day 429s fail fast — no amount of waiting
+ * inside this run will help. */
 async function embedBatchPaced(texts, apiKey, effectiveRpm) {
   for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
     await waitForCapacity(texts.length, effectiveRpm);
@@ -203,17 +237,32 @@ async function embedBatchPaced(texts, apiKey, effectiveRpm) {
     try {
       return await embedBatch(texts, apiKey);
     } catch (err) {
-      if (err instanceof GeminiRateLimitError && attempt < RETRY_ATTEMPTS) {
-        // Wait at least one full window. Gemini's suggested retry can be
-        // optimistic after a burst, and our sliding-window record is
-        // suspect (we just over-counted vs their view), so clear it.
-        const wait = Math.max(err.retryAfterMs, WINDOW_MS) + 1_000;
-        console.log(
-          `  429 (attempt ${attempt}/${RETRY_ATTEMPTS}); sleeping ${Math.ceil(wait / 1000)}s then retrying...`,
-        );
-        await sleep(wait);
-        recentSends.length = 0;
-        continue;
+      if (err instanceof GeminiRateLimitError) {
+        if (err.kind === "daily") {
+          // Daily wall: free tier embed caps at ~1000 RPD. Stop fast so the
+          // operator can resume tomorrow (or upgrade) without burning the
+          // retry budget on a hopeless wait.
+          throw new Error(
+            "Gemini DAILY quota exhausted (RPD). Free-tier embed limit is " +
+              "~1000 requests/day; the counter resets at midnight Pacific. " +
+              "Re-run `pnpm kb:seed` then to resume from where this stopped " +
+              "(previously-inserted rows are preserved). Or upgrade to a " +
+              "paid Gemini tier and set EMBED_RPM=<higher> in .env.local.",
+          );
+        }
+        if (attempt < RETRY_ATTEMPTS) {
+          // Per-minute 429: wait at least one full window. Gemini's
+          // suggested retry can be optimistic after a burst, and our
+          // sliding-window record is suspect (we just over-counted vs their
+          // view), so clear it.
+          const wait = Math.max(err.retryAfterMs, WINDOW_MS) + 1_000;
+          console.log(
+            `  429 minute quota (attempt ${attempt}/${RETRY_ATTEMPTS}); sleeping ${Math.ceil(wait / 1000)}s then retrying...`,
+          );
+          await sleep(wait);
+          recentSends.length = 0;
+          continue;
+        }
       }
       throw err;
     }
@@ -239,9 +288,9 @@ async function main() {
   const effectiveRpm = Math.max(1, Math.floor(rpm * RPM_SAFETY));
   const batchSize = Math.min(MAX_BATCH, effectiveRpm);
 
-  const onlyNamespaces = process.argv
-    .slice(2)
-    .filter((a) => !a.startsWith("--"));
+  const args = process.argv.slice(2);
+  const fresh = args.includes("--fresh");
+  const onlyNamespaces = args.filter((a) => !a.startsWith("--"));
 
   const fixtures = discoverFixtures();
   if (fixtures.size === 0) {
@@ -274,17 +323,42 @@ async function main() {
       continue;
     }
     const docs = JSON.parse(readFileSync(path, "utf8"));
-    const batchCount = Math.ceil(docs.length / batchSize);
-    // Throughput is effectiveRpm contents/min.
-    const estMinutes = Math.ceil(docs.length / effectiveRpm);
+
+    // Resume / fresh-start logic. By default, count rows already in the
+    // namespace and skip the first N docs in the JSON. Pass --fresh to
+    // wipe + re-seed.
+    let startIdx;
+    if (fresh) {
+      await sql`DELETE FROM coach_kb WHERE namespace = ${namespace}`;
+      startIdx = 0;
+      console.log(`\n${namespace} (${source}): --fresh; cleared and seeding ${docs.length} docs.`);
+    } else {
+      const countRows = await sql`SELECT count(*)::int AS n FROM coach_kb WHERE namespace = ${namespace}`;
+      const existing = countRows[0]?.n ?? 0;
+      if (existing >= docs.length) {
+        console.log(
+          `\n${namespace} (${source}): ${existing}/${docs.length} already in DB; nothing to do. ` +
+            `Use --fresh to re-seed.`,
+        );
+        continue;
+      }
+      startIdx = existing;
+      if (existing > 0) {
+        console.log(
+          `\n${namespace} (${source}): resuming at ${existing}/${docs.length}; ` +
+            `${docs.length - existing} docs to embed. (assumes JSON unchanged; pass --fresh to wipe)`,
+        );
+      } else {
+        console.log(`\n${namespace} (${source}): seeding ${docs.length} docs.`);
+      }
+    }
+    const batchCount = Math.ceil((docs.length - startIdx) / batchSize);
+    const estMinutes = Math.ceil((docs.length - startIdx) / effectiveRpm);
     console.log(
-      `\n${namespace} (${source}): ${docs.length} docs in ${batchCount} batches; ` +
-        `est ~${estMinutes} min at ${effectiveRpm} effective RPM.`,
+      `  ${batchCount} batches; est ~${estMinutes} min at ${effectiveRpm} effective RPM.`,
     );
 
-    await sql`DELETE FROM coach_kb WHERE namespace = ${namespace}`;
-
-    for (let i = 0; i < docs.length; i += batchSize) {
+    for (let i = startIdx; i < docs.length; i += batchSize) {
       const batch = docs.slice(i, i + batchSize).map((d) => ({
         source: sanitize(d.source),
         content: sanitize(d.content),
