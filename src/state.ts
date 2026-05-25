@@ -4,7 +4,7 @@
 
 import { Annotation } from "@langchain/langgraph";
 
-export type Agent = "nutrition" | "workout" | "recovery";
+export type Agent = "nutrition" | "workout" | "recovery" | "corrective";
 
 export interface Citation {
   /** Doc title or source label. */
@@ -42,6 +42,7 @@ export interface FindingsMap {
   nutrition?: SpecialistFinding;
   workout?: SpecialistFinding;
   recovery?: SpecialistFinding;
+  corrective?: SpecialistFinding;
 }
 
 export interface FinalAnswer {

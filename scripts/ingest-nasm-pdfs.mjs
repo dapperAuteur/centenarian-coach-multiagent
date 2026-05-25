@@ -8,9 +8,11 @@
 // comes in). --env-file=.env.local is harmless if .env.local is missing.
 //
 // Inputs are the four NASM directories the operator listed; edit INPUTS if
-// they move. CES books are split between workout_kb and recovery_kb by
-// filename keyword — the split rule prints in the dry-run table so it can
-// be tuned before a real run.
+// they move. One namespace per input directory:
+//   - nutrition (CNC)     -> nutrition_kb
+//   - CPT handouts        -> workout_kb
+//   - CPT7 scripts        -> workout_kb
+//   - CES books           -> corrective_kb  (its own specialist)
 
 import {
   existsSync,
@@ -45,22 +47,10 @@ const INPUTS = [
   },
   {
     dir: "/Users/bam/Google Drive/My Drive/files/fitness/nasm/fitness/corrective exercise science/NASM CES Books/NASM CES Books By Chapter",
-    classifyByFilename: true,
+    namespace: "corrective_kb",
     cert: "CES",
   },
 ];
-
-// CES split rule. Filename matches RECOVERY → recovery_kb, unless it also
-// matches ASSESS (which keeps assessment chapters in workout_kb).
-const RECOVERY_PATTERN = /smr|myofascial|foam roll|stretch|flexibility|mobility/i;
-const ASSESS_PATTERN = /assess/i;
-
-function classifyCES(filename) {
-  if (RECOVERY_PATTERN.test(filename) && !ASSESS_PATTERN.test(filename)) {
-    return "recovery_kb";
-  }
-  return "workout_kb";
-}
 
 // ---------------------------------------------------------------------------
 // Chunking.
@@ -256,9 +246,7 @@ async function main() {
     }
     for (const file of files) {
       const name = basename(file, extname(file));
-      const ns = input.classifyByFilename
-        ? classifyCES(name)
-        : input.namespace;
+      const ns = input.namespace;
       try {
         const rawPages = await extractPdf(file);
         const repeated = detectRepeatedLines(rawPages);

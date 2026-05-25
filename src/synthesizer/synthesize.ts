@@ -13,7 +13,7 @@ import type {
   SpecialistFinding,
 } from "@/state";
 
-const SYNTHESIZE_SYSTEM = `You are the coordinator of the Centenarian Coach, a longevity-focused health assistant. You receive findings from one or more specialist agents (nutrition, workout, recovery).
+const SYNTHESIZE_SYSTEM = `You are the coordinator of the Centenarian Coach, a longevity-focused health assistant. You receive findings from one or more specialist agents (nutrition, workout, recovery, corrective).
 
 Weave the findings into ONE cohesive answer addressed to the user, in 2-4 short paragraphs. Every claim must be supported by the specialists' findings; do not introduce facts they did not provide. When the question is cross-domain, connect the specialists' advice rather than listing it separately. Be practical and specific. Write in plain prose. Do not use em-dashes; use commas, parentheses, or separate sentences instead.
 
@@ -28,7 +28,12 @@ const SynthesizeSchema = z.object({
 
 export async function synthesizeNode(state: CoachState): Promise<CoachUpdate> {
   const findings: SpecialistFinding[] = [];
-  for (const agent of ["nutrition", "workout", "recovery"] as const) {
+  for (const agent of [
+    "nutrition",
+    "workout",
+    "recovery",
+    "corrective",
+  ] as const) {
     const finding = state.findings[agent];
     if (finding) findings.push(finding);
   }

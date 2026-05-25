@@ -26,8 +26,13 @@ interface StreamEvent {
   langsmithRunId?: string | null;
 }
 
-// Specialists with an implemented node — all three as of v2.
-const IMPLEMENTED: Agent[] = ["nutrition", "workout", "recovery"];
+// Specialists with an implemented node.
+const IMPLEMENTED: Agent[] = [
+  "nutrition",
+  "workout",
+  "recovery",
+  "corrective",
+];
 
 export default function CoachPage() {
   const [query, setQuery] = useState("");
@@ -110,8 +115,8 @@ export default function CoachPage() {
           <h1 className="text-2xl font-bold">Centenarian Coach</h1>
           <p className="mt-1 text-sm text-gray-500">
             A multi-agent coach: a supervisor routes your question to
-            nutrition, workout, and recovery specialists, each with its own
-            retrieval and tools.
+            nutrition, workout, recovery, and corrective exercise
+            specialists, each with its own retrieval and tools.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3 text-xs">
