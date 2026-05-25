@@ -19,9 +19,15 @@
 //
 // Pacing: each item in a Gemini batchEmbedContents call counts against the
 // per-minute embed quota, so a single 100-item batch consumes 100 RPM.
-// The script paces batches to stay under the cap and retries on 429 using
-// the delay Gemini suggests. Default RPM is the free tier (100); override
-// via EMBED_RPM=<n> in .env.local once you upgrade.
+// We track every sent batch in a sliding 60-second window and never let
+// the window's total exceed EFFECTIVE_RPM (75% of EMBED_RPM by default,
+// to absorb timing slop / clock skew / unrelated app traffic on the same
+// key). On 429 we wait at least 60s (a full window) and clear our local
+// counter — Gemini's "retry in N seconds" hint is often too optimistic
+// after a burst.
+//
+// Defaults are tuned for the free tier (100 RPM cap). Set EMBED_RPM=<n>
+// in .env.local once you upgrade to a paid plan to get full throughput.
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
@@ -35,12 +41,17 @@ const PRIVATE_DIR = resolve(FIXTURES_DIR, "private");
 
 // Free-tier RPM for embed_content. Each item in a batch counts.
 const DEFAULT_RPM = 100;
-// Stay this fraction under the cap to absorb clock skew / other usage.
-const RPM_SAFETY = 0.95;
+// Stay this fraction under the cap. Conservative on purpose: 95% of cap
+// repeatedly tripped 429s under real load, presumably because Gemini
+// counts rejected requests, clocks drift, and the same API key may be
+// used by the running coach for query-time embeddings.
+const RPM_SAFETY = 0.75;
 // Max items the Gemini batch endpoint accepts in one call.
 const MAX_BATCH = 100;
+// Sliding-window length matching Gemini's per-minute quota.
+const WINDOW_MS = 60_000;
 // Per-batch retry budget when Gemini returns 429.
-const RETRY_ATTEMPTS = 4;
+const RETRY_ATTEMPTS = 6;
 
 // C0 control chars Postgres rejects in `text` columns (most importantly
 // 0x00, which pdfjs sometimes emits from quirky embedded fonts).
@@ -141,30 +152,73 @@ async function embedBatch(texts, apiKey) {
   return embeddings.map((e, i) => {
     const values = e?.values;
     if (!values || values.length === 0) {
-      throw new Error(`Gemini batch embedding returned an empty vector at index ${i}`);
+      throw new Error(
+        `Gemini batch embedding returned an empty vector at index ${i}`,
+      );
     }
     return values;
   });
 }
 
-/** embedBatch + retry on 429 using Gemini's suggested delay. */
-async function embedBatchWithRetry(texts, apiKey) {
+// Sliding-window pacing.
+/** @type {{ at: number, count: number }[]} */
+const recentSends = [];
+
+function pruneWindow(now) {
+  while (recentSends.length > 0 && now - recentSends[0].at >= WINDOW_MS) {
+    recentSends.shift();
+  }
+}
+
+/** Block until `needed` request slots are available within the sliding
+ * 60-second window, given the effective per-minute cap. Counts toward
+ * Gemini's view of the world, so we record every attempted send (even
+ * ones that come back 429) until we explicitly clear after a long wait. */
+async function waitForCapacity(needed, effectiveRpm) {
+  // First-batch (or post-clear) fast path.
+  for (;;) {
+    const now = Date.now();
+    pruneWindow(now);
+    const used = recentSends.reduce((s, e) => s + e.count, 0);
+    if (used + needed <= effectiveRpm) return;
+    const oldest = recentSends[0];
+    const wait = Math.max(500, WINDOW_MS - (now - oldest.at) + 200);
+    console.log(
+      `  rate-limit: ${used}+${needed} would exceed ${effectiveRpm}/min; ` +
+        `waiting ${Math.ceil(wait / 1000)}s for capacity...`,
+    );
+    await sleep(wait);
+  }
+}
+
+function recordSend(count) {
+  recentSends.push({ at: Date.now(), count });
+}
+
+/** embedBatch + capacity reservation + 429 retry. */
+async function embedBatchPaced(texts, apiKey, effectiveRpm) {
   for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
+    await waitForCapacity(texts.length, effectiveRpm);
+    recordSend(texts.length);
     try {
       return await embedBatch(texts, apiKey);
     } catch (err) {
       if (err instanceof GeminiRateLimitError && attempt < RETRY_ATTEMPTS) {
-        const wait = err.retryAfterMs + 1_000;
+        // Wait at least one full window. Gemini's suggested retry can be
+        // optimistic after a burst, and our sliding-window record is
+        // suspect (we just over-counted vs their view), so clear it.
+        const wait = Math.max(err.retryAfterMs, WINDOW_MS) + 1_000;
         console.log(
           `  429 (attempt ${attempt}/${RETRY_ATTEMPTS}); sleeping ${Math.ceil(wait / 1000)}s then retrying...`,
         );
         await sleep(wait);
+        recentSends.length = 0;
         continue;
       }
       throw err;
     }
   }
-  throw new Error("embedBatchWithRetry: exhausted retries");
+  throw new Error("embedBatchPaced: exhausted retries");
 }
 
 async function main() {
@@ -184,7 +238,6 @@ async function main() {
   const rpm = Math.max(1, Number(process.env.EMBED_RPM ?? DEFAULT_RPM));
   const effectiveRpm = Math.max(1, Math.floor(rpm * RPM_SAFETY));
   const batchSize = Math.min(MAX_BATCH, effectiveRpm);
-  const minIntervalMs = Math.ceil((batchSize / effectiveRpm) * 60_000);
 
   const onlyNamespaces = process.argv
     .slice(2)
@@ -210,12 +263,10 @@ async function main() {
 
   console.log(
     `Pacing: RPM=${rpm} (effective ${effectiveRpm}), batch=${batchSize}, ` +
-      `~${(minIntervalMs / 1000).toFixed(1)}s between batches. ` +
-      `Override with EMBED_RPM=<n> in .env.local on a paid tier.`,
+      `sliding 60s window. Override with EMBED_RPM=<n> in .env.local on a paid tier.`,
   );
 
   const sql = neon(dbUrl);
-  let lastBatchAt = 0;
 
   for (const [namespace, { path, source }] of fixtures) {
     if (onlyNamespaces.length > 0 && !onlyNamespaces.includes(namespace)) {
@@ -224,37 +275,25 @@ async function main() {
     }
     const docs = JSON.parse(readFileSync(path, "utf8"));
     const batchCount = Math.ceil(docs.length / batchSize);
-    const estMinutes = Math.ceil((batchCount * minIntervalMs) / 60_000);
+    // Throughput is effectiveRpm contents/min.
+    const estMinutes = Math.ceil(docs.length / effectiveRpm);
     console.log(
       `\n${namespace} (${source}): ${docs.length} docs in ${batchCount} batches; ` +
-        `est ~${estMinutes} min at ${rpm} RPM.`,
+        `est ~${estMinutes} min at ${effectiveRpm} effective RPM.`,
     );
 
     await sql`DELETE FROM coach_kb WHERE namespace = ${namespace}`;
 
     for (let i = 0; i < docs.length; i += batchSize) {
-      // Stay under the per-minute quota: gate from the *finish* time of
-      // the previous batch (set after the call returns, below).
-      if (lastBatchAt > 0) {
-        const wait = lastBatchAt + minIntervalMs - Date.now();
-        if (wait > 0) {
-          console.log(
-            `  rate-limit: sleeping ${Math.ceil(wait / 1000)}s before next batch...`,
-          );
-          await sleep(wait);
-        }
-      }
-
       const batch = docs.slice(i, i + batchSize).map((d) => ({
         source: sanitize(d.source),
         content: sanitize(d.content),
       }));
-      const embeddings = await embedBatchWithRetry(
+      const embeddings = await embedBatchPaced(
         batch.map((d) => d.content),
         geminiKey,
+        effectiveRpm,
       );
-      lastBatchAt = Date.now();
-
       for (let j = 0; j < batch.length; j++) {
         const doc = batch[j];
         const literal = `[${embeddings[j].join(",")}]`;
