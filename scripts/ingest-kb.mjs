@@ -1,14 +1,16 @@
-// scripts/ingest-nasm-pdfs.mjs
-// Extracts text from NASM study PDFs, chunks it, and writes per-namespace
-// JSON files to kb-fixtures/private/ (gitignored). The companion
-// `scripts/seed-kb.mjs` then embeds and uploads them to coach_kb.
+// scripts/ingest-kb.mjs
+// Extracts text from a configured set of PDF directories, chunks it, and
+// writes per-namespace JSON files to kb-fixtures/private/ (gitignored).
+// The companion `scripts/seed-kb.mjs` then embeds and uploads them to
+// coach_kb. Script is namespace-agnostic — add an entry to INPUTS for any
+// new specialist KB.
 //
 // Run:  pnpm kb:ingest [--dry-run]
 // No env vars required at ingest time (the seed step is where the API key
 // comes in). --env-file=.env.local is harmless if .env.local is missing.
 //
-// Inputs are the four NASM directories the operator listed; edit INPUTS if
-// they move. One namespace per input directory:
+// Inputs default to the operator's NASM study materials; edit INPUTS to
+// add another corpus or move a path. One namespace per input directory:
 //   - nutrition (CNC)     -> nutrition_kb
 //   - CPT handouts        -> workout_kb
 //   - CPT7 scripts        -> workout_kb

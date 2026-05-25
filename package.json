@@ -15,7 +15,7 @@
     "db:migrate": "drizzle-kit migrate",
     "kb:seed": "node --env-file=.env.local scripts/seed-kb.mjs",
     "kb:clear": "node --env-file=.env.local scripts/clear-kb.mjs",
-    "kb:ingest": "node --env-file=.env.local scripts/ingest-nasm-pdfs.mjs",
+    "kb:ingest": "node --env-file=.env.local scripts/ingest-kb.mjs",
     "review": "node scripts/review.mjs",
     "eval": "RUN_EVALS=1 COACH_LLM_PROVIDER=google vitest run tests/coach.eval.test.ts",
     "test": "vitest run",
