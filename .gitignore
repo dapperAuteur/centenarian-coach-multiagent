@@ -38,3 +38,21 @@ plans/
 kb-fixtures/private/
 
 node_modules
+
+docs/architecture.pdf
+
+docs/lessons/01-single-vs-multi-agent.pdf
+
+docs/lessons/02-supervisor-routing.pdf
+
+docs/lessons/03-per-agent-retrieval.pdf
+
+docs/lessons/04-state-passing.pdf
+
+docs/lessons/05-evals.pdf
+
+docs/lessons/README.pdf
+
+docs/walkthrough-v2.pdf
+
+docs/walkthrough.pdf
