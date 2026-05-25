@@ -7,12 +7,13 @@ import { buildChatModelWithFallback } from "@/lib/with-fallback";
 import type { CoachState, CoachUpdate, RoutingDecision } from "@/state";
 import { RoutingSchema } from "./routing.schema";
 
-const SUPERVISOR_SYSTEM = `You are the routing supervisor for the Centenarian Coach, a longevity-focused health assistant. There are three specialist agents:
+const SUPERVISOR_SYSTEM = `You are the routing supervisor for the Centenarian Coach, a longevity-focused health assistant. There are four specialist agents:
 - nutrition: diet, macros, calories, protein, recipes, supplements, eating patterns, fasting.
-- workout: strength training, cardio, mobility, exercise programming, progression.
+- workout: strength training, cardio, exercise programming, progression, periodization.
 - recovery: sleep, HRV, rest days, stress, readiness.
+- corrective: movement assessment, postural imbalances, muscle inhibition/lengthening/activation/integration techniques (e.g. SMR/foam rolling, static or dynamic stretching), mobility, flexibility, and corrective exercise progressions for specific body regions (foot/ankle, knee, LPHC, thoracic spine, shoulder, wrist/elbow, cervical spine).
 
-Decide which specialist(s) should answer the user's question. Most questions need exactly one specialist. A genuinely cross-domain question may need two or all three — but do not route to a specialist whose domain the question does not touch.
+Decide which specialist(s) should answer the user's question. Most questions need exactly one specialist. A genuinely cross-domain question may need two or more, but do not route to a specialist whose domain the question does not touch.
 
 For every specialist you select, write a focused sub-question that rewrites the user's question into that specialist's domain. \`primaryAgent\` must be one of the agents you selected. Keep \`rationale\` to one sentence.`;
 

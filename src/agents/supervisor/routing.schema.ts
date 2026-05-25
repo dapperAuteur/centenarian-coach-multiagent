@@ -4,7 +4,12 @@
 
 import { z } from "zod";
 
-export const AgentEnum = z.enum(["nutrition", "workout", "recovery"]);
+export const AgentEnum = z.enum([
+  "nutrition",
+  "workout",
+  "recovery",
+  "corrective",
+]);
 
 export const RoutingSchema = z.object({
   agents: z
