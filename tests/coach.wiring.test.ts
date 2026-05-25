@@ -12,8 +12,13 @@ const ctl = vi.hoisted(() => ({
   routeTo: ["nutrition"] as Array<"nutrition" | "workout" | "recovery">,
 }));
 
-vi.mock("@/lib/llm", () => ({
-  buildChatModel: () => ({
+// Mock chat model. Supports the two methods the coach chain calls on it:
+// `withStructuredOutput` (Zod-typed schemas) and `withFallbacks` (the
+// provider-fallback wrapper from src/lib/with-fallback.ts). The mock returns
+// `self` from withFallbacks so tests pass whether the operator has
+// COACH_FALLBACK_PROVIDERS set in .env.local or not.
+function makeMockModel() {
+  const model = {
     withStructuredOutput: (_schema: unknown, opts?: { name?: string }) => ({
       invoke: async (): Promise<unknown> => {
         switch (opts?.name) {
@@ -42,7 +47,13 @@ vi.mock("@/lib/llm", () => ({
         }
       },
     }),
-  }),
+    withFallbacks: (_fallbacks: unknown[]) => model,
+  };
+  return model;
+}
+
+vi.mock("@/lib/llm", () => ({
+  buildChatModel: () => makeMockModel(),
 }));
 
 vi.mock("@/agents/nutrition/retrieval", () => ({
