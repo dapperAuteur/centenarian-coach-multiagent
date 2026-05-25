@@ -3,7 +3,7 @@
 // namespace. Each specialist owns its own namespace; isolation is enforced
 // here, not by convention.
 
-import { geminiEmbed } from "@/lib/embeddings";
+import { embed } from "@/lib/embeddings";
 import { matchCoachKb } from "@/lib/pgvector";
 import type { Citation } from "@/state";
 
@@ -11,7 +11,7 @@ export async function retrieveNutritionKb(
   query: string,
   k = 5,
 ): Promise<Citation[]> {
-  const embedding = await geminiEmbed(query);
+  const embedding = await embed(query);
   const matches = await matchCoachKb(embedding, "nutrition_kb", k);
   return matches.map((match) => ({
     source: match.source,

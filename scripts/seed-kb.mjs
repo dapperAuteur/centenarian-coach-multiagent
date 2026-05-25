@@ -15,7 +15,20 @@
 //   pnpm kb:seed --fresh                  # delete + re-seed (default
 //                                         #   is resume from where DB left off)
 //
-// Requires: STORAGE_DATABASE_URL (or DATABASE_URL), GOOGLE_GEMINI_API_KEY.
+// Requires: STORAGE_DATABASE_URL (or DATABASE_URL). For the Gemini
+// backend, also GOOGLE_GEMINI_API_KEY. For the Ollama backend, a local
+// `ollama serve` reachable at OLLAMA_BASE_URL.
+//
+// Backend (COACH_EMBED_PROVIDER):
+//   - "gemini" (default) — cloud, 768-dim, free-tier 100 RPM / ~1000 RPD.
+//   - "ollama"           — local, free, no rate limit. Defaults to
+//                          nomic-embed-text (768-dim); override with
+//                          OLLAMA_EMBED_MODEL. Must produce 768-dim
+//                          vectors to fit coach_kb.embedding vector(768).
+// Both seed-time and query-time embeddings flow through the same
+// COACH_EMBED_PROVIDER value, kept aligned via src/lib/embeddings.ts.
+// Switching backend means re-seeding: vectors from different backends
+// don't share a space. Use pnpm kb:clear --all && pnpm kb:seed --fresh.
 //
 // Resume: by default the script counts existing coach_kb rows for the
 // namespace and skips the first N docs in the JSON, so a run interrupted
@@ -23,25 +36,31 @@
 // --fresh to force a DELETE + re-seed. Resume assumes the JSON file has
 // not changed since the partial run; pass --fresh if you re-ingested.
 //
-// Pacing: each item in a Gemini batchEmbedContents call counts against
-// the per-minute embed quota, so a single 100-item batch consumes 100
-// RPM. We track every sent batch in a sliding 60-second window and never
-// let the window's total exceed EFFECTIVE_RPM (75% of EMBED_RPM by
-// default, to absorb timing slop / clock skew / unrelated app traffic on
-// the same key). On a per-minute 429 we wait at least 60s and clear our
-// local counter. On a per-DAY 429 (free tier caps embed at ~1000 RPD)
-// we fail fast with a clear message — no amount of pacing helps; the
-// quota resets at midnight Pacific.
-//
-// Defaults are tuned for the free tier (100 RPM cap). Set EMBED_RPM=<n>
-// in .env.local once you upgrade to a paid plan to get full throughput.
+// Pacing (Gemini only): each item in a batchEmbedContents call counts
+// against the per-minute embed quota, so a single 100-item batch
+// consumes 100 RPM. We track every sent batch in a sliding 60-second
+// window and never let the window's total exceed EFFECTIVE_RPM (75% of
+// EMBED_RPM by default, to absorb timing slop / clock skew / unrelated
+// app traffic on the same key). On a per-minute 429 we wait at least
+// 60s and clear our local counter. On a per-DAY 429 (free tier caps
+// embed at ~1000 RPD) we fail fast — no amount of pacing helps; the
+// quota resets at midnight Pacific. Set EMBED_RPM=<n> in .env.local
+// once you upgrade to a paid Gemini plan. Ollama has no rate limit and
+// skips this layer entirely.
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { neon } from "@neondatabase/serverless";
 
-const EMBEDDING_MODEL = "gemini-embedding-001";
+const GEMINI_EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMS = 768;
+
+const DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434";
+const DEFAULT_OLLAMA_EMBED_MODEL = "nomic-embed-text";
+// Conservative local-batch size — Ollama is happy with more, but smaller
+// batches keep memory pressure low on modest laptops and the HTTP loop
+// fast enough to give the operator visible progress.
+const OLLAMA_BATCH = 50;
 
 const FIXTURES_DIR = resolve(process.cwd(), "kb-fixtures");
 const PRIVATE_DIR = resolve(FIXTURES_DIR, "private");
@@ -150,9 +169,9 @@ function parseRetryDelayMs(body) {
 
 /** Embed up to MAX_BATCH inputs in one Gemini API call. */
 async function embedBatch(texts, apiKey) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:batchEmbedContents`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_EMBEDDING_MODEL}:batchEmbedContents`;
   const requests = texts.map((text) => ({
-    model: `models/${EMBEDDING_MODEL}`,
+    model: `models/${GEMINI_EMBEDDING_MODEL}`,
     content: { parts: [{ text }] },
     outputDimensionality: EMBEDDING_DIMS,
   }));
@@ -270,23 +289,92 @@ async function embedBatchPaced(texts, apiKey, effectiveRpm) {
   throw new Error("embedBatchPaced: exhausted retries");
 }
 
-async function main() {
-  const dbUrl = process.env.STORAGE_DATABASE_URL ?? process.env.DATABASE_URL;
-  const geminiKey =
-    process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GEMINI_API_KEY;
-  const missing = [];
-  if (!dbUrl) missing.push("STORAGE_DATABASE_URL (or DATABASE_URL)");
-  if (!geminiKey) missing.push("GEMINI_API_KEY (or GOOGLE_GEMINI_API_KEY)");
-  if (missing.length > 0) {
+/** Embed a batch via a local Ollama instance. No rate-limit pacing — the
+ * local CPU/GPU is the bottleneck, and chunking is only for HTTP overhead.
+ * Validates dimension on the first vector so a non-768 model gives a
+ * helpful error rather than a Postgres cast failure. */
+async function embedBatchOllama(texts, baseUrl, model) {
+  let res;
+  try {
+    res = await fetch(`${baseUrl}/api/embed`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model, input: texts }),
+    });
+  } catch (err) {
     throw new Error(
-      `Missing env var(s): ${missing.join(", ")}. ` +
-        "They must be present in .env.local (run with: pnpm kb:seed).",
+      `Could not reach Ollama at ${baseUrl} (${err instanceof Error ? err.message : err}). ` +
+        `Is \`ollama serve\` running? Try \`curl ${baseUrl}/api/tags\` to check.`,
     );
+  }
+  if (!res.ok) {
+    const body = await res.text();
+    if (res.status === 404 && /model.*not found|pull/i.test(body)) {
+      throw new Error(
+        `Ollama model "${model}" is not pulled. Run \`ollama pull ${model}\` and retry.`,
+      );
+    }
+    throw new Error(`Ollama embed failed (${res.status}): ${body}`);
+  }
+  const data = await res.json();
+  const embeddings = data?.embeddings;
+  if (!Array.isArray(embeddings) || embeddings.length !== texts.length) {
+    throw new Error(
+      `Ollama returned ${embeddings?.length} embeddings for ${texts.length} inputs`,
+    );
+  }
+  if (embeddings[0]?.length !== EMBEDDING_DIMS) {
+    throw new Error(
+      `Ollama model "${model}" returned ${embeddings[0]?.length}-dim vectors; ` +
+        `coach_kb expects ${EMBEDDING_DIMS}. Use a 768-dim model such as ` +
+        `nomic-embed-text. Set OLLAMA_EMBED_MODEL to override.`,
+    );
+  }
+  for (let i = 0; i < embeddings.length; i++) {
+    if (!embeddings[i] || embeddings[i].length === 0) {
+      throw new Error(`Ollama returned an empty vector at index ${i}`);
+    }
+  }
+  return embeddings;
+}
+
+async function main() {
+  const provider =
+    (process.env.COACH_EMBED_PROVIDER ?? "").toLowerCase() === "ollama"
+      ? "ollama"
+      : "gemini";
+
+  const dbUrl = process.env.STORAGE_DATABASE_URL ?? process.env.DATABASE_URL;
+  if (!dbUrl) {
+    throw new Error(
+      "Missing env var: STORAGE_DATABASE_URL (or DATABASE_URL). " +
+        "Must be present in .env.local (run with: pnpm kb:seed).",
+    );
+  }
+
+  let geminiKey = null;
+  let ollamaBaseUrl = "";
+  let ollamaModel = "";
+  if (provider === "gemini") {
+    geminiKey =
+      process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GEMINI_API_KEY;
+    if (!geminiKey) {
+      throw new Error(
+        "GEMINI_API_KEY (or GOOGLE_GEMINI_API_KEY) is required for the " +
+          "Gemini backend. Set it in .env.local, or set " +
+          "COACH_EMBED_PROVIDER=ollama to use a local Ollama instance.",
+      );
+    }
+  } else {
+    ollamaBaseUrl = process.env.OLLAMA_BASE_URL ?? DEFAULT_OLLAMA_BASE_URL;
+    ollamaModel =
+      process.env.OLLAMA_EMBED_MODEL ?? DEFAULT_OLLAMA_EMBED_MODEL;
   }
 
   const rpm = Math.max(1, Number(process.env.EMBED_RPM ?? DEFAULT_RPM));
   const effectiveRpm = Math.max(1, Math.floor(rpm * RPM_SAFETY));
-  const batchSize = Math.min(MAX_BATCH, effectiveRpm);
+  const batchSize =
+    provider === "ollama" ? OLLAMA_BATCH : Math.min(MAX_BATCH, effectiveRpm);
 
   const args = process.argv.slice(2);
   const fresh = args.includes("--fresh");
@@ -310,10 +398,20 @@ async function main() {
     }
   }
 
-  console.log(
-    `Pacing: RPM=${rpm} (effective ${effectiveRpm}), batch=${batchSize}, ` +
-      `sliding 60s window. Override with EMBED_RPM=<n> in .env.local on a paid tier.`,
-  );
+  if (provider === "ollama") {
+    console.log(
+      `Embed backend: Ollama (${ollamaModel} @ ${ollamaBaseUrl}). ` +
+        `Local, no rate limit. Batch=${batchSize}. ` +
+        `Switch backends via COACH_EMBED_PROVIDER in .env.local — note that ` +
+        `mixing backends in one namespace breaks retrieval (different vector spaces).`,
+    );
+  } else {
+    console.log(
+      `Embed backend: Gemini (${GEMINI_EMBEDDING_MODEL}). ` +
+        `Pacing: RPM=${rpm} (effective ${effectiveRpm}), batch=${batchSize}, ` +
+        `sliding 60s window. Override with EMBED_RPM=<n> in .env.local on a paid tier.`,
+    );
+  }
 
   const sql = neon(dbUrl);
 
@@ -353,21 +451,32 @@ async function main() {
       }
     }
     const batchCount = Math.ceil((docs.length - startIdx) / batchSize);
-    const estMinutes = Math.ceil((docs.length - startIdx) / effectiveRpm);
-    console.log(
-      `  ${batchCount} batches; est ~${estMinutes} min at ${effectiveRpm} effective RPM.`,
-    );
+    if (provider === "gemini") {
+      const estMinutes = Math.ceil((docs.length - startIdx) / effectiveRpm);
+      console.log(
+        `  ${batchCount} batches; est ~${estMinutes} min at ${effectiveRpm} effective RPM.`,
+      );
+    } else {
+      console.log(`  ${batchCount} batches (Ollama, no rate limit).`);
+    }
 
     for (let i = startIdx; i < docs.length; i += batchSize) {
       const batch = docs.slice(i, i + batchSize).map((d) => ({
         source: sanitize(d.source),
         content: sanitize(d.content),
       }));
-      const embeddings = await embedBatchPaced(
-        batch.map((d) => d.content),
-        geminiKey,
-        effectiveRpm,
-      );
+      const embeddings =
+        provider === "ollama"
+          ? await embedBatchOllama(
+              batch.map((d) => d.content),
+              ollamaBaseUrl,
+              ollamaModel,
+            )
+          : await embedBatchPaced(
+              batch.map((d) => d.content),
+              geminiKey,
+              effectiveRpm,
+            );
       for (let j = 0; j < batch.length; j++) {
         const doc = batch[j];
         const literal = `[${embeddings[j].join(",")}]`;
