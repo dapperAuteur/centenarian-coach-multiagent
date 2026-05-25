@@ -44,3 +44,32 @@ Each file is a JSON array of `{ source, content }` documents:
 old fixtures: the seed script only DELETEs rows for namespaces it is about
 to insert, so removing a fixture file leaves its rows orphaned until you
 clear them explicitly.
+
+## Embedding backend
+
+Two backends, switched via `COACH_EMBED_PROVIDER` in `.env.local`:
+
+| Value | Cost | Rate limit | Model |
+| --- | --- | --- | --- |
+| `gemini` (default) | Free tier OR paid | 100 RPM / ~1000 RPD on free | `gemini-embedding-001` (768-dim) |
+| `ollama` | Free (local CPU/GPU) | None | `nomic-embed-text` (768-dim) by default; override via `OLLAMA_EMBED_MODEL` |
+
+Both seed-time and query-time embeddings flow through `src/lib/embeddings.ts`
+and read the same `COACH_EMBED_PROVIDER`, so they stay aligned.
+
+**Switching backend means re-seeding the whole KB.** Vectors from different
+models live in different spaces, so mixing them in a namespace breaks
+retrieval. Run `pnpm kb:clear --all && pnpm kb:seed --fresh` after changing
+the env.
+
+To use Ollama locally:
+
+```bash
+brew install ollama          # or download from ollama.com
+ollama pull nomic-embed-text # one-time, ~270 MB
+# in .env.local:
+COACH_EMBED_PROVIDER=ollama
+```
+
+Optional Ollama env vars: `OLLAMA_BASE_URL` (default `http://localhost:11434`)
+and `OLLAMA_EMBED_MODEL` (default `nomic-embed-text`; must be a 768-dim model).
