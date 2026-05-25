@@ -4,7 +4,7 @@
 // specialists' findings — the specialists never read each other's.
 
 import { z } from "zod";
-import { buildChatModel } from "@/lib/llm";
+import { buildChatModelWithFallback } from "@/lib/with-fallback";
 import type {
   Agent,
   Citation,
@@ -51,7 +51,7 @@ export async function synthesizeNode(state: CoachState): Promise<CoachUpdate> {
     .join("\n\n");
 
   const model = (
-    await buildChatModel({
+    await buildChatModelWithFallback({
       role: "synthesizer",
       temperature: 0.3,
       maxTokens: 2048,

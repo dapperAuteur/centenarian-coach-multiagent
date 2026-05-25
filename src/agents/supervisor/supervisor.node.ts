@@ -3,7 +3,7 @@
 // routing decision. It runs before any specialist (enforced by graph
 // topology) and never reads specialist findings.
 
-import { buildChatModel } from "@/lib/llm";
+import { buildChatModelWithFallback } from "@/lib/with-fallback";
 import type { CoachState, CoachUpdate, RoutingDecision } from "@/state";
 import { RoutingSchema } from "./routing.schema";
 
@@ -18,7 +18,7 @@ For every specialist you select, write a focused sub-question that rewrites the 
 
 export async function supervisorNode(state: CoachState): Promise<CoachUpdate> {
   const router = (
-    await buildChatModel({
+    await buildChatModelWithFallback({
       role: "supervisor",
       temperature: 0,
     })

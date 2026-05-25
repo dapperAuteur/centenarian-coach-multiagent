@@ -8,7 +8,7 @@
 
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { z } from "zod";
-import { buildChatModel } from "@/lib/llm";
+import { buildChatModelWithFallback } from "@/lib/with-fallback";
 import type {
   Citation,
   CoachState,
@@ -65,7 +65,7 @@ const AssessSchema = z.object({
 /** Decide which recovery tools (if any) should run. */
 async function assessNode(state: RecoveryState): Promise<RecoveryUpdate> {
   const model = (
-    await buildChatModel({
+    await buildChatModelWithFallback({
       role: "composer",
       temperature: 0,
     })
@@ -118,7 +118,7 @@ async function composeNode(state: RecoveryState): Promise<RecoveryUpdate> {
       : "(no tools used)";
 
   const model = (
-    await buildChatModel({
+    await buildChatModelWithFallback({
       role: "composer",
       temperature: 0.2,
       maxTokens: 2048,
