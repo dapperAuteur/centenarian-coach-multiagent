@@ -71,5 +71,9 @@ ollama pull nomic-embed-text # one-time, ~270 MB
 COACH_EMBED_PROVIDER=ollama
 ```
 
-Optional Ollama env vars: `OLLAMA_BASE_URL` (default `http://localhost:11434`)
-and `OLLAMA_EMBED_MODEL` (default `nomic-embed-text`; must be a 768-dim model).
+Optional Ollama env vars:
+- `OLLAMA_BASE_URL` — default `http://localhost:11434`.
+- `OLLAMA_EMBED_MODEL` — default `nomic-embed-text`; must be a 768-dim model.
+- `OLLAMA_EMBED_BATCH` — default `10`. Increase on Apple Silicon for faster
+  throughput; decrease to 3-5 on slower Intel CPUs if a batch is hitting the
+  30-minute fetch timeout.

@@ -51,16 +51,23 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { neon } from "@neondatabase/serverless";
+import { Agent, setGlobalDispatcher } from "undici";
 
 const GEMINI_EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMS = 768;
 
 const DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434";
 const DEFAULT_OLLAMA_EMBED_MODEL = "nomic-embed-text";
-// Conservative local-batch size — Ollama is happy with more, but smaller
-// batches keep memory pressure low on modest laptops and the HTTP loop
-// fast enough to give the operator visible progress.
-const OLLAMA_BATCH = 50;
+// Conservative local-batch size. Override with OLLAMA_EMBED_BATCH in
+// .env.local — bigger on Apple Silicon, smaller if you're on Intel CPU and
+// hitting timeouts on big chunks. 10 gives reasonably frequent progress
+// logging without hammering the HTTP overhead path.
+const DEFAULT_OLLAMA_BATCH = 10;
+// Headers/body timeout we configure on the global fetch dispatcher when
+// Ollama is the backend. Node's undici default is 5 minutes; embeddings on
+// slower CPUs (Intel, larger chunks) can comfortably exceed that for a
+// batch of 10+ NASM-sized docs.
+const OLLAMA_FETCH_TIMEOUT_MS = 30 * 60_000;
 
 const FIXTURES_DIR = resolve(process.cwd(), "kb-fixtures");
 const PRIVATE_DIR = resolve(FIXTURES_DIR, "private");
@@ -302,8 +309,20 @@ async function embedBatchOllama(texts, baseUrl, model) {
       body: JSON.stringify({ model, input: texts }),
     });
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const causeMsg =
+      err instanceof Error && err.cause instanceof Error
+        ? err.cause.message
+        : "";
+    if (/timeout/i.test(msg) || /timeout/i.test(causeMsg)) {
+      throw new Error(
+        `Ollama embed timed out after ${Math.round(OLLAMA_FETCH_TIMEOUT_MS / 60_000)} min. ` +
+          `Your CPU is taking too long to embed this batch. Try a smaller ` +
+          `batch: set OLLAMA_EMBED_BATCH=5 in .env.local and re-run.`,
+      );
+    }
     throw new Error(
-      `Could not reach Ollama at ${baseUrl} (${err instanceof Error ? err.message : err}). ` +
+      `Could not reach Ollama at ${baseUrl} (${msg}). ` +
         `Is \`ollama serve\` running? Try \`curl ${baseUrl}/api/tags\` to check.`,
     );
   }
@@ -369,12 +388,25 @@ async function main() {
     ollamaBaseUrl = process.env.OLLAMA_BASE_URL ?? DEFAULT_OLLAMA_BASE_URL;
     ollamaModel =
       process.env.OLLAMA_EMBED_MODEL ?? DEFAULT_OLLAMA_EMBED_MODEL;
+    // Extend the global fetch timeouts — Intel CPUs embedding NASM-sized
+    // batches routinely exceed undici's 5-minute default and fail with
+    // "Headers Timeout Error" before the response lands.
+    setGlobalDispatcher(
+      new Agent({
+        headersTimeout: OLLAMA_FETCH_TIMEOUT_MS,
+        bodyTimeout: OLLAMA_FETCH_TIMEOUT_MS,
+      }),
+    );
   }
 
   const rpm = Math.max(1, Number(process.env.EMBED_RPM ?? DEFAULT_RPM));
   const effectiveRpm = Math.max(1, Math.floor(rpm * RPM_SAFETY));
+  const ollamaBatch = Math.max(
+    1,
+    Number(process.env.OLLAMA_EMBED_BATCH ?? DEFAULT_OLLAMA_BATCH),
+  );
   const batchSize =
-    provider === "ollama" ? OLLAMA_BATCH : Math.min(MAX_BATCH, effectiveRpm);
+    provider === "ollama" ? ollamaBatch : Math.min(MAX_BATCH, effectiveRpm);
 
   const args = process.argv.slice(2);
   const fresh = args.includes("--fresh");
@@ -401,9 +433,11 @@ async function main() {
   if (provider === "ollama") {
     console.log(
       `Embed backend: Ollama (${ollamaModel} @ ${ollamaBaseUrl}). ` +
-        `Local, no rate limit. Batch=${batchSize}. ` +
-        `Switch backends via COACH_EMBED_PROVIDER in .env.local — note that ` +
-        `mixing backends in one namespace breaks retrieval (different vector spaces).`,
+        `Local, no rate limit. Batch=${batchSize} ` +
+        `(override with OLLAMA_EMBED_BATCH=<n> in .env.local). ` +
+        `Fetch timeout=${Math.round(OLLAMA_FETCH_TIMEOUT_MS / 60_000)}min/batch. ` +
+        `Switch backends via COACH_EMBED_PROVIDER — mixing backends in one ` +
+        `namespace breaks retrieval (different vector spaces).`,
     );
   } else {
     console.log(
