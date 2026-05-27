@@ -10,10 +10,12 @@
 // Prerequisite: apply the migration in src/db/migrations first.
 //
 // Run:
-//   pnpm kb:seed                          # all namespaces
+//   pnpm kb:seed                          # all namespaces, full range
 //   pnpm kb:seed nutrition_kb workout_kb  # only the listed namespaces
 //   pnpm kb:seed --fresh                  # delete + re-seed (default
 //                                         #   is resume from where DB left off)
+//   pnpm kb:seed nutrition_kb --start=0 --end=3793     # meet-in-the-middle
+//   pnpm kb:seed nutrition_kb --start=3793 --end=7585  # on a second machine
 //
 // Requires: STORAGE_DATABASE_URL (or DATABASE_URL). For the Gemini
 // backend, also GOOGLE_GEMINI_API_KEY. For the Ollama backend, a local
@@ -30,11 +32,20 @@
 // Switching backend means re-seeding: vectors from different backends
 // don't share a space. Use pnpm kb:clear --all && pnpm kb:seed --fresh.
 //
-// Resume: by default the script counts existing coach_kb rows for the
-// namespace and skips the first N docs in the JSON, so a run interrupted
-// by a daily quota wall picks up where it left off the next day. Pass
-// --fresh to force a DELETE + re-seed. Resume assumes the JSON file has
-// not changed since the partial run; pass --fresh if you re-ingested.
+// Resume: the script tracks per-row position via the `doc_index` column on
+// coach_kb. Default mode counts existing rows for the namespace and skips
+// to max(doc_index)+1, so a run interrupted by a quota wall or a battery
+// death picks up where it left off. Pass --fresh to force a DELETE +
+// re-seed of the targeted range. Resume assumes the JSON file has not
+// changed since the partial run; pass --fresh if you re-ingested.
+//
+// Range mode: --start=N --end=M restrict the script to processing JSON
+// indices [N, M). Resume queries scope to that range only, so two
+// machines can split a single namespace meet-in-the-middle (A: --start=0
+// --end=3793, B: --start=3793 --end=7585) and each resumes independently
+// if killed. --fresh in range mode wipes only the targeted range. Range
+// mode requires exactly one namespace argument and the doc_index column
+// from migration 0003 (run `pnpm db:migrate` first).
 //
 // Pacing (Gemini only): each item in a batchEmbedContents call counts
 // against the per-minute embed quota, so a single 100-item batch
@@ -357,6 +368,22 @@ async function embedBatchOllama(texts, baseUrl, model) {
   return embeddings;
 }
 
+/** Parse a `--<name>=<int>` flag from process argv. Returns null when the
+ * flag is absent. Throws on a non-integer or negative value. */
+function parseRangeFlag(args, name) {
+  const prefix = `--${name}=`;
+  const flag = args.find((a) => a.startsWith(prefix));
+  if (!flag) return null;
+  const value = flag.slice(prefix.length);
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 0) {
+    throw new Error(
+      `Invalid --${name}=${value}; must be a non-negative integer.`,
+    );
+  }
+  return n;
+}
+
 async function main() {
   const provider =
     (process.env.COACH_EMBED_PROVIDER ?? "").toLowerCase() === "ollama"
@@ -410,7 +437,22 @@ async function main() {
 
   const args = process.argv.slice(2);
   const fresh = args.includes("--fresh");
+  const startFlag = parseRangeFlag(args, "start");
+  const endFlag = parseRangeFlag(args, "end");
+  if (startFlag != null && endFlag != null && startFlag >= endFlag) {
+    throw new Error(
+      `--start (${startFlag}) must be less than --end (${endFlag}).`,
+    );
+  }
+  const isRangeMode = startFlag != null || endFlag != null;
   const onlyNamespaces = args.filter((a) => !a.startsWith("--"));
+  if (isRangeMode && onlyNamespaces.length !== 1) {
+    throw new Error(
+      "--start/--end requires exactly one namespace. " +
+        `Got: ${onlyNamespaces.length === 0 ? "no namespace" : onlyNamespaces.join(", ")}. ` +
+        "Example: pnpm kb:seed nutrition_kb --start=0 --end=3793",
+    );
+  }
 
   const fixtures = discoverFixtures();
   if (fixtures.size === 0) {
@@ -456,37 +498,95 @@ async function main() {
     }
     const docs = JSON.parse(readFileSync(path, "utf8"));
 
-    // Resume / fresh-start logic. By default, count rows already in the
-    // namespace and skip the first N docs in the JSON. Pass --fresh to
-    // wipe + re-seed.
+    // Resolve [rangeStart, rangeEnd) for this namespace. Without flags it's
+    // the whole JSON; with --start/--end it's the operator-specified slice.
+    const rangeStart = startFlag ?? 0;
+    const rangeEnd = Math.min(endFlag ?? docs.length, docs.length);
+    if (rangeStart >= docs.length) {
+      console.warn(
+        `\n${namespace} (${source}): --start=${rangeStart} is at or past ` +
+          `docs.length (${docs.length}); nothing to do.`,
+      );
+      continue;
+    }
+    if (rangeStart >= rangeEnd) {
+      console.warn(
+        `\n${namespace} (${source}): empty range [${rangeStart}, ${rangeEnd}); ` +
+          `nothing to do.`,
+      );
+      continue;
+    }
+
+    // Resume / fresh-start logic via doc_index. --fresh wipes only the
+    // targeted range (which IS the whole namespace when no range flags
+    // were passed, since rangeStart=0, rangeEnd=docs.length).
     let startIdx;
     if (fresh) {
-      await sql`DELETE FROM coach_kb WHERE namespace = ${namespace}`;
-      startIdx = 0;
-      console.log(`\n${namespace} (${source}): --fresh; cleared and seeding ${docs.length} docs.`);
+      await sql`
+        DELETE FROM coach_kb
+        WHERE namespace = ${namespace}
+          AND doc_index >= ${rangeStart}
+          AND doc_index < ${rangeEnd}
+      `;
+      startIdx = rangeStart;
+      console.log(
+        `\n${namespace} (${source}): --fresh; cleared rows in ` +
+          `[${rangeStart}, ${rangeEnd}); seeding ${rangeEnd - rangeStart} docs.`,
+      );
     } else {
-      const countRows = await sql`SELECT count(*)::int AS n FROM coach_kb WHERE namespace = ${namespace}`;
-      const existing = countRows[0]?.n ?? 0;
-      if (existing >= docs.length) {
+      // Defensive: catch pre-migration rows where doc_index is NULL. Range
+      // resume relies on doc_index, so we can't trust the DB until those
+      // are backfilled (migration 0003).
+      const legacy = await sql`
+        SELECT count(*)::int AS n FROM coach_kb
+        WHERE namespace = ${namespace} AND doc_index IS NULL
+      `;
+      const legacyCount = legacy[0]?.n ?? 0;
+      if (legacyCount > 0) {
+        throw new Error(
+          `${namespace}: ${legacyCount} row(s) have NULL doc_index. ` +
+            `Run \`pnpm db:migrate\` to apply migration 0003 (backfills ` +
+            `doc_index from created_at order), then re-run kb:seed.`,
+        );
+      }
+
+      const maxRows = await sql`
+        SELECT max(doc_index)::int AS m FROM coach_kb
+        WHERE namespace = ${namespace}
+          AND doc_index >= ${rangeStart}
+          AND doc_index < ${rangeEnd}
+      `;
+      const maxIdx = maxRows[0]?.m;
+      startIdx = maxIdx == null ? rangeStart : maxIdx + 1;
+
+      if (startIdx >= rangeEnd) {
         console.log(
-          `\n${namespace} (${source}): ${existing}/${docs.length} already in DB; nothing to do. ` +
-            `Use --fresh to re-seed.`,
+          `\n${namespace} (${source}): range [${rangeStart}, ${rangeEnd}) ` +
+            `already complete; nothing to do. Use --fresh to re-seed.`,
         );
         continue;
       }
-      startIdx = existing;
-      if (existing > 0) {
+
+      if (startIdx > rangeStart) {
         console.log(
-          `\n${namespace} (${source}): resuming at ${existing}/${docs.length}; ` +
-            `${docs.length - existing} docs to embed. (assumes JSON unchanged; pass --fresh to wipe)`,
+          `\n${namespace} (${source}): resuming at ${startIdx} within ` +
+            `[${rangeStart}, ${rangeEnd}); ${rangeEnd - startIdx} docs to embed. ` +
+            `(assumes JSON unchanged; pass --fresh to wipe this range)`,
+        );
+      } else if (isRangeMode) {
+        console.log(
+          `\n${namespace} (${source}): seeding [${rangeStart}, ${rangeEnd}) ` +
+            `(${rangeEnd - rangeStart} docs).`,
         );
       } else {
         console.log(`\n${namespace} (${source}): seeding ${docs.length} docs.`);
       }
     }
-    const batchCount = Math.ceil((docs.length - startIdx) / batchSize);
+
+    const remaining = rangeEnd - startIdx;
+    const batchCount = Math.ceil(remaining / batchSize);
     if (provider === "gemini") {
-      const estMinutes = Math.ceil((docs.length - startIdx) / effectiveRpm);
+      const estMinutes = Math.ceil(remaining / effectiveRpm);
       console.log(
         `  ${batchCount} batches; est ~${estMinutes} min at ${effectiveRpm} effective RPM.`,
       );
@@ -494,8 +594,9 @@ async function main() {
       console.log(`  ${batchCount} batches (Ollama, no rate limit).`);
     }
 
-    for (let i = startIdx; i < docs.length; i += batchSize) {
-      const batch = docs.slice(i, i + batchSize).map((d) => ({
+    for (let i = startIdx; i < rangeEnd; i += batchSize) {
+      const batchEnd = Math.min(i + batchSize, rangeEnd);
+      const batch = docs.slice(i, batchEnd).map((d) => ({
         source: sanitize(d.source),
         content: sanitize(d.content),
       }));
@@ -513,15 +614,14 @@ async function main() {
             );
       for (let j = 0; j < batch.length; j++) {
         const doc = batch[j];
+        const docIdx = i + j;
         const literal = `[${embeddings[j].join(",")}]`;
         await sql`
-          INSERT INTO coach_kb (namespace, source, content, embedding)
-          VALUES (${namespace}, ${doc.source}, ${doc.content}, ${literal}::vector(768))
+          INSERT INTO coach_kb (namespace, source, content, embedding, doc_index)
+          VALUES (${namespace}, ${doc.source}, ${doc.content}, ${literal}::vector(768), ${docIdx})
         `;
       }
-      console.log(
-        `  embedded + inserted ${Math.min(i + batchSize, docs.length)}/${docs.length}`,
-      );
+      console.log(`  embedded + inserted ${batchEnd}/${rangeEnd}`);
     }
   }
 

@@ -6,6 +6,7 @@
 
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -49,16 +50,31 @@ export const coachSpecialistCalls = pgTable("coach_specialist_calls", {
 });
 
 /** Namespaced pgvector knowledge base. One table, namespace per specialist. */
-export const coachKb = pgTable("coach_kb", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  namespace: text("namespace").notNull(), // 'nutrition_kb' | 'workout_kb' | 'recovery_kb'
-  source: text("source").notNull(),
-  content: text("content").notNull(),
-  embedding: vector("embedding", { dimensions: 768 }),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const coachKb = pgTable(
+  "coach_kb",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    namespace: text("namespace").notNull(), // 'nutrition_kb' | 'workout_kb' | 'recovery_kb' | 'corrective_kb'
+    source: text("source").notNull(),
+    content: text("content").notNull(),
+    embedding: vector("embedding", { dimensions: 768 }),
+    // Zero-based index into the fixture JSON for this row, populated by
+    // scripts/seed-kb.mjs. Lets the seed script resume cleanly within an
+    // explicit `--start`/`--end` range (meet-in-the-middle parallel seeds
+    // across machines). Nullable for back-compat with rows inserted before
+    // migration 0003; the migration backfills existing rows.
+    docIndex: integer("doc_index"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("coach_kb_namespace_doc_index_idx").on(
+      table.namespace,
+      table.docIndex,
+    ),
+  ],
+);
 
 /**
  * Single-row runtime configuration managed from the /admin dashboard:

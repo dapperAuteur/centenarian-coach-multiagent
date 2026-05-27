@@ -45,6 +45,42 @@ old fixtures: the seed script only DELETEs rows for namespaces it is about
 to insert, so removing a fixture file leaves its rows orphaned until you
 clear them explicitly.
 
+## Resuming + meet-in-the-middle
+
+Every row carries a `doc_index` (its position in the source JSON) so the
+seed script can resume safely after any kind of interruption.
+
+- **Default resume** (no flags): the script looks at `max(doc_index)` for
+  the namespace and continues from there. If the laptop died at row 870,
+  re-running `pnpm kb:seed` picks up at 871. Pass `--fresh` to wipe and
+  re-seed instead.
+- **Range mode** (`--start=N --end=M`): split one namespace across two
+  machines. Each machine processes its slice independently, with its own
+  resume scope.
+
+```bash
+# Machine A — first half of nutrition_kb
+pnpm kb:seed nutrition_kb --start=0 --end=3793
+
+# Machine B — second half, runs at the same time on a different laptop
+pnpm kb:seed nutrition_kb --start=3793 --end=7585
+```
+
+If A dies at row 1500 (within its 0–3793 range), re-running the **same
+command** on A resumes at 1500 and continues through 3792. B's resume is
+independent — it counts only rows in `[3793, 7585)`.
+
+Range-mode rules:
+- Exactly one namespace argument; ranges across multiple namespaces are
+  rejected.
+- `--fresh` in range mode wipes only the targeted range, so two machines
+  with disjoint ranges plus `--fresh` don't wipe each other.
+- You're responsible for keeping the ranges disjoint across machines.
+  Overlap = duplicate rows; gaps = missing docs (silent).
+- Requires migration 0003 applied (`pnpm db:migrate`). Without it,
+  pre-existing rows have `NULL` doc_index and the script throws with a
+  clear "run db:migrate" message.
+
 ## Embedding backend
 
 Two backends, switched via `COACH_EMBED_PROVIDER` in `.env.local`:
