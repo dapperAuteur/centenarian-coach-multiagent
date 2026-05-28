@@ -62,6 +62,12 @@ export default function WalkthroughPage() {
         >
           Try the coach →
         </Link>
+        <Link
+          href="/guide"
+          className="rounded-md border border-gray-300 px-4 py-2 font-medium text-gray-800 hover:bg-gray-50"
+        >
+          Read the guide
+        </Link>
         <a
           href="https://github.com/dapperAuteur/centenarian-coach-multiagent"
           target="_blank"

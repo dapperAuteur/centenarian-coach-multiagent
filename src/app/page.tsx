@@ -17,13 +17,14 @@ export default function HomePage() {
 
       <p className="mt-8 leading-relaxed text-gray-800">
         A LangGraph supervisor with specialist subgraphs. You ask one question;
-        a coordinator decides which specialists to consult: a{" "}
-        <span className="font-medium">Nutrition</span> specialist with its own
-        knowledge base and a calorie tool, and a{" "}
-        <span className="font-medium">Workout</span> specialist with its own
-        knowledge base, a progression tool, and a mobility lookup. The
-        coordinator weaves the specialists' findings into one answer with
-        per-specialist citations.
+        a coordinator decides which specialists to consult across four domains:{" "}
+        <span className="font-medium">Nutrition</span>,{" "}
+        <span className="font-medium">Workout</span>,{" "}
+        <span className="font-medium">Recovery</span>, and{" "}
+        <span className="font-medium">Corrective Exercise</span>. Each has its
+        own knowledge base (grounded in NASM CPT, CNC, and CES materials) and
+        its own tools. The coordinator weaves their findings into one answer
+        with per-specialist citations.
       </p>
 
       <div className="mt-8 flex flex-wrap gap-3">
@@ -32,6 +33,12 @@ export default function HomePage() {
           className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
         >
           Open the coach →
+        </Link>
+        <Link
+          href="/guide"
+          className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
+        >
+          Read the guide
         </Link>
         <Link
           href="/walkthrough"

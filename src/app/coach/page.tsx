@@ -123,6 +123,9 @@ export default function CoachPage() {
           <Link href="/coach/history" className="text-sky-700 hover:underline">
             History
           </Link>
+          <Link href="/guide" className="text-sky-700 hover:underline">
+            Guide
+          </Link>
           <Link href="/admin" className="text-sky-700 hover:underline">
             Admin
           </Link>
