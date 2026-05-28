@@ -13,6 +13,7 @@
 // produced the score.
 
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import type { Runnable } from "@langchain/core/runnables";
 import { buildChatModel, type BuildChatOptions } from "@/lib/llm";
 import { COACH_PROVIDERS, type LlmProvider } from "@/lib/llm-config";
 
@@ -43,20 +44,33 @@ export function parseFallbackProviders(
 }
 
 /**
- * Build the model for `options.role`, wrapped with a fallback chain when
- * COACH_FALLBACK_PROVIDERS is set. The primary is whatever the dashboard /
- * env override picks; the chain is the env list in order. If no chain is
- * configured, returns the bare primary unchanged.
+ * Build a runnable for `options.role`, wrapped with a fallback chain when
+ * COACH_FALLBACK_PROVIDERS is set, using the per-model `build` adapter.
+ *
+ * `build` is applied to EACH provider's chat model BEFORE the fallbacks are
+ * composed. This ordering matters for structured output: `withFallbacks()`
+ * returns a RunnableWithFallbacks, which does NOT have `.withStructuredOutput`
+ * — so calling `(await buildChatModelWithFallback()).withStructuredOutput()`
+ * crashed at runtime ("withStructuredOutput is not a function") whenever a
+ * fallback chain was configured. Composing structured-output-first fixes it
+ * and means a fallback provider also returns structured output.
+ *
+ * The primary is whatever the dashboard / env override picks; the chain is
+ * the COACH_FALLBACK_PROVIDERS list in order. With no chain configured, the
+ * bare adapted primary is returned unchanged.
  */
-export async function buildChatModelWithFallback(
+export async function withRoleFallback<R extends Runnable>(
   options: BuildChatOptions,
-): Promise<BaseChatModel> {
-  const primary = await buildChatModel(options);
+  build: (model: BaseChatModel) => R,
+): Promise<R> {
+  const primary = build(await buildChatModel(options));
   const chain = parseFallbackProviders(process.env.COACH_FALLBACK_PROVIDERS);
   if (chain.length === 0) return primary;
 
   const fallbacks = await Promise.all(
-    chain.map((provider) => buildChatModel({ ...options, provider })),
+    chain.map(async (provider) =>
+      build(await buildChatModel({ ...options, provider })),
+    ),
   );
-  return primary.withFallbacks(fallbacks) as unknown as BaseChatModel;
+  return primary.withFallbacks(fallbacks) as unknown as R;
 }

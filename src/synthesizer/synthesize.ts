@@ -4,7 +4,7 @@
 // specialists' findings — the specialists never read each other's.
 
 import { z } from "zod";
-import { buildChatModelWithFallback } from "@/lib/with-fallback";
+import { withRoleFallback } from "@/lib/with-fallback";
 import type {
   Agent,
   Citation,
@@ -55,13 +55,10 @@ export async function synthesizeNode(state: CoachState): Promise<CoachUpdate> {
     .map((f) => `### ${f.agent} specialist\n${f.text}`)
     .join("\n\n");
 
-  const model = (
-    await buildChatModelWithFallback({
-      role: "synthesizer",
-      temperature: 0.3,
-      maxTokens: 2048,
-    })
-  ).withStructuredOutput(SynthesizeSchema, { name: "synthesize_answer" });
+  const model = await withRoleFallback(
+    { role: "synthesizer", temperature: 0.3, maxTokens: 2048 },
+    (m) => m.withStructuredOutput(SynthesizeSchema, { name: "synthesize_answer" }),
+  );
 
   const result = await model.invoke([
     { role: "system", content: SYNTHESIZE_SYSTEM },

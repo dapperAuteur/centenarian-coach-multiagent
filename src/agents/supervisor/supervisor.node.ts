@@ -3,7 +3,7 @@
 // routing decision. It runs before any specialist (enforced by graph
 // topology) and never reads specialist findings.
 
-import { buildChatModelWithFallback } from "@/lib/with-fallback";
+import { withRoleFallback } from "@/lib/with-fallback";
 import type { CoachState, CoachUpdate, RoutingDecision } from "@/state";
 import { RoutingSchema } from "./routing.schema";
 
@@ -18,12 +18,11 @@ Decide which specialist(s) should answer the user's question. Most questions nee
 For every specialist you select, write a focused sub-question that rewrites the user's question into that specialist's domain. \`primaryAgent\` must be one of the agents you selected. Keep \`rationale\` to one sentence.`;
 
 export async function supervisorNode(state: CoachState): Promise<CoachUpdate> {
-  const router = (
-    await buildChatModelWithFallback({
-      role: "supervisor",
-      temperature: 0,
-    })
-  ).withStructuredOutput(RoutingSchema, { name: "route_to_specialists" });
+  const router = await withRoleFallback(
+    { role: "supervisor", temperature: 0 },
+    (m) =>
+      m.withStructuredOutput(RoutingSchema, { name: "route_to_specialists" }),
+  );
 
   const decision = await router.invoke([
     { role: "system", content: SUPERVISOR_SYSTEM },
