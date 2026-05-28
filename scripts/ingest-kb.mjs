@@ -5,7 +5,18 @@
 // coach_kb. Script is namespace-agnostic — add an entry to INPUTS for any
 // new specialist KB.
 //
-// Run:  pnpm kb:ingest [--dry-run]
+// Run:  pnpm kb:ingest [--dry-run] [--append]
+//   --dry-run  print what would be written; write nothing.
+//   --append   add NEW source files to existing JSON without disturbing what
+//              is already there. Loads each namespace's current
+//              kb-fixtures/private/<ns>.json, skips any PDF whose basename
+//              is already represented (matched via the source label), and
+//              appends only new files' chunks to the END of the array. This
+//              keeps existing doc_index positions stable so `pnpm kb:seed`
+//              embeds only the newly-appended tail. Without --append the
+//              namespace JSON is rebuilt from scratch (which can shift
+//              indices if a new file sorts into the middle).
+//
 // No env vars required at ingest time (the seed step is where the API key
 // comes in). --env-file=.env.local is harmless if .env.local is missing.
 //
@@ -228,17 +239,56 @@ function pad(s, w) {
   return s + " ".repeat(w - s.length);
 }
 
+/** Recover the source file's basename from a citation label of the form
+ * `NASM <cert> · <basename> · p. <n>`. Used in --append mode to detect which
+ * files are already represented in an existing JSON. Returns null when the
+ * label doesn't match the expected shape. */
+function sourceBasename(source) {
+  const parts = String(source).split(" · ");
+  if (parts.length < 3) return null;
+  return parts.slice(1, -1).join(" · ");
+}
+
 // ---------------------------------------------------------------------------
 // Main.
 // ---------------------------------------------------------------------------
 
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
+  const append = process.argv.includes("--append");
+
+  const outDir = resolve(process.cwd(), "kb-fixtures", "private");
 
   /** @type {Map<string, Array<{ source: string, content: string }>>} */
   const byNamespace = new Map();
   /** @type {Array<{ file: string, pages: number, chunks: number, namespace: string, scanned: number, firstSource: string }>} */
   const report = [];
+  /** ns -> Set of source basenames already present (append mode). */
+  const seenByNamespace = new Map();
+  /** ns -> count of pre-existing docs kept (append mode). */
+  const baselineLen = new Map();
+  /** Names of files skipped because already ingested (append mode). */
+  const skippedFiles = [];
+
+  if (append) {
+    for (const ns of new Set(INPUTS.map((i) => i.namespace))) {
+      const p = join(outDir, `${ns}.json`);
+      if (!existsSync(p)) continue;
+      const existing = JSON.parse(readFileSync(p, "utf8"));
+      byNamespace.set(ns, existing);
+      baselineLen.set(ns, existing.length);
+      const seen = new Set();
+      for (const doc of existing) {
+        const b = sourceBasename(doc.source);
+        if (b) seen.add(b);
+      }
+      seenByNamespace.set(ns, seen);
+      console.log(
+        `append: ${ns} has ${existing.length} existing docs across ` +
+          `${seen.size} files; new files will be appended to the end.`,
+      );
+    }
+  }
 
   for (const input of INPUTS) {
     const files = findPdfs(input.dir).sort();
@@ -249,6 +299,10 @@ async function main() {
     for (const file of files) {
       const name = basename(file, extname(file));
       const ns = input.namespace;
+      if (append && seenByNamespace.get(ns)?.has(name)) {
+        skippedFiles.push(name);
+        continue;
+      }
       try {
         const rawPages = await extractPdf(file);
         const repeated = detectRepeatedLines(rawPages);
@@ -309,7 +363,21 @@ async function main() {
   // Per-namespace totals.
   console.log("");
   for (const [ns, docs] of byNamespace) {
-    console.log(`${ns}: ${docs.length} chunks across ${report.filter((r) => r.namespace === ns).length} files`);
+    const newFiles = report.filter((r) => r.namespace === ns).length;
+    if (append) {
+      const base = baselineLen.get(ns) ?? 0;
+      const added = docs.length - base;
+      console.log(
+        `${ns}: ${docs.length} total (${added} new chunks from ${newFiles} new file(s); ${base} kept)`,
+      );
+    } else {
+      console.log(`${ns}: ${docs.length} chunks across ${newFiles} files`);
+    }
+  }
+  if (append && skippedFiles.length > 0) {
+    console.log(
+      `\nSkipped ${skippedFiles.length} already-ingested file(s) (append mode).`,
+    );
   }
 
   if (dryRun) {
@@ -317,15 +385,26 @@ async function main() {
     return;
   }
 
-  if (byNamespace.size === 0) {
+  // In append mode with nothing new, byNamespace still holds the unchanged
+  // existing docs — but there's no reason to rewrite identical files.
+  if (append) {
+    const anyNew = [...byNamespace.keys()].some(
+      (ns) => (byNamespace.get(ns)?.length ?? 0) > (baselineLen.get(ns) ?? 0),
+    );
+    if (!anyNew) {
+      console.log("\nNo new files to append. Nothing written.");
+      return;
+    }
+  } else if (byNamespace.size === 0) {
     console.error("No chunks produced. Nothing to write.");
     process.exitCode = 1;
     return;
   }
 
-  const outDir = resolve(process.cwd(), "kb-fixtures", "private");
   mkdirSync(outDir, { recursive: true });
   for (const [ns, docs] of byNamespace) {
+    // In append mode, only rewrite namespaces that actually gained docs.
+    if (append && docs.length === (baselineLen.get(ns) ?? 0)) continue;
     const outPath = join(outDir, `${ns}.json`);
     writeFileSync(outPath, `${JSON.stringify(docs, null, 2)}\n`);
     console.log(`Wrote ${docs.length} docs -> ${outPath}`);
