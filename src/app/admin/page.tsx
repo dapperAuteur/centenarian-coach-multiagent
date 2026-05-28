@@ -55,6 +55,9 @@ export default async function AdminPage() {
           >
             History
           </Link>
+          <Link href="/guide" className="text-sky-700 hover:underline">
+            Guide
+          </Link>
           <a
             href="/api/auth/signout?callbackUrl=/"
             className="text-gray-500 hover:text-gray-800 hover:underline"
