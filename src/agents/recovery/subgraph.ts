@@ -8,7 +8,7 @@
 
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { z } from "zod";
-import { buildChatModelWithFallback } from "@/lib/with-fallback";
+import { withRoleFallback } from "@/lib/with-fallback";
 import type {
   Citation,
   CoachState,
@@ -64,12 +64,11 @@ const AssessSchema = z.object({
 
 /** Decide which recovery tools (if any) should run. */
 async function assessNode(state: RecoveryState): Promise<RecoveryUpdate> {
-  const model = (
-    await buildChatModelWithFallback({
-      role: "composer",
-      temperature: 0,
-    })
-  ).withStructuredOutput(AssessSchema, { name: "assess_recovery_tools" });
+  const model = await withRoleFallback(
+    { role: "composer", temperature: 0 },
+    (m) =>
+      m.withStructuredOutput(AssessSchema, { name: "assess_recovery_tools" }),
+  );
   const result = await model.invoke([
     { role: "system", content: RECOVERY_ASSESS_SYSTEM },
     { role: "user", content: state.subQuestion },
@@ -117,13 +116,10 @@ async function composeNode(state: RecoveryState): Promise<RecoveryUpdate> {
           .join("\n")
       : "(no tools used)";
 
-  const model = (
-    await buildChatModelWithFallback({
-      role: "composer",
-      temperature: 0.2,
-      maxTokens: 2048,
-    })
-  ).withStructuredOutput(ComposeSchema, { name: "compose_finding" });
+  const model = await withRoleFallback(
+    { role: "composer", temperature: 0.2, maxTokens: 2048 },
+    (m) => m.withStructuredOutput(ComposeSchema, { name: "compose_finding" }),
+  );
   const result = await model.invoke([
     { role: "system", content: RECOVERY_COMPOSE_SYSTEM },
     {

@@ -12,44 +12,48 @@ const ctl = vi.hoisted(() => ({
   routeTo: ["nutrition"] as Array<"nutrition" | "workout" | "recovery">,
 }));
 
-// Mock chat model. Supports the two methods the coach chain calls on it:
-// `withStructuredOutput` (Zod-typed schemas) and `withFallbacks` (the
-// provider-fallback wrapper from src/lib/with-fallback.ts). The mock returns
-// `self` from withFallbacks so tests pass whether the operator has
-// COACH_FALLBACK_PROVIDERS set in .env.local or not.
+// Mock chat model. withRoleFallback() calls model.withStructuredOutput(...)
+// to get a structured runnable, then composes fallbacks with
+// structuredRunnable.withFallbacks([...]). So the structured runnable (not
+// the model) needs withFallbacks; it returns self so the tests pass whether
+// or not COACH_FALLBACK_PROVIDERS is set in .env.local (which vitest loads).
 function makeMockModel() {
-  const model = {
-    withStructuredOutput: (_schema: unknown, opts?: { name?: string }) => ({
-      invoke: async (): Promise<unknown> => {
-        switch (opts?.name) {
-          case "route_to_specialists":
-            return {
-              agents: ctl.routeTo,
-              primaryAgent: ctl.routeTo[0],
-              subQuestions: ctl.routeTo.map((agent) => ({
-                agent,
-                question: `mock sub-question for ${agent}`,
-              })),
-              rationale: "mock routing decision",
-            };
-          case "assess_tools":
-            return { needsCalorieTool: false, calorieArgs: null };
-          case "assess_workout_tools":
-            return { progressionArgs: null, mobilityArgs: null };
-          case "assess_recovery_tools":
-            return { sleepArgs: null, hrvArgs: null };
-          case "compose_finding":
-            return { text: "Mock specialist finding.\n\nSecond paragraph." };
-          case "synthesize_answer":
-            return { text: "Mock synthesized answer.\n\nSecond paragraph." };
-          default:
-            throw new Error(`unexpected structured-output name: ${String(opts?.name)}`);
-        }
-      },
-    }),
-    withFallbacks: (_fallbacks: unknown[]) => model,
+  return {
+    withStructuredOutput: (_schema: unknown, opts?: { name?: string }) => {
+      const structured = {
+        invoke: async (): Promise<unknown> => {
+          switch (opts?.name) {
+            case "route_to_specialists":
+              return {
+                agents: ctl.routeTo,
+                primaryAgent: ctl.routeTo[0],
+                subQuestions: ctl.routeTo.map((agent) => ({
+                  agent,
+                  question: `mock sub-question for ${agent}`,
+                })),
+                rationale: "mock routing decision",
+              };
+            case "assess_tools":
+              return { needsCalorieTool: false, calorieArgs: null };
+            case "assess_workout_tools":
+              return { progressionArgs: null, mobilityArgs: null };
+            case "assess_recovery_tools":
+              return { sleepArgs: null, hrvArgs: null };
+            case "compose_finding":
+              return { text: "Mock specialist finding.\n\nSecond paragraph." };
+            case "synthesize_answer":
+              return { text: "Mock synthesized answer.\n\nSecond paragraph." };
+            default:
+              throw new Error(
+                `unexpected structured-output name: ${String(opts?.name)}`,
+              );
+          }
+        },
+        withFallbacks: (_fallbacks: unknown[]) => structured,
+      };
+      return structured;
+    },
   };
-  return model;
 }
 
 vi.mock("@/lib/llm", () => ({

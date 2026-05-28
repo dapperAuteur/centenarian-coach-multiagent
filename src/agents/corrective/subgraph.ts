@@ -10,7 +10,7 @@
 
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { z } from "zod";
-import { buildChatModelWithFallback } from "@/lib/with-fallback";
+import { withRoleFallback } from "@/lib/with-fallback";
 import type {
   Citation,
   CoachState,
@@ -63,13 +63,10 @@ async function composeNode(state: CorrectiveState): Promise<CorrectiveUpdate> {
           .join("\n\n")
       : "(no sources retrieved)";
 
-  const model = (
-    await buildChatModelWithFallback({
-      role: "composer",
-      temperature: 0.2,
-      maxTokens: 2048,
-    })
-  ).withStructuredOutput(ComposeSchema, { name: "compose_finding" });
+  const model = await withRoleFallback(
+    { role: "composer", temperature: 0.2, maxTokens: 2048 },
+    (m) => m.withStructuredOutput(ComposeSchema, { name: "compose_finding" }),
+  );
   const result = await model.invoke([
     { role: "system", content: CORRECTIVE_COMPOSE_SYSTEM },
     {
