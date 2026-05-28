@@ -17,15 +17,15 @@
 //              namespace JSON is rebuilt from scratch (which can shift
 //              indices if a new file sorts into the middle).
 //
-// No env vars required at ingest time (the seed step is where the API key
-// comes in). --env-file=.env.local is harmless if .env.local is missing.
-//
-// Inputs default to the operator's NASM study materials; edit INPUTS to
-// add another corpus or move a path. One namespace per input directory:
-//   - nutrition (CNC)     -> nutrition_kb
-//   - CPT handouts        -> workout_kb
-//   - CPT7 scripts        -> workout_kb
-//   - CES books           -> corrective_kb  (its own specialist)
+// Source directories are configured via env vars (set in .env.local, which
+// is gitignored) so personal paths and source names stay out of the public
+// repo. Each var is a comma-separated list of directories; all of a
+// namespace's dirs are merged:
+//   INGEST_NUTRITION_DIRS   -> nutrition_kb
+//   INGEST_WORKOUT_DIRS     -> workout_kb
+//   INGEST_CORRECTIVE_DIRS  -> corrective_kb
+//   INGEST_RECOVERY_DIRS    -> recovery_kb
+// The Gemini API key is only needed at seed time, not here.
 
 import {
   existsSync,
@@ -39,31 +39,25 @@ import { basename, extname, join, resolve } from "node:path";
 import { getDocumentProxy, extractText } from "unpdf";
 
 // ---------------------------------------------------------------------------
-// Inputs — edit when source dirs move.
+// Inputs. Directories come from env vars (comma-separated, merged per
+// namespace). `cert` is a short domain tag prefixed onto each citation's
+// source label. Add a row here to support a new specialist namespace.
 // ---------------------------------------------------------------------------
 
-const INPUTS = [
-  {
-    dir: "/Users/bam/Google Drive/My Drive/files/fitness/nasm/nutrition",
-    namespace: "nutrition_kb",
-    cert: "CNC",
-  },
-  {
-    dir: "/Users/bam/Google Drive/My Drive/files/fitness/nasm/fitness/certified personal trainer/Handouts - EN/NASM CPT Handouts By Chapter",
-    namespace: "workout_kb",
-    cert: "CPT",
-  },
-  {
-    dir: "/Users/bam/Google Drive/My Drive/files/fitness/nasm/fitness/certified personal trainer/scripts/CPT7",
-    namespace: "workout_kb",
-    cert: "CPT",
-  },
-  {
-    dir: "/Users/bam/Google Drive/My Drive/files/fitness/nasm/fitness/corrective exercise science/NASM CES Books/NASM CES Books By Chapter",
-    namespace: "corrective_kb",
-    cert: "CES",
-  },
+const NAMESPACE_INPUTS = [
+  { env: "INGEST_NUTRITION_DIRS", namespace: "nutrition_kb", cert: "Nutrition" },
+  { env: "INGEST_WORKOUT_DIRS", namespace: "workout_kb", cert: "Training" },
+  { env: "INGEST_CORRECTIVE_DIRS", namespace: "corrective_kb", cert: "Corrective" },
+  { env: "INGEST_RECOVERY_DIRS", namespace: "recovery_kb", cert: "Recovery" },
 ];
+
+const INPUTS = NAMESPACE_INPUTS.flatMap(({ env, namespace, cert }) =>
+  (process.env[env] ?? "")
+    .split(",")
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .map((dir) => ({ dir, namespace, cert })),
+);
 
 // ---------------------------------------------------------------------------
 // Chunking.
@@ -240,7 +234,7 @@ function pad(s, w) {
 }
 
 /** Recover the source file's basename from a citation label of the form
- * `NASM <cert> · <basename> · p. <n>`. Used in --append mode to detect which
+ * `<cert> · <basename> · p. <n>`. Used in --append mode to detect which
  * files are already represented in an existing JSON. Returns null when the
  * label doesn't match the expected shape. */
 function sourceBasename(source) {
@@ -256,6 +250,15 @@ function sourceBasename(source) {
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
   const append = process.argv.includes("--append");
+
+  if (INPUTS.length === 0) {
+    console.error(
+      "No source directories configured. Set one or more of " +
+        NAMESPACE_INPUTS.map((i) => i.env).join(" / ") +
+        " in .env.local (comma-separated absolute paths). See .env.example.",
+    );
+    process.exit(1);
+  }
 
   const outDir = resolve(process.cwd(), "kb-fixtures", "private");
 
@@ -318,7 +321,7 @@ async function main() {
           const cleaned = cleanPage(raw, repeated);
           if (wordCount(cleaned) < MIN_CHUNK_WORDS) continue;
           for (const content of splitIntoChunks(cleaned)) {
-            const source = `NASM ${input.cert} · ${name} · p. ${i + 1}`;
+            const source = `${input.cert} · ${name} · p. ${i + 1}`;
             if (!firstSource) firstSource = source;
             if (!byNamespace.has(ns)) byNamespace.set(ns, []);
             byNamespace.get(ns).push({ source, content });
