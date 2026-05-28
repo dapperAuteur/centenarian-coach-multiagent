@@ -81,6 +81,33 @@ Range-mode rules:
   pre-existing rows have `NULL` doc_index and the script throws with a
   clear "run db:migrate" message.
 
+## Adding content to a finished namespace
+
+To add new PDFs to a namespace that's already seeded — without re-embedding
+what's already there — use append mode. It keeps existing rows untouched and
+puts new chunks at the end, so `pnpm kb:seed` only embeds the new tail.
+
+```bash
+# 1. Drop the new PDF(s) into the relevant source dir (the ones listed in
+#    INPUTS at the top of scripts/ingest-kb.mjs), e.g. the CPT folders for
+#    workout_kb.
+
+# 2. Append just the new files to the JSON (existing entries stay put).
+pnpm kb:ingest --append --dry-run   # preview: shows skipped vs new files
+pnpm kb:ingest --append             # writes the appended JSON
+
+# 3. Seed — resume picks up at the first new doc_index and embeds only
+#    the appended chunks.
+pnpm kb:seed workout_kb
+```
+
+Append mode skips any file already represented in the JSON (matched by the
+basename in its source label), so re-running it is safe. Do NOT run a plain
+`pnpm kb:ingest` (without `--append`) to add content: that rebuilds the JSON
+from scratch and, if a new file sorts into the middle, shifts every later
+`doc_index` — which breaks the alignment between the JSON and the rows
+already in the DB.
+
 ## Embedding backend
 
 Two backends, switched via `COACH_EMBED_PROVIDER` in `.env.local`:
