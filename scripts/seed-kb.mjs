@@ -369,12 +369,21 @@ async function embedBatchOllama(texts, baseUrl, model) {
 }
 
 /** Parse a `--<name>=<int>` flag from process argv. Returns null when the
- * flag is absent. Throws on a non-integer or negative value. */
+ * flag is absent. Throws on an empty value, a non-integer, or a negative
+ * value. The empty-value check matters because `--start= 5180` is shell-
+ * tokenized into `--start=` + `5180` (two args), and we want a loud error
+ * instead of silently parsing as 0 and re-embedding from scratch. */
 function parseRangeFlag(args, name) {
   const prefix = `--${name}=`;
   const flag = args.find((a) => a.startsWith(prefix));
   if (!flag) return null;
   const value = flag.slice(prefix.length);
+  if (value === "") {
+    throw new Error(
+      `--${name}= has no value. Write it as --${name}=<integer> with no ` +
+        `spaces around the equals sign (e.g. --${name}=5180).`,
+    );
+  }
   const n = Number(value);
   if (!Number.isInteger(n) || n < 0) {
     throw new Error(
