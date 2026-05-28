@@ -4,7 +4,7 @@
 // Two source dirs:
 //   - kb-fixtures/*.json          public; tracked by git (currently empty).
 //   - kb-fixtures/private/*.json  gitignored; the operator's own corpus
-//                                 (e.g. NASM PDFs via `pnpm kb:ingest`).
+//                                 (e.g. ingested PDFs via `pnpm kb:ingest`).
 // When the same namespace exists in both, the private file wins.
 //
 // Prerequisite: apply the migration in src/db/migrations first.
@@ -77,7 +77,7 @@ const DEFAULT_OLLAMA_BATCH = 10;
 // Headers/body timeout we configure on the global fetch dispatcher when
 // Ollama is the backend. Node's undici default is 5 minutes; embeddings on
 // slower CPUs (Intel, larger chunks) can comfortably exceed that for a
-// batch of 10+ NASM-sized docs.
+// batch of 10+ paragraph-sized docs.
 const OLLAMA_FETCH_TIMEOUT_MS = 30 * 60_000;
 
 const FIXTURES_DIR = resolve(process.cwd(), "kb-fixtures");
@@ -424,7 +424,7 @@ async function main() {
     ollamaBaseUrl = process.env.OLLAMA_BASE_URL ?? DEFAULT_OLLAMA_BASE_URL;
     ollamaModel =
       process.env.OLLAMA_EMBED_MODEL ?? DEFAULT_OLLAMA_EMBED_MODEL;
-    // Extend the global fetch timeouts — Intel CPUs embedding NASM-sized
+    // Extend the global fetch timeouts — Intel CPUs embedding paragraph-sized
     // batches routinely exceed undici's 5-minute default and fail with
     // "Headers Timeout Error" before the response lands.
     setGlobalDispatcher(
@@ -468,7 +468,7 @@ async function main() {
     throw new Error(
       `No *.json fixtures found in ${FIXTURES_DIR} or ${PRIVATE_DIR}. ` +
         "Drop your corpus there first (see kb-fixtures/README.md), or run " +
-        "`pnpm kb:ingest` to ingest NASM PDFs into kb-fixtures/private/.",
+        "`pnpm kb:ingest` to ingest your PDFs into kb-fixtures/private/.",
     );
   }
   if (onlyNamespaces.length > 0) {
