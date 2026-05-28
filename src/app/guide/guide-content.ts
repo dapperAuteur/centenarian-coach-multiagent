@@ -40,7 +40,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       },
       {
         type: "p",
-        text: "The coach is grounded in NASM study materials: the Certified Personal Trainer (CPT), Certified Nutrition Coach (CNC), and Corrective Exercise Specialist (CES) curricula. Answers cite real passages from those sources rather than relying on generic model knowledge.",
+        text: "The coach is grounded in a science-based fitness, nutrition, and corrective-exercise curriculum. Answers cite real passages from those source materials rather than relying on generic model knowledge.",
       },
     ],
   },
@@ -56,10 +56,10 @@ export const GUIDE_SECTIONS: GuideSection[] = [
       {
         type: "list",
         items: [
-          "Nutrition: diet, macros, protein, calories, supplements, eating patterns, fasting. Grounded in NASM CNC.",
-          "Workout: strength training, cardio, exercise programming, progression, periodization. Grounded in NASM CPT.",
+          "Nutrition: diet, macros, protein, calories, supplements, eating patterns, fasting.",
+          "Workout: strength training, cardio, exercise programming, progression, periodization.",
           "Recovery: sleep, HRV, rest days, stress, and readiness.",
-          "Corrective Exercise: movement assessment, postural imbalances, mobility, flexibility, SMR / foam rolling, and region-specific corrective strategies. Grounded in NASM CES.",
+          "Corrective Exercise: movement assessment, postural imbalances, mobility, flexibility, SMR / foam rolling, and region-specific corrective strategies.",
         ],
       },
     ],
@@ -91,7 +91,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     blocks: [
       {
         type: "p",
-        text: "Each run shows the supervisor's routing rationale, which specialists were consulted (with timings), and the synthesized answer. Citations are grouped per specialist and toggled open under the answer, so you can see the NASM source label behind each claim.",
+        text: "Each run shows the supervisor's routing rationale, which specialists were consulted (with timings), and the synthesized answer. Citations are grouped per specialist and toggled open under the answer, so you can see the source label behind each claim.",
       },
       {
         type: "p",
@@ -256,11 +256,11 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     blocks: [
       {
         type: "p",
-        text: "The repo ships kb-fixtures/ empty. You supply the knowledge base: either hand-written { source, content } JSON files, or PDFs you ingest. The author's instance is grounded in NASM CPT, CNC, and CES PDFs.",
+        text: "The repo ships kb-fixtures/ empty. You supply the knowledge base: either hand-written { source, content } JSON files, or PDFs you ingest. The author's instance is grounded in a science-based curriculum of fitness, nutrition, and corrective-exercise source PDFs.",
       },
       {
         type: "p",
-        text: "Because NASM materials are copyrighted (licensed for personal study), they live in a gitignored kb-fixtures/private/ directory and are never committed. The app is single-admin, so that content stays private to the operator's database.",
+        text: "Because source materials may be copyrighted (licensed for personal study), they live in a gitignored kb-fixtures/private/ directory and are never committed. The app is single-admin, so that content stays private to the operator's database.",
       },
     ],
   },
@@ -271,7 +271,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
     blocks: [
       {
         type: "p",
-        text: "kb:ingest extracts text from the PDF directories listed in scripts/ingest-kb.mjs (NASM nutrition -> nutrition_kb, CPT -> workout_kb, CES -> corrective_kb), chunks it, and writes kb-fixtures/private/<namespace>.json. Use --append to add new PDFs to a finished namespace without disturbing existing rows.",
+        text: "kb:ingest extracts text from the PDF directories listed in scripts/ingest-kb.mjs (one source directory per namespace: nutrition -> nutrition_kb, training -> workout_kb, corrective exercise -> corrective_kb), chunks it, and writes kb-fixtures/private/<namespace>.json. Use --append to add new PDFs to a finished namespace without disturbing existing rows.",
       },
       {
         type: "code",

@@ -10,7 +10,7 @@ import { GUIDE_SECTIONS } from "./guide-content";
 export const metadata = {
   title: "Guide | Centenarian Coach Multi-Agent",
   description:
-    "How to use and run the Centenarian Coach: asking the multi-agent coach, the architecture, and operating the NASM-grounded knowledge base (PDF ingest, embeddings, choosing LLMs).",
+    "How to use and run the Centenarian Coach: asking the multi-agent coach, the architecture, and operating the science-based knowledge base (PDF ingest, embeddings, choosing LLMs).",
 };
 
 export default function GuidePage() {
@@ -25,8 +25,8 @@ export default function GuidePage() {
       <h1 className="mt-4 text-3xl font-bold tracking-tight">Guide</h1>
       <p className="mt-2 text-sm text-gray-500">
         How to use the coach, how it is built, and how to run it yourself. The
-        coach is grounded in NASM CPT, CNC, and CES study materials. Search or
-        filter by who you are.
+        coach is grounded in a science-based fitness and nutrition curriculum.
+        Search or filter by who you are.
       </p>
 
       <GuideBrowser sections={GUIDE_SECTIONS} />

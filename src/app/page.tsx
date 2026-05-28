@@ -22,7 +22,8 @@ export default function HomePage() {
         <span className="font-medium">Workout</span>,{" "}
         <span className="font-medium">Recovery</span>, and{" "}
         <span className="font-medium">Corrective Exercise</span>. Each has its
-        own knowledge base (grounded in NASM CPT, CNC, and CES materials) and
+        own knowledge base (grounded in a science-based fitness and nutrition
+        curriculum) and
         its own tools. The coordinator weaves their findings into one answer
         with per-specialist citations.
       </p>
