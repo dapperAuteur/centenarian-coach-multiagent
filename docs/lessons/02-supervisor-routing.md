@@ -31,7 +31,7 @@ uses Zod plus LangChain's `withStructuredOutput`:
 
 ```ts
 // src/agents/supervisor/routing.schema.ts
-export const AgentEnum = z.enum(["nutrition", "workout", "recovery"]);
+export const AgentEnum = z.enum(["nutrition", "workout", "recovery", "corrective"]);
 
 export const RoutingSchema = z.object({
   agents: z.array(AgentEnum).min(1)
