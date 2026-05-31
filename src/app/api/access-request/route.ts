@@ -16,6 +16,7 @@
 
 import { NextResponse } from "next/server";
 import { signIn } from "@/auth";
+import { apiError, handleRouteError, newRequestId } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 
@@ -26,15 +27,13 @@ interface AccessRequestBody {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request): Promise<Response> {
+  const requestId = newRequestId();
   const body = (await req.json().catch(() => ({}))) as AccessRequestBody;
   const email =
     typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
   if (!email || !EMAIL_RE.test(email)) {
-    return NextResponse.json(
-      { error: "A valid email is required." },
-      { status: 400 },
-    );
+    return apiError(400, "A valid email is required.", requestId);
   }
 
   const adminEmail = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
@@ -55,19 +54,10 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ outcome: "magic_link_sent" });
   } catch (err) {
     // Auth.js wraps the underlying error as { name: "AdapterError", cause },
-    // and `err.message` is the bare class name — useless on its own. Unwrap
-    // the cause so the failure mode (missing table, SMTP refused, etc.)
-    // actually appears in both server logs and the client response.
-    const errorObj = err as Error & { cause?: unknown };
-    const cause = errorObj?.cause;
-    const causeMessage = cause instanceof Error ? cause.message : undefined;
-    const detail =
-      errorObj instanceof Error
-        ? causeMessage
-          ? `${errorObj.message}: ${causeMessage}`
-          : errorObj.message
-        : "Failed to send sign-in link.";
-    console.error("[access-request] sign-in failed:", errorObj, cause);
-    return NextResponse.json({ error: detail }, { status: 500 });
+    // and `err.message` is the bare class name — useless on its own.
+    // handleRouteError unwraps one level of `cause` so the failure mode
+    // (missing table, SMTP refused, etc.) appears in both the server logs and
+    // the client response, and attaches a request id.
+    return handleRouteError("access-request", err, requestId);
   }
 }

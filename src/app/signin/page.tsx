@@ -19,6 +19,7 @@
 // No magic link is ever sent to a non-admin email.
 
 import { useState, type FormEvent } from "react";
+import ErrorNotice from "@/components/ErrorNotice";
 
 type Status =
   | "idle"
@@ -33,6 +34,7 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   const normalized = email.trim().toLowerCase();
   const busy = status === "sending" || status === "joining";
@@ -41,6 +43,7 @@ export default function SignInPage() {
     e.preventDefault();
     if (!normalized || busy) return;
     setError(null);
+    setRequestId(null);
     setStatus("sending");
     try {
       const res = await fetch("/api/access-request", {
@@ -51,9 +54,13 @@ export default function SignInPage() {
       const data = (await res.json().catch(() => ({}))) as {
         outcome?: string;
         error?: string;
+        requestId?: string;
       };
       if (!res.ok) {
-        throw new Error(data.error ?? `Request failed (${res.status})`);
+        setError(data.error ?? `Request failed (${res.status})`);
+        setRequestId(data.requestId ?? res.headers.get("x-request-id"));
+        setStatus("error");
+        return;
       }
       if (data.outcome === "magic_link_sent") {
         setStatus("sent");
@@ -71,6 +78,7 @@ export default function SignInPage() {
   async function joinWaitlist() {
     if (!normalized || busy) return;
     setError(null);
+    setRequestId(null);
     setStatus("joining");
     try {
       const res = await fetch("/api/waitlist", {
@@ -81,8 +89,12 @@ export default function SignInPage() {
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
+          requestId?: string;
         };
-        throw new Error(data.error ?? `Request failed (${res.status})`);
+        setError(data.error ?? `Request failed (${res.status})`);
+        setRequestId(data.requestId ?? res.headers.get("x-request-id"));
+        setStatus("error");
+        return;
       }
       setStatus("waitlisted");
     } catch (err) {
@@ -180,9 +192,11 @@ export default function SignInPage() {
       )}
 
       {error && (
-        <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
+        <ErrorNotice
+          className="mt-4"
+          message={error}
+          requestId={requestId ?? undefined}
+        />
       )}
     </main>
   );
