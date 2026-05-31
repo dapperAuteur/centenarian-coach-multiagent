@@ -40,7 +40,7 @@ new namespace string rather than new DDL:
 -- src/db/migrations (coach_kb)
 CREATE TABLE coach_kb (
   id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  namespace  text NOT NULL,          -- 'nutrition_kb' | 'workout_kb' | 'recovery_kb'
+  namespace  text NOT NULL,          -- 'nutrition_kb' | 'workout_kb' | 'recovery_kb' | 'corrective_kb'
   source     text NOT NULL,          -- citation label
   content    text NOT NULL,          -- the chunk (also the citation snippet)
   embedding  vector(768)

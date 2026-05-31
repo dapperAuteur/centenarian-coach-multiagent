@@ -30,9 +30,9 @@ no seam along which to divide the work.
 
 A multi-agent system splits one large prompt into a **supervisor** that routes
 and a set of **specialists** that each own a slice of the problem. In this repo
-the coach has a supervisor plus a Nutrition and a Workout specialist (Recovery
-is planned). The supervisor classifies the question, decides which specialists
-to consult, and synthesizes their findings.
+the coach has a supervisor plus Nutrition, Workout, Recovery, and Corrective
+Exercise specialists. The supervisor classifies the question, decides which
+specialists to consult, and synthesizes their findings.
 
 That split buys three concrete things:
 

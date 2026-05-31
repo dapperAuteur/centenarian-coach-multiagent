@@ -2,6 +2,8 @@
 
 > **This is a portfolio + course artifact.** The live demo is gated to a single admin email — anyone else can join a paid-access waitlist.
 
+**Live demo:** [centenarian-coach-multiagent.witus.online](https://centenarian-coach-multiagent.witus.online) — gated to a single admin email; everyone else can join the access waitlist.
+
 A LangGraph supervisor with specialist subgraphs. You ask one question. A coordinator decides which specialists to consult. Each specialist has its own retrieval store and its own tools. The coordinator weaves the findings into one answer with citations.
 
 [![Build status](https://img.shields.io/badge/build-passing-green.svg)]() <!-- replace with real CI badge -->
@@ -16,12 +18,12 @@ A LangGraph supervisor with specialist subgraphs. You ask one question. A coordi
 
 Most AI coaches use one prompt for everything. This one routes your question to the specialist that actually knows the answer.
 
-The supervisor classifies the user's question, decides which specialists to invoke (one, two, or all three), and synthesizes their findings. Each specialist (Nutrition, Workout, Recovery) owns its own retrieval namespace and its own tools. Specialists do not read each other's outputs — the supervisor handles synthesis.
+The supervisor classifies the user's question, decides which specialists to invoke (one, two, three, or all four), and synthesizes their findings. Each specialist (Nutrition, Workout, Recovery, Corrective Exercise) owns its own retrieval namespace and its own tools. Specialists do not read each other's outputs — the supervisor handles synthesis.
 
 This repo demonstrates three LangGraph patterns: supervisor routing, per-agent retrieval, and state passing across nested subgraphs.
 
-Companion 5-lesson course (Module 2 of the series): [livelongworkfree.com/course/multi-agent](https://livelongworkfree.com/course/multi-agent)
-Companion podcast (S1E3 — coming after S1E1): [livelongworkfree.com/podcast](https://livelongworkfree.com/podcast)
+Companion 5-lesson course (Module 2 of the series): *coming soon.*
+Companion podcast (S1E3 — coming after S1E1): *coming soon.*
 Sister projects in the same curriculum: [Triage Agent](https://github.com/dapperAuteur/witus-triage-agent), [Field Reporter](https://github.com/dapperAuteur/wanderlearn-field-reporter)
 
 ---
@@ -30,7 +32,7 @@ Sister projects in the same curriculum: [Triage Agent](https://github.com/dapper
 
 A single-agent coach conflates domains. Ask "I slept 5 hours, should I do legs today?" and a single-prompt agent has to be a nutrition expert, a strength training expert, a recovery expert, and a synthesizer all at once. Quality suffers.
 
-The right architecture is a coordinator that knows when to consult one specialist (a pure nutrition question), when to consult two (cross-domain like the legs example), and when to consult all three.
+The right architecture is a coordinator that knows when to consult one specialist (a pure nutrition question), when to consult two (cross-domain like the legs example), and when to consult all four.
 
 Built originally for CentenarianOS — my personal "live to 100 in good shape" operating system — but architected so the same supervisor + specialist pattern works anywhere. The repo ships an **empty `kb-fixtures/` directory**: bring your own corpus (any domain), seed it, and the routing logic is unchanged.
 
@@ -43,11 +45,13 @@ graph TD
     USER([User question]) --> SUPERVISOR[Supervisor: classify + route]
     SUPERVISOR -->|nutrition path| NUTRITION[Nutrition specialist]
     SUPERVISOR -->|workout path| WORKOUT[Workout specialist]
-    %% all three specialists ship; the supervisor routes to one, two, or all three
+    %% all four specialists ship; the supervisor routes to one, two, three, or all four
     SUPERVISOR -->|recovery path| RECOVERY[Recovery specialist]
+    SUPERVISOR -->|corrective path| CORRECTIVE[Corrective Exercise specialist]
     NUTRITION --> SYNTHESIZE[Synthesize answer]
     WORKOUT --> SYNTHESIZE
     RECOVERY --> SYNTHESIZE
+    CORRECTIVE --> SYNTHESIZE
     SYNTHESIZE --> ANSWER([Final answer with citations])
 ```
 
@@ -74,7 +78,7 @@ This repo demonstrates three LangGraph patterns. Each has a companion lesson und
 A typed routing decision before any specialist runs. The supervisor returns a `RoutingDecision` — which specialists to consult, the primary one, an optional rewritten sub-question per specialist, and a rationale. It is produced with a Zod schema via `withStructuredOutput`, so an invalid route is unrepresentable.
 
 ```ts
-type Agent = 'nutrition' | 'workout' | 'recovery';
+type Agent = 'nutrition' | 'workout' | 'recovery' | 'corrective';
 
 type RoutingDecision = {
   agents: Agent[];                          // specialists to consult
@@ -90,7 +94,7 @@ Full supervisor: [`src/agents/supervisor/`](./src/agents/supervisor/)
 
 ### 2. Per-agent retrieval
 
-Each specialist has its own pgvector namespace. Nutrition does not see workout docs. Workout does not see recovery docs. This is the difference between three specialists and one generalist with a fancy prompt.
+Each specialist has its own pgvector namespace. Nutrition does not see workout docs. Workout does not see recovery docs. This is the difference between four specialists and one generalist with a fancy prompt.
 
 ```ts
 export async function retrieveNutritionKb(query: string, k = 5) {
@@ -102,7 +106,7 @@ export async function retrieveNutritionKb(query: string, k = 5) {
 }
 ```
 
-Each namespace can be tuned, evaluated, and updated independently. Adding a fourth specialist (Mobility, Mindset, whatever your domain needs) is a contained change.
+Each namespace can be tuned, evaluated, and updated independently. Adding another specialist (Mindset, whatever your domain needs) is a contained change.
 
 All retrieval modules: [`src/agents/*/retrieval.ts`](./src/agents/)
 
@@ -119,11 +123,12 @@ type CoachState = {
     nutrition?: SpecialistFinding;
     workout?: SpecialistFinding;
     recovery?: SpecialistFinding;
+    corrective?: SpecialistFinding;
   };
   finalAnswer?: {
     text: string;
     citations: Citation[];
-    consultedAgents: ('nutrition' | 'workout' | 'recovery')[];
+    consultedAgents: ('nutrition' | 'workout' | 'recovery' | 'corrective')[];
   };
 };
 ```
@@ -160,11 +165,12 @@ pnpm kb:seed
 pnpm dev
 ```
 
-Open `http://localhost:3000/coach` and try these three sample questions to see routing in action:
+Open `http://localhost:3000/coach` and try these four sample questions to see routing in action:
 
 1. "How much protein should a 70-year-old eat to preserve muscle?" → routes to **Nutrition**.
 2. "How should I progress my squat once I can hit all my reps?" → routes to **Workout**.
-3. "I want to build muscle — how should I combine eating and training?" → routes to **Nutrition + Workout**.
+3. "My knee caves inward when I squat — how do I fix it?" → routes to **Corrective Exercise**.
+4. "I want to build muscle — how should I combine eating and training?" → routes to **Nutrition + Workout**.
 
 Watch each trace in LangSmith to see the supervisor decision, the specialist subgraphs, and the synthesizer working in sequence.
 
@@ -184,7 +190,7 @@ Five lessons under `/docs/lessons/`. Each is ~1,200 words plus inline code.
 - [Lesson 4 — State Passing](./docs/lessons/04-state-passing.md). Sharing context across nested subgraphs without stomping.
 - [Lesson 5 — Evals](./docs/lessons/05-evals.md). Building a LangSmith eval dataset and rubric for multi-agent answers.
 
-Lessons use a different sample domain (a fictional customer support desk with three product specialists) so the pattern transfers cleanly.
+The lessons teach with this repo's own specialists (Nutrition, Workout, Recovery, Corrective Exercise), and each ends with a build-it-yourself exercise that rebuilds the pattern on a separate domain — a fictional customer-support desk — so the architecture transfers cleanly to your own problem.
 
 ---
 
@@ -221,7 +227,8 @@ centenarian-coach-multiagent/
 │   │   ├── supervisor/             <- routing logic
 │   │   ├── nutrition/              <- specialist subgraph + tools
 │   │   ├── workout/                <- specialist subgraph + tools
-│   │   └── recovery/               <- specialist subgraph + tools
+│   │   ├── recovery/               <- specialist subgraph + tools
+│   │   └── corrective/             <- specialist subgraph + tools
 │   ├── synthesizer/                <- weaves findings into final answer
 │   ├── state.ts                    <- typed state object
 │   ├── app/
@@ -307,7 +314,7 @@ Two more provider-shaped bugs showed up the same week: `gemini-2.5-pro` has no f
 
 ## Roadmap
 
-This repo ships v2 — three specialists and a 20-question eval. The visible roadmap:
+This repo ships v2 — four specialists and a 20-question eval. The visible roadmap:
 
 - [x] v2 — Recovery specialist with sleep + HRV tools.
 - [x] v2.1 — LangSmith eval dataset (20 questions).
@@ -324,9 +331,9 @@ Track progress in [Issues](./issues). PRs not currently accepted; this is a port
 - **Triage Agent (single-agent, human-in-the-loop):** [github.com/dapperAuteur/witus-triage-agent](https://github.com/dapperAuteur/witus-triage-agent)
 - **Field Reporter (reflection-loop agent):** [github.com/dapperAuteur/wanderlearn-field-reporter](https://github.com/dapperAuteur/wanderlearn-field-reporter)
 - **Honest model comparison:** [Gemini vs Claude SWOT](https://brandanthonymcdonald.com/blog/gemini-vs-claude-swot)
-- **Podcast walkthrough:** [Live Long. Work Free.](https://livelongworkfree.com/podcast)
-- **4-lesson sister course (single-agent triage):** [livelongworkfree.com/course/triage](https://livelongworkfree.com/course/triage)
-- **5-lesson course for this repo:** [livelongworkfree.com/course/multi-agent](https://livelongworkfree.com/course/multi-agent)
+- **Podcast walkthrough:** Live Long. Work Free. — *coming soon.*
+- **4-lesson sister course (single-agent triage):** *coming soon.*
+- **5-lesson course for this repo:** *coming soon.*
 
 The three repos together cover the three patterns that show up most in production agent engineering: single-agent + human-in-the-loop (Triage), multi-agent + supervisor routing (this repo), and reflection loops (Field Reporter). Together they are a complete curriculum.
 

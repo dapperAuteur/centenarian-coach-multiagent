@@ -102,8 +102,9 @@ walk through the design decisions — when multi-agent pays, structured routing,
 per-agent retrieval, state passing, and evals — and each ends with a
 build-this-yourself exercise on a customer-support-desk example, so the
 pattern transfers. The chat model is switchable: Claude or Gemini, an env
-var apart, for A/B quality comparison. Recovery is the planned third
-specialist; evals land in v2."
+var apart, for A/B quality comparison. All four specialists ship — nutrition,
+workout, recovery, and corrective exercise — and the eval suite lives in
+`evals/`."
 
 **Show:** `docs/lessons/README.md`, then back to the GitHub repo for the
 sign-off shot.
