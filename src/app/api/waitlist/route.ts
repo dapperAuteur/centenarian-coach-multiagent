@@ -11,6 +11,7 @@ import { NextResponse, after } from "next/server";
 import { getDb } from "@/lib/db";
 import { waitlist } from "@/db/schema";
 import { submitToInbox } from "@/lib/submit-to-inbox";
+import { apiError, handleRouteError, newRequestId } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 
@@ -21,15 +22,13 @@ interface WaitlistBody {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request): Promise<Response> {
+  const requestId = newRequestId();
   const body = (await req.json().catch(() => ({}))) as WaitlistBody;
   const email =
     typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
   if (!email || !EMAIL_RE.test(email)) {
-    return NextResponse.json(
-      { error: "A valid email is required." },
-      { status: 400 },
-    );
+    return apiError(400, "A valid email is required.", requestId);
   }
 
   try {
@@ -52,9 +51,6 @@ export async function POST(req: Request): Promise<Response> {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Insert failed" },
-      { status: 500 },
-    );
+    return handleRouteError("waitlist", err, requestId);
   }
 }

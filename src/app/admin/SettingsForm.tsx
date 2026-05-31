@@ -12,6 +12,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import ErrorNotice from "@/components/ErrorNotice";
 import {
   COACH_PROVIDERS,
   COACH_ROLES,
@@ -94,7 +95,7 @@ type Status =
   | { kind: "idle" }
   | { kind: "saving" }
   | { kind: "saved" }
-  | { kind: "error"; message: string };
+  | { kind: "error"; message: string; requestId?: string };
 
 interface Props {
   initialSettings: CoachSettings;
@@ -150,12 +151,19 @@ export function SettingsForm({
         headers: { "content-type": "application/json" },
         body: JSON.stringify(settings),
       });
-      const data = (await res.json()) as {
+      const data = (await res.json().catch(() => ({}))) as {
         settings?: CoachSettings;
         error?: string;
+        requestId?: string;
       };
       if (!res.ok || !data.settings) {
-        throw new Error(data.error ?? `Save failed (${res.status})`);
+        setStatus({
+          kind: "error",
+          message: data.error ?? `Save failed (${res.status})`,
+          requestId:
+            data.requestId ?? res.headers.get("x-request-id") ?? undefined,
+        });
+        return;
       }
       setSettings(data.settings);
       setStatus({ kind: "saved" });
@@ -337,10 +345,10 @@ export function SettingsForm({
         {status.kind === "saved" && (
           <span className="text-sm text-green-700">Saved.</span>
         )}
-        {status.kind === "error" && (
-          <span className="text-sm text-red-700">{status.message}</span>
-        )}
       </div>
+      {status.kind === "error" && (
+        <ErrorNotice message={status.message} requestId={status.requestId} />
+      )}
     </div>
   );
 }

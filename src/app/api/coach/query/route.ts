@@ -23,6 +23,7 @@ import type {
   FindingsMap,
   RoutingDecision,
 } from "@/state";
+import { apiError, newRequestId } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -32,6 +33,7 @@ interface QueryBody {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const requestId = newRequestId();
   let body: QueryBody = {};
   try {
     body = (await req.json()) as QueryBody;
@@ -41,10 +43,7 @@ export async function POST(req: Request): Promise<Response> {
   const userQuery =
     typeof body.userQuery === "string" ? body.userQuery.trim() : "";
   if (!userQuery) {
-    return new Response(JSON.stringify({ error: "userQuery is required" }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    });
+    return apiError(400, "userQuery is required", requestId);
   }
 
   const sessionId = randomUUID();
@@ -125,9 +124,11 @@ export async function POST(req: Request): Promise<Response> {
 
         send({ type: "done", langsmithRunId });
       } catch (err) {
+        console.error(`[coach/query] (requestId=${requestId})`, err);
         send({
           type: "error",
           message: err instanceof Error ? err.message : "Unknown error",
+          requestId,
         });
       } finally {
         controller.close();
@@ -139,6 +140,7 @@ export async function POST(req: Request): Promise<Response> {
     headers: {
       "content-type": "application/x-ndjson; charset=utf-8",
       "cache-control": "no-store",
+      "x-request-id": requestId,
     },
   });
 }

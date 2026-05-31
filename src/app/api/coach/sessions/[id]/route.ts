@@ -1,7 +1,7 @@
 // src/app/api/coach/sessions/[id]/route.ts
-// GET /api/coach/sessions/:id — one coach run with its specialist calls
-// (PRD §9). 404s on an unknown id. Admin-gated by middleware.
+// GET /api/coach/sessions/:id — fetch a single session for the detail view.
 
+import { apiError, handleRouteError, newRequestId } from "@/lib/api-error";
 import { getSession } from "@/lib/sessions";
 
 export const runtime = "nodejs";
@@ -11,15 +11,15 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
-  const { id } = await params;
+  const requestId = newRequestId();
   try {
+    const { id } = await params;
     const session = await getSession(id);
     if (!session) {
-      return Response.json({ error: "Session not found" }, { status: 404 });
+      return apiError(404, "Session not found", requestId);
     }
     return Response.json({ session });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return Response.json({ error: message }, { status: 500 });
+    return handleRouteError("coach/sessions/[id]", err, requestId);
   }
 }
