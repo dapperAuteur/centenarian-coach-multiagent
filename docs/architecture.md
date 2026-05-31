@@ -12,16 +12,20 @@ graph TD
     USER([User question]) --> SUPERVISOR[Supervisor: classify + route]
     SUPERVISOR -->|nutrition path| NUTRITION[Nutrition specialist]
     SUPERVISOR -->|workout path| WORKOUT[Workout specialist]
+    SUPERVISOR -->|recovery path| RECOVERY[Recovery specialist]
+    SUPERVISOR -->|corrective path| CORRECTIVE[Corrective Exercise specialist]
     NUTRITION --> SYNTHESIZE[Synthesize answer]
     WORKOUT --> SYNTHESIZE
+    RECOVERY --> SYNTHESIZE
+    CORRECTIVE --> SYNTHESIZE
     SYNTHESIZE --> ANSWER([Final answer with citations])
 ```
 
 `START → supervisor → (fan-out to the chosen specialists) → synthesize → END`.
 The supervisor returns a structured routing decision before any specialist runs;
 the conditional edge out of it returns an array of node names, so the chosen
-specialists run in parallel and fan back in to the synthesizer. Recovery is a
-planned third specialist (v2).
+specialists run in parallel and fan back in to the synthesizer. Four specialists
+ship: nutrition, workout, recovery, and corrective exercise.
 
 Defined in [`src/graph.ts`](../src/graph.ts).
 
@@ -57,6 +61,7 @@ type CoachState = {
     nutrition?: SpecialistFinding;
     workout?: SpecialistFinding;
     recovery?: SpecialistFinding;
+    corrective?: SpecialistFinding;
   };
   finalAnswer?: { text: string; citations: Citation[]; consultedAgents: Agent[] };
 };
@@ -73,6 +78,8 @@ their own slot without overwriting one another. Defined in
 | `src/agents/supervisor/` | Routing schema + supervisor node |
 | `src/agents/nutrition/`  | Nutrition subgraph, retrieval, tools |
 | `src/agents/workout/`    | Workout subgraph, retrieval, tools |
+| `src/agents/recovery/`   | Recovery subgraph, retrieval, tools |
+| `src/agents/corrective/` | Corrective Exercise subgraph, retrieval, tools |
 | `src/synthesizer/`       | Synthesizer node (fan-in over findings) |
 | `src/lib/`               | LLM factory, embeddings, pgvector, LangSmith gate |
 | `src/app/api/coach/`     | Streaming query route |

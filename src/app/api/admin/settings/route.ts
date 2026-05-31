@@ -10,6 +10,7 @@ import {
   updateSettings,
 } from "@/lib/settings";
 import { COACH_PROVIDERS } from "@/lib/llm-config";
+import { apiError, handleRouteError, newRequestId } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,36 +48,35 @@ function envContext() {
 }
 
 export async function GET(): Promise<Response> {
+  const requestId = newRequestId();
   try {
     const settings = await getStoredSettings();
     return Response.json({ settings, ...envContext() });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return Response.json({ error: message }, { status: 500 });
+    return handleRouteError("admin/settings:GET", err, requestId);
   }
 }
 
 export async function PUT(req: Request): Promise<Response> {
+  const requestId = newRequestId();
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    return apiError(400, "Invalid JSON body", requestId);
   }
 
   const parsed = settingsSchema.safeParse(body);
   if (!parsed.success) {
-    return Response.json(
-      { error: "Invalid settings", issues: parsed.error.issues },
-      { status: 400 },
-    );
+    return apiError(400, "Invalid settings", requestId, {
+      issues: parsed.error.issues,
+    });
   }
 
   try {
     const settings = await updateSettings(parsed.data);
     return Response.json({ settings, ...envContext() });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return Response.json({ error: message }, { status: 500 });
+    return handleRouteError("admin/settings:PUT", err, requestId);
   }
 }

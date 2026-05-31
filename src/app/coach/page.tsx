@@ -8,6 +8,8 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import ErrorNotice from "@/components/ErrorNotice";
+import { extractApiError } from "@/lib/client-errors";
 import type {
   Agent,
   Citation,
@@ -23,6 +25,7 @@ interface StreamEvent {
   finding?: SpecialistFinding;
   finalAnswer?: FinalAnswer;
   message?: string;
+  requestId?: string;
   langsmithRunId?: string | null;
 }
 
@@ -41,6 +44,7 @@ export default function CoachPage() {
   const [findings, setFindings] = useState<SpecialistFinding[]>([]);
   const [answer, setAnswer] = useState<FinalAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
   const [showCitations, setShowCitations] = useState(false);
   const [runId, setRunId] = useState<string | null>(null);
 
@@ -54,6 +58,7 @@ export default function CoachPage() {
     setFindings([]);
     setAnswer(null);
     setError(null);
+    setRequestId(null);
     setShowCitations(false);
     setRunId(null);
 
@@ -63,8 +68,14 @@ export default function CoachPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ userQuery }),
       });
-      if (!res.ok || !res.body) {
-        throw new Error(`Request failed (${res.status})`);
+      if (!res.ok) {
+        const apiErr = await extractApiError(res);
+        setError(apiErr.message);
+        setRequestId(apiErr.requestId ?? null);
+        return;
+      }
+      if (!res.body) {
+        throw new Error("The server returned an empty response.");
       }
 
       const reader = res.body.getReader();
@@ -88,6 +99,7 @@ export default function CoachPage() {
             setAnswer(event.finalAnswer);
           } else if (event.type === "error") {
             setError(event.message ?? "Unknown error");
+            setRequestId(event.requestId ?? null);
           } else if (event.type === "done" && event.langsmithRunId) {
             setRunId(event.langsmithRunId);
           }
@@ -153,9 +165,11 @@ export default function CoachPage() {
       </form>
 
       {error && (
-        <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
+        <ErrorNotice
+          className="mt-4"
+          message={error}
+          requestId={requestId ?? undefined}
+        />
       )}
 
       {routing && (
