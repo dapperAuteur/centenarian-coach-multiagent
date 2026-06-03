@@ -4,9 +4,10 @@
 
 ## What you will build
 
-One artifact, start to finish: the **Centenarian Coach**. You ask it a health
-question. A *supervisor* classifies the question and decides which domain
-specialists to consult — nutrition, workout, recovery — and each specialist
+One artifact, start to finish: **Fit T. Cent 3.0**, the Centenarian Coach (the
+"3.0" is honest — this is a rebuild of a coach I have shipped twice before). You
+ask it a health question. A *supervisor* classifies the question and decides which
+domain specialists to consult — nutrition, workout, recovery — and each specialist
 answers from **its own retrieval store**, then a synthesizer weaves the findings
 into one cited answer.
 

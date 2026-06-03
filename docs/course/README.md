@@ -1,7 +1,7 @@
 # Domain-Specialist Multi-Agent with Per-Agent RAG
 
-A LangChain Academy **Project** course. You build one artifact end to end: the
-**Centenarian Coach** — a LangGraph supervisor that routes a question to domain
+A LangChain Academy **Project** course. You build one artifact end to end:
+**Fit T. Cent 3.0**, the Centenarian Coach — a LangGraph supervisor that routes a question to domain
 specialists (nutrition, workout, recovery), where **each specialist owns its own
 retrieval namespace** and every answer carries citations grounded in that
 specialist's corpus.
@@ -40,10 +40,11 @@ measured, not assumed.
 7. [The topology-enforces-ordering rule](./module-1-supervisor/07-topology-enforces-ordering.md) — `course/lesson-07`
 8. [Conditional fan-out + temperature-0 classification](./module-1-supervisor/08-fan-out-and-temperature-zero.md) — `course/lesson-08`
 
-### Module 2 · Specialist #1: Nutrition — *in progress*
-Per-agent retrieval namespacing · the embedding-consistency trap · building the
-first specialist subgraph · the type-enforced "can't read other specialists'
-findings" trick.
+### Module 2 · Specialist #1: Nutrition — *live*
+9. [Per-agent retrieval namespacing](./module-2-nutrition/09-per-agent-retrieval-namespacing.md) — `course/lesson-09`
+10. [The embedding-consistency trap](./module-2-nutrition/10-embedding-consistency-trap.md) — `course/lesson-10`
+11. [Building the first specialist subgraph (Nutrition)](./module-2-nutrition/11-building-the-nutrition-subgraph.md) — `course/lesson-11`
+12. [The type-enforced "can't read other specialists' findings" trick](./module-2-nutrition/12-type-enforced-isolation.md) — `course/lesson-12`
 
 ### Module 3 · Specialists #2 + #3: Workout + Recovery — *in progress*
 Adding Workout (the pattern repeats) · adding Recovery + subgraph isolation ·
@@ -64,7 +65,7 @@ with starting file paths · extending the eval suite · capstone.
 
 ---
 
-> **Status.** Modules 0–1 are authored; Modules 2–6 are being written on the
+> **Status.** Modules 0–2 are authored; Modules 3–6 are being written on the
 > `feat/langchain-academy-project-refactor` branch, decomposed and expanded from
 > the repo's original five lessons in [`../lessons/`](../lessons/). The video
 > production package lives in [`../video/`](../video/).
