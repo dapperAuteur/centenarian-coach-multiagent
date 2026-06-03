@@ -51,10 +51,12 @@ measured, not assumed.
 14. [Adding Recovery, and why each specialist gets its own state schema](./module-3-workout-recovery/14-adding-recovery-and-isolation.md), `course/lesson-14`
 15. [State passing and fan-in](./module-3-workout-recovery/15-state-passing-and-fan-in.md), `course/lesson-15`
 
-### Module 4 · LangSmith evaluation, *in progress*
-What to evaluate · deterministic evaluators (routing + citation) · the LLM-judge
-grounding evaluator · running evals in LangSmith · the find-bug → add-example →
-re-run loop on a growing dataset.
+### Module 4 · LangSmith evaluation, *live*
+16. [Why multi-agent systems fail quietly, and what to evaluate](./module-4-evaluation/16-why-multi-agent-fails-quietly.md), `course/lesson-16`
+17. [Deterministic evaluators: routing and citation](./module-4-evaluation/17-deterministic-evaluators.md), `course/lesson-17`
+18. [The LLM-judge grounding evaluator](./module-4-evaluation/18-llm-judge-grounding.md), `course/lesson-18`
+19. [Running evals in LangSmith](./module-4-evaluation/19-running-evals-in-langsmith.md), `course/lesson-19`
+20. [The iteration loop and the growing dataset](./module-4-evaluation/20-iteration-loop-growing-dataset.md), `course/lesson-20`
 
 ### Module 5 · Deployment + multi-tenant, *in progress*
 LangGraph Platform deployment · per-user state · auth on the live coach ·
@@ -66,7 +68,7 @@ with starting file paths · extending the eval suite · capstone.
 
 ---
 
-> **Status.** Modules 0–3 are authored; Modules 4–6 are being written on the
+> **Status.** Modules 0–4 are authored; Modules 5–6 are being written on the
 > `feat/langchain-academy-project-refactor` branch, decomposed and expanded from
 > the repo's original five lessons in [`../lessons/`](../lessons/). The video
 > production package lives in [`../video/`](../video/).
