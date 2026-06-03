@@ -1,4 +1,4 @@
-# Module 0 · Lesson 4 — First-run smoke test
+# Module 0 · Lesson 4 · First-run smoke test
 
 > **Tag:** `course/lesson-04` · **Module 0: Setup + scope** · ~5 min
 
@@ -23,7 +23,7 @@ pnpm kb:status    # prints how many rows landed in each namespace
 `pnpm kb:seed` ([`scripts/seed-kb.mjs`](../../../scripts/seed-kb.mjs)) embeds every
 document with the same model the coach uses at query time and writes a
 768-dimension vector per row. That "same model at seed and query" rule is the
-embedding-consistency trap you will meet properly in Module 2 — a sentence embedding
+embedding-consistency trap you will meet properly in Module 2 · a sentence embedding
 only means something relative to other vectors from the *same* model (Reimers &
 Gurevych, 2019). For now, just confirm `pnpm kb:status` shows non-empty namespaces.
 
@@ -40,12 +40,12 @@ pnpm dev
 The route handler [`src/app/api/coach/query/route.ts`](../../../src/app/api/coach/query/route.ts)
 streams NDJSON events as the graph runs. You will see them arrive in order:
 
-1. `session` — a session id.
-2. `routing` — the supervisor's decision (this question → **nutrition**), with a
+1. `session`, a session id.
+2. `routing`, the supervisor's decision (this question → **nutrition**), with a
    rationale.
-3. `finding` — the nutrition specialist's answer, **with citations** to the
+3. `finding`, the nutrition specialist's answer, **with citations** to the
    snippets it retrieved.
-4. `answer` — the synthesizer's final, woven answer plus the combined citations.
+4. `answer`, the synthesizer's final, woven answer plus the combined citations.
 
 That ordering is not luck; it is enforced by the graph's structure, which is the
 subject of Module 1. The citations are the grounding discipline from Lesson 1 made
@@ -58,11 +58,11 @@ If you set `LANGSMITH_API_KEY`, every query writes a LangSmith trace
 (LangChain, 2025). The `done` event carries a `langsmithRunId`; open that run and
 you will see the tree: the supervisor node, the nutrition specialist as a nested
 subgraph (retrieve → assess → compose), and the synthesizer at the end. Tracing is
-how you debug a multi-agent system that "fails quietly" — a wrong route still
+how you debug a multi-agent system that "fails quietly", a wrong route still
 produces a fluent answer, and the trace is where you see *why* (LangChain, 2025).
 Observability is wired into the artifact from the first run, not added later.
 
-If `LANGSMITH_API_KEY` is unset, the app still runs — tracing is fail-soft — but you
+If `LANGSMITH_API_KEY` is unset, the app still runs, tracing is fail-soft, but you
 will not have a trace to open. Set it now; you will use traces in every module.
 
 ## You now have a running coach
@@ -73,8 +73,7 @@ supervisor decide where to route, and why is the ordering guaranteed?*
 
 ### Try it
 
-Ask a cross-domain question — "I slept five hours; should I train legs today?" —
-and watch the `routing` event fan out to **two** specialists. Note which two, and
+Ask a cross-domain question, "I slept five hours; should I train legs today?", and watch the `routing` event fan out to **two** specialists. Note which two, and
 whether the final answer connects their advice or just lists it. You will make that
 behavior measurable in Module 4.
 
@@ -88,4 +87,4 @@ Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Sia
 
 ---
 
-Previous: [Lesson 3 — Getting set up (Python)](./03-getting-set-up-python.md) · **End of Module 0** · Next: *Module 1 — The supervisor (in progress)* · [Course index](../README.md)
+Previous: [Lesson 3 · Getting set up (Python)](./03-getting-set-up-python.md) · **End of Module 0** · Next: *Module 1 · The supervisor (in progress)* · [Course index](../README.md)

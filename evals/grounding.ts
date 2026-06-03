@@ -2,7 +2,7 @@
 // LLM-as-judge grounding evaluator. Deliberately kept OUT of evals/rubric.ts so
 // that file stays pure (no API, no network) and unit-tests cleanly. The judge
 // scores, 0..1, what fraction of the final answer's factual claims trace back
-// to a retrieved snippet — the citation-grounding discipline a health/longevity
+// to a retrieved snippet, the citation-grounding discipline a health/longevity
 // coach must meet, where an ungrounded but fluent answer is a liability.
 //
 // Used two ways with one source of truth:

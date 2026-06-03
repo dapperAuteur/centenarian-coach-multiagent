@@ -1,11 +1,11 @@
-# Migration notes — `feat/langchain-academy-project-refactor`
+# Migration notes, `feat/langchain-academy-project-refactor`
 
 **Goal:** refactor this repo into a LangChain Academy **Project** course,
-*Domain-Specialist Multi-Agent with Per-Agent RAG* — 6 modules / 28 lessons /
-~2.5 hr video — lifting the existing 4/5 baseline to "Exceeding" (every rubric
+*Domain-Specialist Multi-Agent with Per-Agent RAG*, 6 modules / 28 lessons /
+~2.5 hr video, lifting the existing 4/5 baseline to "Exceeding" (every rubric
 criterion ≥ 4, ≥ 3 at 5). Source-of-truth: `plans/PRD-langchain-academy-project.md`.
 
-## Build status — Phase A complete; checkpoint pause
+## Build status, Phase A complete; checkpoint pause
 
 The build runs in two phases (per the approved plan + the kickoff's
 "scaffold + Module 0, then checkpoint" decision):
@@ -20,16 +20,16 @@ The build runs in two phases (per the approved plan + the kickoff's
 
 ## Files changed (paths only)
 
-**Added — artifact code (committed):**
+**Added, artifact code (committed):**
 - `evals/grounding.ts` · `evals/run-langsmith.ts`
 - `langgraph.json` · `src/deployment/graph.ts`
 - `tests/topology.test.ts`
 
-**Modified — artifact code (committed):**
+**Modified, artifact code (committed):**
 - `evals/rubric.ts` · `evals/dataset.json` · `tests/coach.eval.test.ts`
 - `package.json` · `pnpm-lock.yaml` · `README.md`
 
-**Added — course + video docs (committed):**
+**Added, course + video docs (committed):**
 - `docs/course/README.md`
 - `docs/course/module-0-setup/01-course-overview.md`
 - `docs/course/module-0-setup/02-getting-set-up-typescript.md`
@@ -37,7 +37,7 @@ The build runs in two phases (per the approved plan + the kickoff's
 - `docs/course/module-0-setup/04-first-run-smoke-test.md`
 - `docs/video/README.md` · `docs/video/production-guide.md` · `docs/video/script.md`
 
-**Added — operator tasks (local; `plans/` is gitignored, NOT committed):**
+**Added, operator tasks (local; `plans/` is gitignored, NOT committed):**
 - `plans/user-tasks/12-provision-langsmith-deployment.md`
 - `plans/user-tasks/13-recording-stack-and-video-host.md`
 - `plans/user-tasks/14-cover-letter-sign-off.md`
@@ -57,10 +57,10 @@ Honest at end of Phase A, with the Phase-B / operator-task target.
 | P3 | Project-scale runtime | **3** | 5 | 6-module/28-lesson structure fixed + Module 0 authored; runtime budget ~2h26m. 5 once Modules 1–6 prose + video land. |
 | P4 | Deep code refs + tagged commits | **5** | 5 | Every Module 0 lesson names real file paths; `course/lesson-NN` tags exist and check out. Pattern sustained as lessons land. |
 | P5 | Eval/observability built in | **4** | 5 | `rubric.ts` (routing+citation) + `grounding.ts` (LLM-judge) + `run-langsmith.ts` (`evaluate()`) + growing-dataset convention (`addedIn`/`note`, 3 regression examples). 5 once the Module 4 iteration-arc lesson is written. |
-| P6 | Extensibility close | **2** | 5 | Not yet materialized — Module 6 (the "add a new specialist" lesson, worked with the wired `corrective` agent) is Phase B. Code + plan already support it. |
+| P6 | Extensibility close | **2** | 5 | Not yet materialized, Module 6 (the "add a new specialist" lesson, worked with the wired `corrective` agent) is Phase B. Code + plan already support it. |
 
 No stop condition tripped: every sub-3 score (P3, P6) reaches target in Phase B
-via planned, scoped work — this is expected mid-build state, not a blocker.
+via planned, scoped work, this is expected mid-build state, not a blocker.
 
 ## Per-provider eval reruns
 
@@ -70,25 +70,25 @@ via planned, scoped work — this is expected mid-build state, not a blocker.
 
 ## Blocked on operator tasks
 
-- **Task 12 — LangSmith Deployment.** Blocks Module 5 cloud lessons + **P2=5**.
+- **Task 12, LangSmith Deployment.** Blocks Module 5 cloud lessons + **P2=5**.
   Deployment URL pending; goes into README, here, and the landing PR.
-- **Task 13 — Recording stack + Cloudinary.** Blocks the video → **P3=5**.
+- **Task 13, Recording stack + Cloudinary.** Blocks the video → **P3=5**.
   Recording is also separately gated on BAM's go-ahead (no speculative recording).
-- **Task 14 — Cover-letter sign-off.** Blocks application submission, not the build.
+- **Task 14, Cover-letter sign-off.** Blocks application submission, not the build.
 
 ## Pending deliverables (Phase B)
 
-- **bam-landing-page PR** at `/learn/project-multi-agent-rag` — opened once course
+- **bam-landing-page PR** at `/learn/project-multi-agent-rag`, opened once course
   content is ready; URL recorded here. **Not yet opened.** (Do NOT edit
   bam-landing-page from this branch.)
-- **LangSmith Deployment URL** — recorded here once task 12 completes. **Pending.**
+- **LangSmith Deployment URL**, recorded here once task 12 completes. **Pending.**
 
 ## Verification (Phase A)
 
-- `pnpm typecheck` — **green**.
-- `pnpm test` — **green**: 8 files / 39 passed, 1 file (key-gated `coach.eval`)
+- `pnpm typecheck`, **green**.
+- `pnpm test`, **green**: 8 files / 39 passed, 1 file (key-gated `coach.eval`)
   skipped. Includes the new `tests/topology.test.ts`.
-- `pnpm lint` — changed files are **error-free** (one warning in `topology.test.ts`
+- `pnpm lint`, changed files are **error-free** (one warning in `topology.test.ts`
   mirroring the accepted `coach.wiring.test.ts` pattern). The 10 errors are
   **pre-existing** in `src/app/{coach,page,signin}` pages and unchanged from the
   `course/lesson-00` baseline (`git diff course/lesson-00 -- src/app/...` is empty).
@@ -99,12 +99,12 @@ via planned, scoped work — this is expected mid-build state, not a blocker.
 
 All artifact-scaffold code (evals, `langgraph.json`, topology test) landed up front,
 so tags `course/lesson-01..04` (Module 0) include code that belongs to later
-modules. This is cosmetic — Module 0's lessons run fine against it — and the
+modules. This is cosmetic, Module 0's lessons run fine against it, and the
 per-lesson tag purity (each module's code at its own lessons) is the documented
 post-authoring finalization pass once Modules 1–6 land.
 
 ## Stop conditions
 
 None tripped. Branch committed + pushed; **not merged** (BAM merges). Single branch
-per the kickoff — no bundle needed. Paused at the planned Module 0 checkpoint for
+per the kickoff, no bundle needed. Paused at the planned Module 0 checkpoint for
 tone + citation-format approval before Modules 1–6.

@@ -1,4 +1,4 @@
-# Production guide — pre & post
+# Production guide, pre & post
 
 Production bible for the *Domain-Specialist Multi-Agent with Per-Agent RAG*
 course video. Read alongside [`script.md`](./script.md). Platform assumptions:
@@ -11,18 +11,18 @@ a seeded Neon database, and a LangSmith project open for traces.
 
 ---
 
-## Part A — Pre-production
+## Part A, Pre-production
 
 ### A1. Format & runtime budget
 
 Each lesson is a **voice-over screencast**. The course opens and closes with one
 short **on-camera** segment each (intro doubles as the landing-page embed). Target
-total **2h25m** — squarely in the Project-tier P3=5 band (120–180 min, 25–30
+total **2h25m**, squarely in the Project-tier P3=5 band (120–180 min, 25–30
 lessons).
 
 | Module | Lessons | Budget |
 |---|---|---|
-| Course intro (on-camera) | — | 1.5 min |
+| Course intro (on-camera) | - | 1.5 min |
 | 0 · Setup + scope | 4 | 15.5 min |
 | 1 · The supervisor | 4 | 22 min |
 | 2 · Specialist #1 (Nutrition) | 4 | 22 min |
@@ -30,15 +30,15 @@ lessons).
 | 4 · LangSmith evaluation | 5 | 28 min |
 | 5 · Deployment + multi-tenant | 4 | 22 min |
 | 6 · Extension launching pad | 4 | 16 min |
-| Course outro (on-camera) | — | 1 min |
+| Course outro (on-camera) | - | 1 min |
 | **Total** | **28 lessons** | **~146 min (2h26m)** |
 
 Per-lesson timings live in `script.md`. Pace screencast narration at ~135–150
-wpm — slower than conversation; learners are reading code while listening.
+wpm, slower than conversation; learners are reading code while listening.
 
 ### A2. Recording stack (the gear the operator task buys)
 
-**Audio is the #1 quality lever — budget here first.**
+**Audio is the #1 quality lever, budget here first.**
 
 | Role | Recommended | Budget alt | Notes |
 |---|---|---|---|
@@ -58,7 +58,7 @@ peaks; never let it clip. Reference: noise/levels matter more than mic price
 Legible code on a 1080p embed is non-negotiable. Before recording:
 
 - **Capture at 1920×1080, 30 fps.** Set the editor to a 1080p-friendly window;
-  do **not** record a 4K/Retina desktop scaled down — text turns mushy.
+  do **not** record a 4K/Retina desktop scaled down, text turns mushy.
 - **Editor font ≥ 18 pt; terminal font ≥ 16 pt.** Zoom further when reading a
   specific block. Enable word-wrap off + a visible ruler so line callouts land.
 - **One theme, high contrast.** Pick the repo's default and stick to it across all
@@ -91,13 +91,13 @@ The coach hits a live DB + LLM. De-risk before recording:
 
 ### A5. Capture workflow (per lesson)
 
-1. **Slate** (3 s): say "Module N, Lesson M — <title>, take 1." Helps the edit.
+1. **Slate** (3 s): say "Module N, Lesson M, <title>, take 1." Helps the edit.
 2. Record **3 s of room tone** silence head and tail for noise-print + clean cuts.
 3. Record the **narration + screencast** in short segments per script scene; on a
    fluff, pause, clap once (audio spike = edit marker), restate the sentence.
 4. Capture the **demo run** and the **LangSmith trace** as their own segments so
    they can be sped up / trimmed independently.
-5. Stop, review levels, move on. Don't chase perfection in-camera — fix in post.
+5. Stop, review levels, move on. Don't chase perfection in-camera, fix in post.
 
 **File naming:** `mNN-lNN-<segment>.mov` (e.g. `m04-l03-grounding-demo.mov`),
 matching the `course/lesson-NN` tag. Stash raw captures in
@@ -105,13 +105,13 @@ matching the `course/lesson-NN` tag. Stash raw captures in
 
 ---
 
-## Part B — Post-production
+## Part B, Post-production
 
 ### B1. Edit
 
 - Cut silences, retakes (find the clap spikes), and dead air; tighten pauses to
   ~0.4 s. Target the runtime budget in A1.
-- **Zoom + callout** on every file-path / line-number mention — push in on the
+- **Zoom + callout** on every file-path / line-number mention, push in on the
   code, drop a highlight box or arrow. This is what makes a screencast teach.
 - **Title card** per module (3 s) and a **lower-third** with the lesson title +
   the `course/lesson-NN` tag for the first 5 s of each lesson.
@@ -125,7 +125,7 @@ matching the `course/lesson-NN` tag. Stash raw captures in
   true-peak ≤ -1 dBTP** (the web/streaming target; ITU-R BS.1770 / EBU R 128
   family). Consistent loudness across 26 lessons is a quality tell.
 
-### B3. Captions & transcript (accessibility — required)
+### B3. Captions & transcript (accessibility, required)
 
 - Auto-caption, then **human-correct** the domain vocabulary (LangGraph, pgvector,
   supervisor, namespace, Drizzle, LangSmith, Mifflin–St Jeor, HRV). Auto-captions
@@ -156,7 +156,7 @@ Per PRD §7 the intro is hosted on **Cloudinary**:
 
 1. Upload to the course folder; copy the delivery/player URL.
 2. Set **`NEXT_PUBLIC_WALKTHROUGH_EMBED_URL`** (already scaffolded in
-   `.env.example`) to that URL — the coach UI's walkthrough slot and the
+   `.env.example`) to that URL, the coach UI's walkthrough slot and the
    landing-page embed both read it.
 3. The landing-page PR to `bam-landing-page` embeds the same intro on
    `/learn/project-multi-agent-rag` (PRD §7) and links the per-module reels.
@@ -184,4 +184,4 @@ curriculum citations (curriculum APA-7 references live per-lesson in
 - European Broadcasting Union. (2020). *EBU R 128: Loudness normalisation and permitted maximum level of audio signals.* https://tech.ebu.ch/docs/r/r128.pdf
 - International Telecommunication Union. (2015). *Recommendation ITU-R BS.1770-4: Algorithms to measure audio programme loudness and true-peak audio level.* https://www.itu.int/rec/R-REC-BS.1770
 - LangChain. (2025). *LangSmith documentation: Tracing and projects.* https://docs.langchain.com/langsmith
-- Web Accessibility Initiative. (2023). *Captions/subtitles — Web accessibility perspectives.* World Wide Web Consortium. https://www.w3.org/WAI/perspective-videos/captions/
+- Web Accessibility Initiative. (2023). *Captions/subtitles, Web accessibility perspectives.* World Wide Web Consortium. https://www.w3.org/WAI/perspective-videos/captions/

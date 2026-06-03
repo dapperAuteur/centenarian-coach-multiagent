@@ -1,4 +1,4 @@
-# Module 2 · Lesson 12 — The type-enforced "can't read other specialists' findings" trick
+# Module 2 · Lesson 12 · The type-enforced "can't read other specialists' findings" trick
 
 > **Tag:** `course/lesson-12` · **Module 2: Specialist #1 (Nutrition)** · ~4 min
 
@@ -25,7 +25,7 @@ const NutritionAnnotation = Annotation.Root({
 ```
 
 There is **no `findings` channel here.** The subgraph's nodes are typed against
-`NutritionState`, so `state.findings` is not just empty — it does not type-check.
+`NutritionState`, so `state.findings` is not just empty, it does not type-check.
 The Workout specialist's findings are unreachable from inside Nutrition not by
 discipline but by construction. This is the principle of least privilege applied
 to graph state: a component is given access only to what it needs (Saltzer &
@@ -44,7 +44,7 @@ findings: Annotation<FindingsMap>({
 }),
 ```
 
-The adapter `nutritionNode` returns `{ findings: { nutrition: finding } }` — only
+The adapter `nutritionNode` returns `{ findings: { nutrition: finding } }`, only
 its own key. When specialists fan out in parallel (Module 1), each writes a
 different key, and the reducer merges them without collision. A specialist
 *cannot* clobber another's slot, because it only ever names its own. The
@@ -55,7 +55,7 @@ weaves them.
 
 A prompt instruction is a request the model can ignore, and you only discover the
 leak when an answer cross-contaminates in production. A missing state channel is a
-compile error — the leak is impossible to write. The guarantee holds regardless of
+compile error, the leak is impossible to write. The guarantee holds regardless of
 the model, the temperature, or how the prompt drifts over time. For a health
 assistant where attributability is the whole value proposition, "impossible to
 write" is the standard you want.
@@ -63,7 +63,7 @@ write" is the standard you want.
 ### Build on the coach
 
 In a scratch edit of `nutrition/subgraph.ts`, try to read another specialist's
-finding from inside a node — e.g., reference `state.findings` in `composeNode`.
+finding from inside a node, e.g., reference `state.findings` in `composeNode`.
 TypeScript rejects it: `findings` is not on `NutritionState`. That red squiggle
 *is* the isolation guarantee. Revert the edit. (Module 6 relies on this: a new
 specialist gets the same "no findings channel" subgraph for free.)
@@ -76,4 +76,4 @@ LangChain. (2025). *LangGraph documentation: State, channels, and reducers*. htt
 
 ---
 
-Previous: [Lesson 11 — Building the Nutrition subgraph](./11-building-the-nutrition-subgraph.md) · **End of Module 2** · Next: *Module 3 — Specialists #2 + #3 (Workout + Recovery)* · [Course index](../README.md)
+Previous: [Lesson 11 · Building the Nutrition subgraph](./11-building-the-nutrition-subgraph.md) · **End of Module 2** · Next: *Module 3 · Specialists #2 + #3 (Workout + Recovery)* · [Course index](../README.md)

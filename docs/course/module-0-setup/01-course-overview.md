@@ -1,13 +1,13 @@
-# Module 0 · Lesson 1 — Course overview & the single-artifact promise
+# Module 0 · Lesson 1 · Course overview & the single-artifact promise
 
 > **Tag:** `course/lesson-01` · **Module 0: Setup + scope** · ~3.5 min
 
 ## What you will build
 
 One artifact, start to finish: **Fit T. Cent 3.0**, the Centenarian Coach (the
-"3.0" is honest — this is a rebuild of a coach I have shipped twice before). You
+"3.0" is honest, this is a rebuild of a coach I have shipped twice before). You
 ask it a health question. A *supervisor* classifies the question and decides which
-domain specialists to consult — nutrition, workout, recovery — and each specialist
+domain specialists to consult, nutrition, workout, recovery, and each specialist
 answers from **its own retrieval store**, then a synthesizer weaves the findings
 into one cited answer.
 
@@ -22,7 +22,7 @@ you make that competence real rather than cosmetic.
 ## Why grounding is the point, not a feature
 
 This is a health and longevity domain. The recommendations are the kind that
-have actual evidence behind them — for example, that older adults need more
+have actual evidence behind them, for example, that older adults need more
 dietary protein per kilogram of bodyweight than younger adults to preserve muscle
 (Bauer et al., 2013). Large language models, left ungrounded, produce fluent text
 that is confidently wrong; hallucination is a well-documented failure mode of
@@ -35,11 +35,11 @@ that scores whether each claim is actually traceable to a source.
 
 Every lesson contributes to the same coach. Concretely:
 
-- **By the end of Module 0**, the coach runs locally — you seed a corpus, ask a
+- **By the end of Module 0**, the coach runs locally, you seed a corpus, ask a
   question, and read the answer plus its LangSmith trace.
 - **Modules 1–3** build the architecture: the supervisor, then the specialists,
   each with its own retrieval namespace and isolated state.
-- **Module 4** makes evaluation part of the artifact — routing, citation, and
+- **Module 4** makes evaluation part of the artifact, routing, citation, and
   grounding evaluators, plus a dataset that grows as you find bugs.
 - **Module 5** deploys it to LangGraph Platform.
 - **Module 6** turns the coach into a launching pad: how to add a *new* specialist,
@@ -55,7 +55,7 @@ The coach is built on the LangChain ecosystem: **LangGraph** for the supervisor 
 specialist subgraphs (LangChain, 2025a), **LangSmith** for tracing and evaluation
 (LangChain, 2025b), **pgvector** for per-namespace vector retrieval (pgvector,
 2025), Drizzle ORM over Postgres, and Zod for the routing schema. You will touch
-each one in the module where it earns its place — there is no standalone "tools
+each one in the module where it earns its place, there is no standalone "tools
 tour."
 
 ## How to navigate
@@ -64,8 +64,8 @@ tour."
   names in the repo.
 - The branch carries a tagged commit per lesson. To start any lesson from a clean
   state: `git checkout course/lesson-N`.
-- The next two lessons get you set up — TypeScript first (the artifact's language),
-  then a Python translation reference — and Lesson 4 is the first-run smoke test.
+- The next two lessons get you set up, TypeScript first (the artifact's language),
+  then a Python translation reference, and Lesson 4 is the first-run smoke test.
 
 ## References
 
@@ -85,4 +85,4 @@ Wu, Q., Bansal, G., Zhang, J., Wu, Y., Li, B., Zhu, E., Jiang, L., Zhang, X., Zh
 
 ---
 
-Next: **[Lesson 2 — Getting set up (TypeScript)](./02-getting-set-up-typescript.md)** · [Course index](../README.md)
+Next: **[Lesson 2 · Getting set up (TypeScript)](./02-getting-set-up-typescript.md)** · [Course index](../README.md)

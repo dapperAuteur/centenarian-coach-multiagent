@@ -1,6 +1,6 @@
 // evals/rubric.ts
-// Deterministic evaluators for the coach. Both are pure functions — no API,
-// no network — so they unit-test cleanly (tests/evals.rubric.test.ts) and can
+// Deterministic evaluators for the coach. Both are pure functions, no API,
+// no network, so they unit-test cleanly (tests/evals.rubric.test.ts) and can
 // gate CI without spending tokens. The eval runner (tests/coach.eval.test.ts)
 // applies them across evals/dataset.json.
 
@@ -17,7 +17,7 @@ export interface EvalExample {
    * the "growing dataset" convention taught in Module 4.
    */
   addedIn?: string;
-  /** Why this example exists — typically the bug/regression it pins. */
+  /** Why this example exists, typically the bug/regression it pins. */
   note?: string;
 }
 

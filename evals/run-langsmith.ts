@@ -8,8 +8,7 @@
 // dependency-free, CI-cheap regression gate. This is the opt-in, network-bound
 // runner. Run it with `pnpm eval:langsmith` (needs LANGSMITH_API_KEY).
 //
-// It lives in evals/ as a .ts file (not .mjs) so the "@/" path alias resolves —
-// the package script runs it through tsx, which honors tsconfig paths.
+// It lives in evals/ as a .ts file (not .mjs) so the "@/" path alias resolves, // the package script runs it through tsx, which honors tsconfig paths.
 
 import { fileURLToPath } from "node:url";
 import { Client } from "langsmith";
@@ -70,7 +69,7 @@ async function runCoach(input: {
 }
 
 // The routing + citation evaluators wrap the SAME pure rubric functions from
-// evals/rubric.ts — no scoring logic is duplicated here. (groundingEvaluator
+// evals/rubric.ts, no scoring logic is duplicated here. (groundingEvaluator
 // likewise wraps evals/grounding.ts.)
 function routingEvaluator(args: {
   outputs: Record<string, unknown>;
@@ -105,7 +104,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   runLangsmithEval()
     .then(() => {
       console.log(
-        "\nLangSmith experiment complete — open the printed experiment URL in the dashboard.",
+        "\nLangSmith experiment complete, open the printed experiment URL in the dashboard.",
       );
     })
     .catch((error: unknown) => {

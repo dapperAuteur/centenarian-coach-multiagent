@@ -7,7 +7,7 @@
 // The whole graph tree is imported through the "@/" path alias, and alias
 // resolution inside the Platform Docker build is not guaranteed. If the build
 // cannot resolve "@/graph", THIS is the one line to switch to a relative import
-// ("../graph") or to wire a tsconfig-paths shim — see Module 5. Keeping it a
+// ("../graph") or to wire a tsconfig-paths shim, see Module 5. Keeping it a
 // pure re-export means the app, the tests, and the eval suite all keep
 // exercising the exact same compiled graph.
 export { coachGraph } from "@/graph";

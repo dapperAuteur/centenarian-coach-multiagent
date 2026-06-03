@@ -1,9 +1,9 @@
-# Module 0 · Lesson 3 — Getting set up (Python) + language-translation table
+# Module 0 · Lesson 3 · Getting set up (Python) + language-translation table
 
 > **Tag:** `course/lesson-03` · **Module 0: Setup + scope** · ~3 min
 
 LangChain Academy's courses are usually taught in Python. **This course's artifact
-is TypeScript** — one runnable coach, so every lesson can point at the real files
+is TypeScript**, one runnable coach, so every lesson can point at the real files
 you deploy (that is what keeps the course honest). This lesson is the bridge for
 Python-first learners: there is no second Python codebase to maintain, but the
 concepts map cleanly, and LangGraph ships in both languages with the same mental
@@ -40,7 +40,7 @@ deploy is the TypeScript repo.
 The shapes match because LangGraph models the same thing in both languages: a state
 graph with typed channels, reducers that merge concurrent writes, and conditional
 edges for routing (LangChain, 2025a). The two places the languages diverge in this
-course are the schema library (Zod vs. Pydantic — both produce JSON Schema for
+course are the schema library (Zod vs. Pydantic, both produce JSON Schema for
 structured output) and the evaluation SDK surface, which is `evaluate` in the
 JavaScript `langsmith` package and `evaluate`/`aevaluate` in the Python one
 (LangChain, 2025b).
@@ -63,4 +63,4 @@ Pydantic. (2025). *Pydantic documentation*. https://docs.pydantic.dev/
 
 ---
 
-Previous: [Lesson 2 — Getting set up (TypeScript)](./02-getting-set-up-typescript.md) · Next: **[Lesson 4 — First-run smoke test](./04-first-run-smoke-test.md)** · [Course index](../README.md)
+Previous: [Lesson 2 · Getting set up (TypeScript)](./02-getting-set-up-typescript.md) · Next: **[Lesson 4 · First-run smoke test](./04-first-run-smoke-test.md)** · [Course index](../README.md)

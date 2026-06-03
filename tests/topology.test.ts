@@ -1,6 +1,6 @@
 // tests/topology.test.ts
 // The topology-enforces-ordering test (Module 1). The supervisor ALWAYS runs
-// before any specialist, and the synthesizer ALWAYS runs last — and that order
+// before any specialist, and the synthesizer ALWAYS runs last, and that order
 // is a guarantee of the graph's STRUCTURE (its edges), not of prompt discipline
 // or luck. We prove it by streaming node-completion order for both a single
 // route and a full fan-out: in every case supervisor is first, synthesize is
@@ -107,7 +107,7 @@ function assertOrdering(order: string[]): void {
   }
 }
 
-describe("topology enforces ordering (mocked — no API keys)", () => {
+describe("topology enforces ordering (mocked, no API keys)", () => {
   beforeEach(() => {
     ctl.routeTo = ["nutrition"];
   });

@@ -1,9 +1,8 @@
-# Module 1 · Lesson 6 — Designing the routing schema with Zod
+# Module 1 · Lesson 6 · Designing the routing schema with Zod
 
 > **Tag:** `course/lesson-06` · **Module 1: The supervisor** · ~6 min
 
-A supervisor's job sounds simple — "pick which specialists answer the question" —
-and most implementations get it subtly wrong. They ask the model, in prose, which
+A supervisor's job sounds simple, "pick which specialists answer the question", and most implementations get it subtly wrong. They ask the model, in prose, which
 agents to use, then parse the prose. This lesson builds a supervisor that returns
 a **typed, structured routing decision**, and explains why that matters more than
 it looks.
@@ -13,12 +12,12 @@ it looks.
 For each question the coach's supervisor decides three things
 ([`src/agents/supervisor/routing.schema.ts`](../../../src/agents/supervisor/routing.schema.ts)):
 
-1. **Which specialists to consult** — one, two, or more.
-2. **A focused sub-question per chosen specialist** — the user's question,
+1. **Which specialists to consult**, one, two, or more.
+2. **A focused sub-question per chosen specialist**, the user's question,
    rewritten into that specialist's domain.
-3. **A one-sentence rationale** — for the UI and for debugging routing.
+3. **A one-sentence rationale**, for the UI and for debugging routing.
 
-It decides all of this *before any specialist runs* — enforced by the graph's
+It decides all of this *before any specialist runs*, enforced by the graph's
 shape, which is Lesson 7.
 
 ## Structured output beats prose routing
@@ -26,8 +25,7 @@ shape, which is Lesson 7.
 The naive prompt ends with "...respond with the names of the agents to use," and
 you parse the text. It fails in boring, frequent ways: the model says "Nutrition
 and Workout specialists" (now you are string-matching), adds a caveat sentence, or
-picks an agent that does not exist. Constraining a model to emit a typed object —
-function/tool calling, a.k.a. structured output — removes that whole failure class
+picks an agent that does not exist. Constraining a model to emit a typed object, function/tool calling, a.k.a. structured output, removes that whole failure class
 by making the output conform to a schema (LangChain, 2025). This repo uses Zod
 (Colinhacks, 2025) plus LangChain's `withStructuredOutput`:
 
@@ -45,7 +43,7 @@ export const RoutingSchema = z.object({
 });
 ```
 
-`AgentEnum` makes an invalid agent name **unrepresentable** — the model cannot
+`AgentEnum` makes an invalid agent name **unrepresentable**, the model cannot
 route to a specialist that does not exist. `agents.min(1)` makes "route to nobody"
 unrepresentable. The shape is the contract. The `.describe()` strings are not
 decoration: they are serialized into the JSON Schema the model sees, so they are
@@ -69,7 +67,7 @@ const decision = await router.invoke([
 ```
 
 `withStructuredOutput` returns a runnable whose `.invoke()` resolves to a value
-**typed as `z.infer<typeof RoutingSchema>`** — no parsing, no `any`. If the output
+**typed as `z.infer<typeof RoutingSchema>`**, no parsing, no `any`. If the output
 does not satisfy the schema it throws *here*, loudly, at the boundary, instead of
 producing a plausible-looking wrong object that breaks three nodes later.
 
@@ -86,8 +84,8 @@ const primaryAgent = agents.includes(decision.primaryAgent)
 ```
 
 Small thing, large payoff: every downstream node can now *trust* the routing
-object completely. Cross-field invariants belong in one place — the node that
-produces the value — not scattered through the consumers.
+object completely. Cross-field invariants belong in one place, the node that
+produces the value, not scattered through the consumers.
 
 > **Provider trap.** A Zod schema that round-trips cleanly through one provider's
 > structured-output API may not survive another's. This repo hit it: `.positive()`
@@ -99,7 +97,7 @@ produces the value — not scattered through the consumers.
 
 Extend `RoutingSchema` with a `confidence: z.number().min(0).max(1)` field and have
 the system prompt set it low when a question is ambiguous. Then ask: where would a
-downstream node *use* it — to ask the user a clarifying question before fanning
+downstream node *use* it, to ask the user a clarifying question before fanning
 out? Sketch the change; you do not have to wire it. The point is feeling how the
 schema is the contract every other node reads.
 
@@ -111,4 +109,4 @@ LangChain. (2025). *LangGraph documentation: Structured output*. https://langcha
 
 ---
 
-Previous: [Lesson 5 — Single vs. multi-agent](./05-single-vs-multi-agent.md) · Next: **[Lesson 7 — The topology-enforces-ordering rule](./07-topology-enforces-ordering.md)** · [Course index](../README.md)
+Previous: [Lesson 5 · Single vs. multi-agent](./05-single-vs-multi-agent.md) · Next: **[Lesson 7 · The topology-enforces-ordering rule](./07-topology-enforces-ordering.md)** · [Course index](../README.md)

@@ -1,4 +1,4 @@
-# Module 2 · Lesson 9 — Per-agent retrieval namespacing
+# Module 2 · Lesson 9 · Per-agent retrieval namespacing
 
 > **Tag:** `course/lesson-09` · **Module 2: Specialist #1 (Nutrition)** · ~6 min
 
@@ -27,7 +27,7 @@ export const coachKb = pgTable("coach_kb", {
 Retrieval-augmented generation grounds an answer in retrieved documents rather
 than the model's parameters (Lewis et al., 2020); the `namespace` column decides
 *which* documents are even eligible to be retrieved for a given specialist. One
-table means one schema, one index, one seeding script — and isolation becomes a
+table means one schema, one index, one seeding script, and isolation becomes a
 `WHERE namespace = ...`, not a second database.
 
 ## The retrieval function is the boundary
@@ -73,7 +73,7 @@ A training question against a combined corpus returns a blurry mix of sleep
 science, recipes, and program design, and the model grounds its answer in whatever
 ranked highest. Namespacing removes the cross-talk at the source: a nutrition
 query is scored only against nutrition documents, so the top-k is sharper, the
-prompt is shorter, and the citation trail is honest — every snippet the Nutrition
+prompt is shorter, and the citation trail is honest, every snippet the Nutrition
 finding cites genuinely came from `nutrition_kb`. Each namespace can also be
 seeded, tuned, and evaluated independently (Module 4 evaluates them per-specialist).
 
@@ -83,7 +83,7 @@ Run `pnpm kb:status` and note the row counts per namespace. Then ask the coach a
 nutrition question and open the LangSmith trace: find the `retrieve` step and
 confirm every returned `source` is a nutrition document. Now imagine adding a fifth
 namespace (`mindset_kb`): what is the *complete* list of changes? (A seed file, a
-`retrieveMindsetKb` that passes the new namespace — and nothing in `pgvector.ts` or
+`retrieveMindsetKb` that passes the new namespace, and nothing in `pgvector.ts` or
 the schema. That containment is the point, and Module 6 makes it concrete.)
 
 ## References
@@ -96,4 +96,4 @@ pgvector. (2025). *pgvector: Open-source vector similarity search for Postgres* 
 
 ---
 
-Previous: [Module 1 · Lesson 8 — Fan-out + temperature-0](../module-1-supervisor/08-fan-out-and-temperature-zero.md) · Next: **[Lesson 10 — The embedding-consistency trap](./10-embedding-consistency-trap.md)** · [Course index](../README.md)
+Previous: [Module 1 · Lesson 8 · Fan-out + temperature-0](../module-1-supervisor/08-fan-out-and-temperature-zero.md) · Next: **[Lesson 10 · The embedding-consistency trap](./10-embedding-consistency-trap.md)** · [Course index](../README.md)

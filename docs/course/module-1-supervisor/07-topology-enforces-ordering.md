@@ -1,9 +1,9 @@
-# Module 1 · Lesson 7 — The topology-enforces-ordering rule
+# Module 1 · Lesson 7 · The topology-enforces-ordering rule
 
 > **Tag:** `course/lesson-07` · **Module 1: The supervisor** · ~5 min
 
 "The supervisor runs before any specialist, and the synthesizer runs last." In a
-lot of agent code that sentence is a *hope* — it holds because the prompt asks the
+lot of agent code that sentence is a *hope*, it holds because the prompt asks the
 model to behave, or because the author remembered to call things in the right
 order. This lesson is about making it a **structural guarantee** instead: the
 graph's shape makes the wrong order unrepresentable.
@@ -32,7 +32,7 @@ new StateGraph(CoachAnnotation)
 Read the edges, not the intentions:
 
 - `START` goes **only** to `supervisor`. There is no path that reaches a specialist
-  without first passing through the supervisor — so `state.routing` always exists
+  without first passing through the supervisor, so `state.routing` always exists
   before a specialist runs.
 - Specialists are reachable **only** through the conditional edge *out of* the
   supervisor.
@@ -74,7 +74,7 @@ pnpm test tests/topology.test.ts
 ## Why this matters beyond tidiness
 
 Two reasons. First, **trust**: because ordering is structural, every node can
-assume the state it depends on already exists — the specialists never check
+assume the state it depends on already exists, the specialists never check
 "did the supervisor run yet?" Second, **debuggability**: when a multi-agent system
 misbehaves, "did it run in the right order?" is the first question, and here the
 answer is a property of the compiled graph you can inspect and test, not a
@@ -83,7 +83,7 @@ behavior you have to reproduce.
 ### Build on the coach
 
 Open `tests/topology.test.ts` and run it green. Then, in a scratch copy of
-`src/graph.ts`, try to express a *wrong* order — for example, add an edge from a
+`src/graph.ts`, try to express a *wrong* order, for example, add an edge from a
 specialist back to `supervisor`. Re-run the topology test and watch the
 "supervisor first / synthesize last" invariant catch it. The exercise is to feel
 that the test is checking the *structure*, not the model's behavior.
@@ -96,4 +96,4 @@ Vitest. (2025). *Vitest documentation*. https://vitest.dev
 
 ---
 
-Previous: [Lesson 6 — The routing schema](./06-routing-schema-zod.md) · Next: **[Lesson 8 — Conditional fan-out + temperature-0](./08-fan-out-and-temperature-zero.md)** · [Course index](../README.md)
+Previous: [Lesson 6 · The routing schema](./06-routing-schema-zod.md) · Next: **[Lesson 8 · Conditional fan-out + temperature-0](./08-fan-out-and-temperature-zero.md)** · [Course index](../README.md)

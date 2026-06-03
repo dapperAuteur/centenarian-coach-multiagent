@@ -1,4 +1,4 @@
-# Module 0 · Lesson 2 — Getting set up (TypeScript)
+# Module 0 · Lesson 2 · Getting set up (TypeScript)
 
 > **Tag:** `course/lesson-02` · **Module 0: Setup + scope** · ~4 min
 
@@ -12,10 +12,10 @@ installed and its database ready. Lesson 4 runs it.
 - **A Postgres database with the `pgvector` extension.** Neon's free tier works and
   is what the course assumes (Neon, 2025); pgvector adds the vector type and
   similarity operators retrieval depends on (pgvector, 2025).
-- **An LLM key** — `ANTHROPIC_API_KEY` (Claude) and/or `GEMINI_API_KEY`. Embeddings
+- **An LLM key**, `ANTHROPIC_API_KEY` (Claude) and/or `GEMINI_API_KEY`. Embeddings
   default to Gemini, so set `GEMINI_API_KEY` even if you run chat on Claude.
-- **Optional:** `LANGSMITH_API_KEY` for tracing. Tracing is fail-soft — the app
-  runs without it — but you will want it by Lesson 4 to see the trace.
+- **Optional:** `LANGSMITH_API_KEY` for tracing. Tracing is fail-soft, the app
+  runs without it, but you will want it by Lesson 4 to see the trace.
 
 ## Steps
 
@@ -41,8 +41,8 @@ The connection string is read as `STORAGE_DATABASE_URL` (or `DATABASE_URL`).
 
 It runs the Drizzle migrations in [`src/db/migrations/`](../../../src/db/migrations/)
 against your database (Drizzle Team, 2025). The first migration creates the
-`coach_kb` table — one table, with a `namespace` column and an `embedding
-vector(768)` column — and the `match_coach_kb(query_embedding, namespace_filter,
+`coach_kb` table, one table, with a `namespace` column and an `embedding
+vector(768)` column, and the `match_coach_kb(query_embedding, namespace_filter,
 match_count)` SQL function that does the cosine-similarity search each specialist
 calls. That single namespaced table is the per-agent-RAG pattern you will dissect
 in Module 2; for now, just confirm the migration applies cleanly.
@@ -54,14 +54,14 @@ the schema it generates from is [`src/db/schema.ts`](../../../src/db/schema.ts).
 
 This repo tracks a current Next.js release, and its conventions can differ from
 older tutorials. If you are extending the app's routes or pages, read the bundled
-guides under `node_modules/next/dist/docs/` rather than relying on memory — the
+guides under `node_modules/next/dist/docs/` rather than relying on memory, the
 App Router's data-fetching and route-handler APIs move between majors (Vercel,
 2025).
 
 ## Checkpoint
 
 You are set up when `pnpm install` and `pnpm db:migrate` both finish without error.
-You have **not** run the coach yet — that needs a seeded corpus, which is Lesson 4.
+You have **not** run the coach yet, that needs a seeded corpus, which is Lesson 4.
 If you prefer Python, Lesson 3 maps the concepts across before you continue.
 
 ## References
@@ -78,4 +78,4 @@ Vercel. (2025). *Next.js documentation: App Router*. https://nextjs.org/docs/app
 
 ---
 
-Previous: [Lesson 1 — Course overview](./01-course-overview.md) · Next: **[Lesson 3 — Getting set up (Python)](./03-getting-set-up-python.md)** · [Course index](../README.md)
+Previous: [Lesson 1 · Course overview](./01-course-overview.md) · Next: **[Lesson 3 · Getting set up (Python)](./03-getting-set-up-python.md)** · [Course index](../README.md)

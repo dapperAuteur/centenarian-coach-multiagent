@@ -1,4 +1,4 @@
-# Module 2 · Lesson 10 — The embedding-consistency trap
+# Module 2 · Lesson 10 · The embedding-consistency trap
 
 > **Tag:** `course/lesson-10` · **Module 2: Specialist #1 (Nutrition)** · ~5 min
 
@@ -11,16 +11,16 @@ the coach prevents it.
 
 A sentence embedding is a vector whose *only* meaning is its position relative to
 other vectors produced by **the same model** (Reimers & Gurevych, 2019). Two
-different models — even two that both output 768 numbers — place text in
+different models, even two that both output 768 numbers, place text in
 different, incompatible spaces. Cosine similarity between a vector from model A and
 a vector from model B is noise. So if you seed `coach_kb` with model A and embed
 queries with model B, retrieval returns near-random documents, the specialist
-grounds its answer in irrelevant snippets, and nothing errors — you just get
+grounds its answer in irrelevant snippets, and nothing errors, you just get
 confidently wrong answers.
 
 ## One module for both seed-time and query-time
 
-The coach routes every embedding — seeding *and* querying — through a single
+The coach routes every embedding, seeding *and* querying, through a single
 factory, [`src/lib/embeddings.ts`](../../../src/lib/embeddings.ts):
 
 ```ts
@@ -33,8 +33,7 @@ export async function embed(text: string): Promise<number[]> {
 
 Both `scripts/seed-kb.mjs` and the specialists' `retrieve` nodes call `embed()`.
 Because they share one code path, they cannot drift: whatever backend seeded the
-corpus is the backend that embeds the query. The header comment says it plainly —
-"switching providers means re-seeding the whole KB" — because the stored vectors
+corpus is the backend that embeds the query. The header comment says it plainly, "switching providers means re-seeding the whole KB", because the stored vectors
 and the query vectors must live in the same space.
 
 ## Two guardrails worth copying
@@ -50,20 +49,20 @@ and the query vectors must live in the same space.
 
    A dimension mismatch fails loudly at insert/query time instead of silently
    corrupting search. (Google's Gemini embedding model supports configurable
-   output dimensionality; the coach pins it to 768 — Google, 2025.)
+   output dimensionality; the coach pins it to 768, Google, 2025.)
 
 2. **Make the provider an explicit, logged choice.** `COACH_EMBED_PROVIDER`
    selects the backend (`gemini` default, `ollama` local). The trap is switching it
    on a *seeded* database. The documented fix is a full re-seed
-   (`pnpm kb:clear --all && pnpm kb:seed --fresh`), not a partial one — a half-Gemini,
+   (`pnpm kb:clear --all && pnpm kb:seed --fresh`), not a partial one, a half-Gemini,
    half-Ollama table is the worst of both.
 
 ## Why this lesson exists at all
 
 It is tempting to treat "the embedding model" as an implementation detail you can
 swap. It is not: it is part of your data's identity. Choosing a different embedding
-model is choosing to rebuild your index. Naming that explicitly — and funnelling
-seed and query through one function — turns a silent, expensive trap into a one-line
+model is choosing to rebuild your index. Naming that explicitly, and funnelling
+seed and query through one function, turns a silent, expensive trap into a one-line
 policy.
 
 ### Build on the coach
@@ -72,7 +71,7 @@ You seeded all four namespaces in Module 0 with the default (Gemini). As a thoug
 experiment, trace what would break if you set `COACH_EMBED_PROVIDER=ollama` and
 restarted *without* re-seeding: which step returns garbage, and would any test
 catch it? (Retrieval would return low-similarity, wrong-namespace-feeling results;
-the grounding evaluator in Module 4 is the thing that would finally catch it — the
+the grounding evaluator in Module 4 is the thing that would finally catch it, the
 deterministic routing/citation tests would not.)
 
 ## References
@@ -83,4 +82,4 @@ Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Sia
 
 ---
 
-Previous: [Lesson 9 — Per-agent retrieval namespacing](./09-per-agent-retrieval-namespacing.md) · Next: **[Lesson 11 — Building the first specialist subgraph](./11-building-the-nutrition-subgraph.md)** · [Course index](../README.md)
+Previous: [Lesson 9 · Per-agent retrieval namespacing](./09-per-agent-retrieval-namespacing.md) · Next: **[Lesson 11 · Building the first specialist subgraph](./11-building-the-nutrition-subgraph.md)** · [Course index](../README.md)
