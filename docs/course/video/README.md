@@ -55,4 +55,4 @@ paths the written lessons cite, the video and the prose stay in lockstep.
 The course teaches a health/longevity domain, so on-screen claims carry
 citations. Teaching narration in `script.md` marks **`[on-screen cite: …]`** cues;
 those citations must match the `## References` section of the corresponding lesson
-in [`../lessons/`](../lessons/). The video inherits the lesson's APA-7 references, it does not invent new ones on camera.
+in [the course](../README.md). The video inherits the lesson's APA-7 references, it does not invent new ones on camera.

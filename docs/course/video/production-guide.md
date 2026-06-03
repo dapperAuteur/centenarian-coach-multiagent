@@ -177,7 +177,7 @@ Per PRD §7 the intro is hosted on **Cloudinary**:
 
 These are production-craft references for this guide; they are **not** course
 curriculum citations (curriculum APA-7 references live per-lesson in
-[`../lessons/`](../lessons/)).
+[the course](../README.md)).
 
 - Audacity Team. (2023). *Audacity manual: Recording and noise reduction.* https://manual.audacityteam.org/
 - Cloudinary. (2025). *Video upload and delivery documentation.* https://cloudinary.com/documentation/video_manipulation_and_delivery

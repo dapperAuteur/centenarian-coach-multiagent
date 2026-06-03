@@ -11,7 +11,7 @@
 
 ## Script-writing workflow (per module)
 
-1. The module's lessons in [`../lessons/`](../lessons/) are authored + approved.
+1. The module's lessons in [the course](../README.md) are authored + approved.
 2. For each lesson, fill the **template** below from the lesson's prose and its
    `## References` (on-screen citations must match).
 3. Record against that lesson's **`git checkout course/lesson-NN`** state so the
@@ -133,4 +133,4 @@ This blueprint is production material, not curriculum, it carries no APA-7
 `## References` of its own. The **verbatim narration** written from it inherits
 each lesson's references: every `[on-screen cite: …]` cue in a finished script
 must resolve to an entry in that lesson's `## References` section in
-[`../lessons/`](../lessons/).
+[the course](../README.md).
