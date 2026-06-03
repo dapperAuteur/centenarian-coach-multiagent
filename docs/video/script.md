@@ -1,12 +1,13 @@
 # Course video — script blueprint
 
-> ✍️ **The verbatim narration is written LAST**, module by module, after each
-> module's lesson prose is authored and approved. This file is the **blueprint**:
+> ✍️ **The verbatim narration AND the explicit screen-recording description are
+> written LAST**, module by module, after each module's lesson prose is authored
+> and approved — together, in one per-module pass. This file is the **blueprint**:
 > the per-lesson script template, the runtime budget, and a coverage checklist
-> derived from the approved lesson plan. Writing the words against finalized
-> lessons keeps the script matched to the shipped course and avoids re-records.
-> See [`README.md`](./README.md) for why; [`production-guide.md`](./production-guide.md)
-> for how it's recorded.
+> derived from the approved lesson plan. Writing the words and the shot list
+> against finalized lessons keeps both matched to the shipped course and avoids
+> re-records. See [`README.md`](./README.md) for why;
+> [`production-guide.md`](./production-guide.md) for how it's recorded.
 
 ## Script-writing workflow (per module)
 
@@ -20,18 +21,29 @@
 
 ## Per-lesson script template
 
+Each finished lesson gets BOTH columns below, written in the same pass: the
+narration (what's said) and the screen-recording description (what's shown,
+shot by shot). They are numbered so the editor can line audio against video.
+
 ```
 LESSON mNN-lNN — <title>            [tag: course/lesson-NN] [budget: N min]
 
-[HOOK — 10–15s]      The failure or question this lesson resolves. One sentence.
-[WHY — 20–40s]       Why it matters for a multi-agent coach; the design tension.
-[CODE WALK]          On-screen file(s) with path callouts; read the key lines
-                     aloud; zoom on the load-bearing block. Mark every claim that
-                     needs an [on-screen cite: <source from lesson References>].
-[DEMO]               Run the command / ask the question; show the result; open
-                     the LangSmith trace and point at the node(s) that matter.
-[TAKEAWAY — 15–25s]  The one rule to remember. Restate it as a sentence.
-[BRIDGE — 5–10s]     One line pointing to the next lesson / the exercise.
+NARRATION
+  [HOOK — 10–15s]      The failure or question this lesson resolves. One sentence.
+  [WHY — 20–40s]       Why it matters for a multi-agent coach; the design tension.
+  [CODE WALK]          Read the key lines aloud; name each file path. Mark every
+                       claim needing an [on-screen cite: <source from lesson Refs>].
+  [DEMO]               Narrate the run and the trace as they happen.
+  [TAKEAWAY — 15–25s]  The one rule to remember. Restate it as a sentence.
+  [BRIDGE — 5–10s]     One line pointing to the next lesson / the exercise.
+
+SCREEN-RECORDING DESCRIPTION (shot list — written last, with the narration)
+  0. Checkout state: `git checkout course/lesson-NN`; clean `git status`.
+  1. <window> — <action>; zoom/highlight <file:line or UI element>.
+  2. <terminal> — run `<exact command>`; expected on-screen result: <…>.
+  3. <LangSmith> — open the run; expand <node path>; point at <snippet / metric>.
+  …  one numbered shot per discrete on-screen action; mark speed-ramps (⏩) and
+     callouts. Every file path / command here must exist at the lesson's tag.
 ```
 
 On-camera bookends (intro/outro) use a shorter beat list — hook, promise, who
@@ -43,10 +55,12 @@ shipped. Intro budget 1.5 min (doubles as the landing-page embed); outro 1 min.
 
 ## Coverage checklist (28 lessons)
 
-Each row is the **source material** a verbatim script writes from — objective,
+Each row is the **seed material** a finished lesson writes from — objective,
 what's on screen, the demo/trace, and the takeaway — pulled from the approved
-lesson plan and the real repo paths. The script writer turns each row into
-narration via the template once the lesson lands.
+lesson plan and the real repo paths. Once the lesson lands, the writer expands
+each row into BOTH the narration and the explicit shot-by-shot screen-recording
+description via the template above. The rows below are not the shot list; they
+are what the shot list (written last) is built from.
 
 ### Module 0 · Setup + scope — `course/lesson-01..04` (15.5 min)
 
