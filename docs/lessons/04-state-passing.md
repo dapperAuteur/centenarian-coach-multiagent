@@ -1,4 +1,4 @@
-# Lesson 4 — State passing: shared state without stomping
+# Lesson 4 · State passing: shared state without stomping
 
 A multi-agent graph has one piece of shared state that every node reads and
 writes. When specialists run in parallel, naive state handling lets them
@@ -8,7 +8,7 @@ subgraphs.
 
 ## The shared state
 
-LangGraph state is declared as an annotation — a set of named channels, each
+LangGraph state is declared as an annotation, a set of named channels, each
 with a type and an optional reducer. The coach's top-level state:
 
 ```ts
@@ -27,8 +27,7 @@ export const CoachAnnotation = Annotation.Root({
 
 Each node returns a *partial* update. LangGraph applies it to the channel. For a
 channel with no reducer, the default behaviour is last-write-wins: the update
-replaces the channel's value. That is fine for `routing` (one node writes it) —
-and a bug waiting to happen for `findings`.
+replaces the channel's value. That is fine for `routing` (one node writes it), and a bug waiting to happen for `findings`.
 
 ## Why `findings` needs a reducer
 
@@ -43,7 +42,7 @@ return { findings: { nutrition: nutritionFinding } };
 return { findings: { workout: workoutFinding } };
 ```
 
-With last-write-wins, LangGraph applies one update, then the other — and the
+With last-write-wins, LangGraph applies one update, then the other, and the
 second `{ findings: { workout } }` *replaces* the channel, discarding the
 nutrition finding. The cross-domain answer silently loses half its input.
 
@@ -56,7 +55,7 @@ reducer: (prev, next) => ({ ...prev, ...next }),
 Now each update is *merged* into the channel instead of replacing it. The two
 parallel updates compose to `{ nutrition, workout }` regardless of order,
 because each specialist writes only its own key. The rule that makes this safe:
-**a specialist writes only its own slot** — `nutritionNode` never returns a
+**a specialist writes only its own slot**, `nutritionNode` never returns a
 `workout` key.
 
 Picking a reducer is the core state-design decision. Ask, per channel: is it
@@ -84,15 +83,15 @@ const NutritionAnnotation = Annotation.Root({
 ```
 
 There is no `findings` here. The nutrition subgraph's nodes cannot read another
-specialist's output because that data is not in their state — the isolation is
+specialist's output because that data is not in their state, the isolation is
 structural, not a convention someone has to remember. (Note `citations` and
-`toolCalls` use append reducers — the retrieve and tool nodes each contribute,
+`toolCalls` use append reducers, the retrieve and tool nodes each contribute,
 and their contributions accumulate.)
 
 ## The adapter node: bridging two state shapes
 
 A subgraph has its own state; the top-level graph has `CoachState`. Something
-must translate. That is the **adapter node** — a thin function that runs the
+must translate. That is the **adapter node**, a thin function that runs the
 subgraph and maps its result into a top-level update:
 
 ```ts
@@ -114,7 +113,7 @@ export async function nutritionNode(state: CoachState): Promise<CoachUpdate> {
 }
 ```
 
-The adapter reads from `CoachState` (only what it needs — its sub-question),
+The adapter reads from `CoachState` (only what it needs, its sub-question),
 runs the subgraph in the subgraph's own state shape, and writes back exactly one
 key of `findings`. The two state worlds touch only here, in a function small
 enough to read at a glance.
@@ -122,8 +121,8 @@ enough to read at a glance.
 ## Fan-in: the synthesizer
 
 After the specialists, a `synthesize` node runs. It is the *one* node allowed to
-read across specialists — `state.findings.nutrition` and `state.findings.workout`
-together — because synthesis is its entire job. The merge reducer guarantees
+read across specialists, `state.findings.nutrition` and `state.findings.workout`
+together, because synthesis is its entire job. The merge reducer guarantees
 both findings are present by the time it runs. Fan-out, isolated work, fan-in:
 the shape of every supervisor system.
 
@@ -135,10 +134,10 @@ Continue the support desk (Billing, Technical, Account).
 merge reducer, plus `routing` and `finalAnswer`. Then design one specialist
 subgraph's state schema and confirm it has no `findings` channel. Write the
 adapter node for that specialist. Finally, trace by hand: if Billing and
-Technical run in parallel, what is in `findings` after each — with the reducer,
+Technical run in parallel, what is in `findings` after each, with the reducer,
 and without it?
 
 ---
 
-Next: **[Lesson 5 — Evals](./05-evals.md)** — building a LangSmith eval dataset
+Next: **[Lesson 5 · Evals](./05-evals.md)**, building a LangSmith eval dataset
 that catches the failures you actually care about.
