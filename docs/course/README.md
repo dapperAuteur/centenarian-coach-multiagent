@@ -4,7 +4,7 @@ A LangChain Academy **Project** course. You build one artifact end to end:
 **Fit T. Cent 3.0**, the Centenarian Coach, a LangGraph supervisor that routes a question to domain
 specialists (nutrition, workout, recovery), where **each specialist owns its own
 retrieval namespace** and every answer carries citations grounded in that
-specialist's corpus.
+specialist's corpus (the set of documents that specialist can retrieve from).
 
 It is the first project-tier course to teach **per-agent RAG**. Most multi-agent
 courses share one global tool/retrieval set; here, isolation is the whole point,
@@ -46,9 +46,10 @@ measured, not assumed.
 11. [Building the first specialist subgraph (Nutrition)](./module-2-nutrition/11-building-the-nutrition-subgraph.md), `course/lesson-11`
 12. [The type-enforced "can't read other specialists' findings" trick](./module-2-nutrition/12-type-enforced-isolation.md), `course/lesson-12`
 
-### Module 3 · Specialists #2 + #3: Workout + Recovery, *in progress*
-Adding Workout (the pattern repeats) · adding Recovery + subgraph isolation ·
-state passing and fan-in.
+### Module 3 · Specialists #2 + #3: Workout + Recovery, *live*
+13. [Adding Workout: the pattern repeats](./module-3-workout-recovery/13-adding-workout.md), `course/lesson-13`
+14. [Adding Recovery, and why each specialist gets its own state schema](./module-3-workout-recovery/14-adding-recovery-and-isolation.md), `course/lesson-14`
+15. [State passing and fan-in](./module-3-workout-recovery/15-state-passing-and-fan-in.md), `course/lesson-15`
 
 ### Module 4 · LangSmith evaluation, *in progress*
 What to evaluate · deterministic evaluators (routing + citation) · the LLM-judge
@@ -65,7 +66,7 @@ with starting file paths · extending the eval suite · capstone.
 
 ---
 
-> **Status.** Modules 0–2 are authored; Modules 3–6 are being written on the
+> **Status.** Modules 0–3 are authored; Modules 4–6 are being written on the
 > `feat/langchain-academy-project-refactor` branch, decomposed and expanded from
 > the repo's original five lessons in [`../lessons/`](../lessons/). The video
 > production package lives in [`../video/`](../video/).
