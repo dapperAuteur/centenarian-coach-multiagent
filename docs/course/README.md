@@ -34,9 +34,11 @@ measured, not assumed.
 3. [Getting set up (Python) + language-translation table](./module-0-setup/03-getting-set-up-python.md) — `course/lesson-03`
 4. [First-run smoke test](./module-0-setup/04-first-run-smoke-test.md) — `course/lesson-04`
 
-### Module 1 · The supervisor — *in progress*
-Single vs. multi-agent · the Zod routing schema · the topology-enforces-ordering
-rule · conditional fan-out + temperature-0 classification.
+### Module 1 · The supervisor — *live*
+5. [Single-agent vs. multi-agent: when the complexity pays](./module-1-supervisor/05-single-vs-multi-agent.md) — `course/lesson-05`
+6. [Designing the routing schema with Zod](./module-1-supervisor/06-routing-schema-zod.md) — `course/lesson-06`
+7. [The topology-enforces-ordering rule](./module-1-supervisor/07-topology-enforces-ordering.md) — `course/lesson-07`
+8. [Conditional fan-out + temperature-0 classification](./module-1-supervisor/08-fan-out-and-temperature-zero.md) — `course/lesson-08`
 
 ### Module 2 · Specialist #1: Nutrition — *in progress*
 Per-agent retrieval namespacing · the embedding-consistency trap · building the
@@ -62,7 +64,7 @@ with starting file paths · extending the eval suite · capstone.
 
 ---
 
-> **Status.** Module 0 lessons are authored; Modules 1–6 are being written on the
+> **Status.** Modules 0–1 are authored; Modules 2–6 are being written on the
 > `feat/langchain-academy-project-refactor` branch, decomposed and expanded from
 > the repo's original five lessons in [`../lessons/`](../lessons/). The video
 > production package lives in [`../video/`](../video/).
