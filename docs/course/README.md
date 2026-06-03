@@ -58,9 +58,11 @@ measured, not assumed.
 19. [Running evals in LangSmith](./module-4-evaluation/19-running-evals-in-langsmith.md), `course/lesson-19`
 20. [The iteration loop and the growing dataset](./module-4-evaluation/20-iteration-loop-growing-dataset.md), `course/lesson-20`
 
-### Module 5 · Deployment + multi-tenant, *in progress*
-LangGraph Platform deployment · per-user state · auth on the live coach ·
-cost/latency dashboards.
+### Module 5 · Deployment + multi-tenant, *live*
+21. [LangGraph Platform and langgraph.json](./module-5-deployment/21-langgraph-platform-and-langgraph-json.md), `course/lesson-21`
+22. [Deploying, and wiring env + database](./module-5-deployment/22-deploying-env-and-database.md), `course/lesson-22`
+23. [Per-user state and auth on the live coach](./module-5-deployment/23-per-user-state-and-auth.md), `course/lesson-23`
+24. [Cost and latency dashboards](./module-5-deployment/24-cost-and-latency-dashboards.md), `course/lesson-24`
 
 ### Module 6 · Extension launching pad, *in progress*
 How to add a new specialist (worked with the `corrective` agent) · 3–5 extensions
@@ -68,7 +70,7 @@ with starting file paths · extending the eval suite · capstone.
 
 ---
 
-> **Status.** Modules 0–4 are authored; Modules 5–6 are being written on the
+> **Status.** Modules 0–5 are authored; Module 6 is being written on the
 > `feat/langchain-academy-project-refactor` branch, decomposed and expanded from
 > the repo's original five lessons in [`../lessons/`](../lessons/). The video
 > production package lives in [`../video/`](../video/).
