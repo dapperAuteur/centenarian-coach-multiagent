@@ -10,6 +10,7 @@
 import { describe, it, expect } from "vitest";
 import datasetJson from "../evals/dataset.json";
 import { routingScore, citationScore, type EvalExample } from "../evals/rubric";
+import { groundingScore } from "../evals/grounding";
 import { coachGraph } from "@/graph";
 
 const dataset = datasetJson as EvalExample[];
@@ -19,12 +20,18 @@ const runEvals =
   Boolean(process.env.ANTHROPIC_API_KEY) &&
   Boolean(process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GEMINI_API_KEY);
 
+// Opt-in: also run the LLM-judge grounding evaluator (one extra LLM call per
+// example). Reported as a mean, not gated — grounding is a gradient the Module 4
+// iteration loop moves, not a pass/fail line.
+const runGrounding = process.env.RUN_GROUNDING === "1";
+
 describe.skipIf(!runEvals)("coach eval dataset", () => {
   it(
     "routes accurately and cites every finding across the dataset",
     async () => {
       let routingHits = 0;
       let citationHits = 0;
+      let groundingTotal = 0;
 
       for (const example of dataset) {
         const state = await coachGraph.invoke({
@@ -35,9 +42,15 @@ describe.skipIf(!runEvals)("coach eval dataset", () => {
         const citation = citationScore(state);
         routingHits += routing.score;
         citationHits += citation.score;
+        let groundingNote = "";
+        if (runGrounding) {
+          const grounding = await groundingScore(state);
+          groundingTotal += grounding.score;
+          groundingNote = ` grounding=${grounding.score.toFixed(2)}`;
+        }
         const note = routing.comment ? `  (${routing.comment})` : "";
         console.log(
-          `[${example.id}] routing=${routing.score} citations=${citation.score}${note}`,
+          `[${example.id}] routing=${routing.score} citations=${citation.score}${groundingNote}${note}`,
         );
       }
 
@@ -47,6 +60,11 @@ describe.skipIf(!runEvals)("coach eval dataset", () => {
         `\nrouting accuracy:  ${(routingAccuracy * 100).toFixed(0)}% (${routingHits}/${dataset.length})` +
           `\ncitation coverage: ${(citationCoverage * 100).toFixed(0)}% (${citationHits}/${dataset.length})`,
       );
+      if (runGrounding) {
+        console.log(
+          `grounding (mean):  ${(groundingTotal / dataset.length).toFixed(2)}`,
+        );
+      }
 
       expect(routingAccuracy).toBeGreaterThanOrEqual(0.8);
       expect(citationCoverage).toBeGreaterThanOrEqual(0.9);

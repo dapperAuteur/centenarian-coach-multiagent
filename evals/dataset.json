@@ -18,5 +18,8 @@
   { "id": "nr1", "question": "Does eating in a calorie deficit hurt my recovery between workouts?", "expectedAgents": ["nutrition", "recovery"] },
   { "id": "nwr1", "question": "I slept six hours, want to build muscle, and have a heavy session planned. What should I eat, how should I train, and should I rest?", "expectedAgents": ["nutrition", "workout", "recovery"] },
   { "id": "nwr2", "question": "I am 70 and want to stay strong for decades. What should my diet, training, and recovery look like?", "expectedAgents": ["nutrition", "workout", "recovery"] },
-  { "id": "nwr3", "question": "After a hard training week, how should I adjust my eating, my workouts, and my sleep?", "expectedAgents": ["nutrition", "workout", "recovery"] }
+  { "id": "nwr3", "question": "After a hard training week, how should I adjust my eating, my workouts, and my sleep?", "expectedAgents": ["nutrition", "workout", "recovery"] },
+  { "id": "wr3", "question": "My lower back is tight after deadlifts and I slept badly. What should I do today?", "expectedAgents": ["recovery", "corrective"], "addedIn": "module-4", "note": "regression: a cross-domain sleep + tightness question was misrouted to workout only" },
+  { "id": "c1", "question": "My right shoulder rounds forward when I press overhead. How do I fix it?", "expectedAgents": ["corrective"], "addedIn": "module-4", "note": "regression: a postural/corrective question leaked to the workout specialist; also the first corrective-only example in the set" },
+  { "id": "nwr4", "question": "Heavy training block, eating at maintenance, waking unrefreshed. Should I adjust everything?", "expectedAgents": ["nutrition", "workout", "recovery"], "addedIn": "module-5", "note": "regression: a 3-way question under-routed and dropped nutrition" }
 ]

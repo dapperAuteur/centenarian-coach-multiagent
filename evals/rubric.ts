@@ -10,6 +10,15 @@ export interface EvalExample {
   id: string;
   question: string;
   expectedAgents: Agent[];
+  /**
+   * The module/lesson that introduced this example (e.g. "module-4"). Optional:
+   * the original baseline set is bare; every example added later as the course
+   * finds bugs carries provenance, so the dataset's growth is legible. This is
+   * the "growing dataset" convention taught in Module 4.
+   */
+  addedIn?: string;
+  /** Why this example exists — typically the bug/regression it pins. */
+  note?: string;
 }
 
 export interface EvalScore {
