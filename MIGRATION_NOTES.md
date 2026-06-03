@@ -1,147 +1,110 @@
-# Migration notes — `feat/llm-provider-swap` (coach)
+# Migration notes — `feat/langchain-academy-project-refactor`
 
-**Goal:** add five free LLM providers (Ollama local + four hosted free tiers)
-to the coach's chat-model factory so dev loops and the deployed instance can
-run at $0 in the normal case, while Anthropic and Google stay selectable as
-paid options for quality or emergency use. Mirrors the swap that landed in
-`witus-triage-agent` on `feat/llm-provider-swap`.
+**Goal:** refactor this repo into a LangChain Academy **Project** course,
+*Domain-Specialist Multi-Agent with Per-Agent RAG* — 6 modules / 28 lessons /
+~2.5 hr video — lifting the existing 4/5 baseline to "Exceeding" (every rubric
+criterion ≥ 4, ≥ 3 at 5). Source-of-truth: `plans/PRD-langchain-academy-project.md`.
 
-## Files changed
+## Build status — Phase A complete; checkpoint pause
 
-### Factory + dispatch
-- `src/lib/llm-config.ts` *(new, zero imports)* — `COACH_PROVIDERS` is now a
-  `const` tuple sourced from a single seven-member list; `LlmProvider` is
-  derived from it. Adds `PROVIDER_COST_CLASS`, `PROVIDER_LABELS`, `COACH_ROLES`,
-  and the seven-row `DEFAULT_MODELS` matrix. Zero imports on purpose so the
-  client SettingsForm can import value-level constants without dragging
-  server-only deps into the browser bundle.
-- `src/lib/llm.ts` — rewritten with an exhaustive `switch (provider)` ending
-  in `const _exhaustive: never`. New cases: `ollama` (ChatOllama), `mistral`
-  (ChatMistralAI), and `cerebras` / `openrouter` / `together` (ChatOpenAI with
-  `configuration.baseURL`). `BuildChatOptions` gains an optional `provider`
-  override the fallback chain uses to build models for specific providers
-  regardless of stored settings. Re-exports everything from `llm-config` so
-  existing imports `from "@/lib/llm"` keep working.
-- `src/lib/with-fallback.ts` *(new)* — `parseFallbackProviders()` (parses
-  `COACH_FALLBACK_PROVIDERS`, drops unknowns, lowercases) and
-  `buildChatModelWithFallback({ role, ... })` which wraps the primary chat
-  model with LangChain's `withFallbacks([...])` when the env var is set.
+The build runs in two phases (per the approved plan + the kickoff's
+"scaffold + Module 0, then checkpoint" decision):
 
-### Call sites (8 total, all moved to the fallback variant)
-- `src/agents/supervisor/supervisor.node.ts`
-- `src/agents/nutrition/subgraph.ts` × 2 (assess + compose)
-- `src/agents/workout/subgraph.ts` × 2
-- `src/agents/recovery/subgraph.ts` × 2
-- `src/synthesizer/synthesize.ts`
+- **Phase A (this push):** branch scaffold + Module 0, then pause for BAM to
+  approve lesson tone + APA-7 citation format **before** mass-producing Modules
+  1–6. ✅ Done.
+- **Phase B (after approval):** Modules 1–6 lessons; eval iteration-arc lesson;
+  bam-landing-page PR; final self-scoring; legacy `docs/lessons/` folds into
+  `docs/course/`. Module 5 *cloud* steps gated on operator task 12; video gated
+  on task 13 + BAM's record go-ahead.
 
-The 20-question eval (`tests/coach.eval.test.ts`) still routes through these
-nodes; pinning a single provider is the env override's job.
+## Files changed (paths only)
 
-### Settings + persistence
-- `src/lib/settings.ts` — `resolveSettings` now spreads `DEFAULT_MODELS` for
-  **every** provider via a new `mergedModels()` helper; `providerOverride()`
-  accepts all seven providers. No DB migration needed — `app_settings.models`
-  is `jsonb` and new provider keys are added lazily on save.
-- `src/app/api/admin/settings/route.ts` — Zod schema for PUT body now derives
-  from `COACH_PROVIDERS` so adding a provider propagates.
+**Added — artifact code (committed):**
+- `evals/grounding.ts` · `evals/run-langsmith.ts`
+- `langgraph.json` · `src/deployment/graph.ts`
+- `tests/topology.test.ts`
 
-### Dashboard UI
-- `src/app/admin/page.tsx` — server component now computes
-  `providerKeyPresent: Record<LlmProvider, boolean>` from env (Ollama is
-  always true; others check the matching `*_API_KEY`) and passes it to the
-  form. No secret values leak — just true/false flags.
-- `src/app/admin/SettingsForm.tsx` — provider radio replaced with a grouped
-  `<select>` (Free / Paid `<optgroup>`s); each option's label includes the
-  cost class and a "no API key set" suffix when applicable. A persistent
-  banner above the form is amber when a paid provider is active, green
-  otherwise. The per-role `MODEL_OPTIONS` map extended to all seven providers.
+**Modified — artifact code (committed):**
+- `evals/rubric.ts` · `evals/dataset.json` · `tests/coach.eval.test.ts`
+- `package.json` · `pnpm-lock.yaml` · `README.md`
 
-### Config + docs
-- `.env.example` — Free-vs-paid block; all five new key slots documented with
-  signup URLs; `COACH_FALLBACK_PROVIDERS` documented with the recommended
-  deployed value (`openrouter,anthropic`).
-- `plans/user-tasks/10-provision-free-provider-keys.md` — new operator task
-  for BAM: sign up, paste keys into `.env.local` + Vercel env, trigger deploy.
+**Added — course + video docs (committed):**
+- `docs/course/README.md`
+- `docs/course/module-0-setup/01-course-overview.md`
+- `docs/course/module-0-setup/02-getting-set-up-typescript.md`
+- `docs/course/module-0-setup/03-getting-set-up-python.md`
+- `docs/course/module-0-setup/04-first-run-smoke-test.md`
+- `docs/video/README.md` · `docs/video/production-guide.md` · `docs/video/script.md`
 
-### Tests
-- `tests/llm.test.ts` *(new)* — 13 cases covering per-provider dispatch,
-  missing-key throws, per-call provider override, the `COACH_ROLES`
-  invariant, and `parseFallbackProviders` parsing.
+**Added — operator tasks (local; `plans/` is gitignored, NOT committed):**
+- `plans/user-tasks/12-provision-langsmith-deployment.md`
+- `plans/user-tasks/13-recording-stack-and-video-host.md`
+- `plans/user-tasks/14-cover-letter-sign-off.md`
+- `plans/user-tasks/00-describe-how-to-use-user-tasks.md` (index → 5-col format)
 
-### Dependencies
-- Added: `@langchain/ollama`, `@langchain/openai`, `@langchain/mistralai`.
-- Kept: `@langchain/anthropic`, `@langchain/google-genai`. Selectable in
-  `/admin` as the paid options and available as emergency fallbacks.
-- Embeddings still always use Gemini (`gemini-embedding-001` @ 768 dims);
-  the chat-model provider does not affect retrieval.
+**Per-lesson tags:** `course/lesson-00` (pristine start) … `course/lesson-04`
+(Module 0). `git checkout course/lesson-04` lands at the first-run smoke test.
 
-## Per-provider eval re-runs
+## Rubric self-scoring (§3 of the PRD)
 
-**Not yet executed.** The eval requires either Ollama running locally or a
-key for one of the new hosted providers; neither is configured here. Once
-task 10 lands, run:
+Honest at end of Phase A, with the Phase-B / operator-task target.
 
-```bash
-COACH_LLM_PROVIDER=ollama       pnpm eval     # local, no keys needed
-COACH_LLM_PROVIDER=cerebras     pnpm eval     # ~20 calls × 2 evaluators
-COACH_LLM_PROVIDER=openrouter   pnpm eval     # for fallback comparison
-```
+| # | Criterion | Phase A (now) | Target | Evidence / what's left |
+|---|---|---|---|---|
+| P1 | One cohesive artifact | **4** | 5 | Module 0 ends in a first-run smoke test (`lesson-04`); single-artifact discipline holds. 5 once the Module 6 extensibility close lands. |
+| P2 | Multiple ecosystem tools | **4** | 5 | LangGraph + LangSmith (trace + `evaluate()` runner) + pgvector + Drizzle + Zod + LangGraph Platform **scaffold**. 5 once the live Deployment is provisioned (task 12). |
+| P3 | Project-scale runtime | **3** | 5 | 6-module/28-lesson structure fixed + Module 0 authored; runtime budget ~2h26m. 5 once Modules 1–6 prose + video land. |
+| P4 | Deep code refs + tagged commits | **5** | 5 | Every Module 0 lesson names real file paths; `course/lesson-NN` tags exist and check out. Pattern sustained as lessons land. |
+| P5 | Eval/observability built in | **4** | 5 | `rubric.ts` (routing+citation) + `grounding.ts` (LLM-judge) + `run-langsmith.ts` (`evaluate()`) + growing-dataset convention (`addedIn`/`note`, 3 regression examples). 5 once the Module 4 iteration-arc lesson is written. |
+| P6 | Extensibility close | **2** | 5 | Not yet materialized — Module 6 (the "add a new specialist" lesson, worked with the wired `corrective` agent) is Phase B. Code + plan already support it. |
 
-The PRD bar is **routing accuracy ≥ 80%** and **citation coverage ≥ 80%** —
-both enforced in `tests/coach.eval.test.ts`. Append each new result to the
-LangSmith dataset run history and (optionally) summarise in a new
-`EVAL.md` per the witus-triage-agent precedent.
+No stop condition tripped: every sub-3 score (P3, P6) reaches target in Phase B
+via planned, scoped work — this is expected mid-build state, not a blocker.
 
-## Deployment shape
+## Per-provider eval reruns
 
-For the deployed instance, the recommended Vercel env values are:
+**None this session.** Code changes were verified by `pnpm typecheck` + `pnpm test`
+(no live LLM calls). Live eval reruns (`pnpm eval`, `RUN_GROUNDING=1 pnpm eval`,
+`pnpm eval:langsmith`) need keys/DB and are part of the Module 4 authoring pass.
 
-```
-COACH_LLM_PROVIDER=cerebras
-COACH_FALLBACK_PROVIDERS=openrouter,anthropic
-```
+## Blocked on operator tasks
 
-Cerebras handles normal traffic at $0; OpenRouter catches Cerebras's daily
-quota wall (also free); Anthropic is the **paid emergency tier** so a
-reviewer hitting the demo URL never sees a hard failure. In the normal case
-the coach costs $0; in the worst case it falls through to a few Claude
-calls.
+- **Task 12 — LangSmith Deployment.** Blocks Module 5 cloud lessons + **P2=5**.
+  Deployment URL pending; goes into README, here, and the landing PR.
+- **Task 13 — Recording stack + Cloudinary.** Blocks the video → **P3=5**.
+  Recording is also separately gated on BAM's go-ahead (no speculative recording).
+- **Task 14 — Cover-letter sign-off.** Blocks application submission, not the build.
 
-## Known issues + caveats
+## Pending deliverables (Phase B)
 
-- **Llama 3.3 70B ≠ Claude Sonnet 4.6** on structured output and tool
-  calling. The supervisor's `RoutingSchema` and the specialists' tool
-  schemas use Zod with `withStructuredOutput`; some open-weight models
-  return slightly looser JSON. Watch routing accuracy on the eval re-run.
-- **Cerebras free tier daily ceiling** — a bursty session can hit the wall.
-  Mitigated by the OpenRouter fallback.
-- **Gemini schema subset** — known from prior work: `.positive()` compiles
-  to `exclusiveMinimum` which Gemini's structured-output rejects. Already
-  worked around in the calorie-calculator tool. Verify the recovery + workout
-  tool schemas before pointing Gemini at production traffic.
-- **Free-tier ToS — some providers train on submitted traffic.** Read each
-  provider's terms before pointing the deployed coach at it.
+- **bam-landing-page PR** at `/learn/project-multi-agent-rag` — opened once course
+  content is ready; URL recorded here. **Not yet opened.** (Do NOT edit
+  bam-landing-page from this branch.)
+- **LangSmith Deployment URL** — recorded here once task 12 completes. **Pending.**
 
-## Verification
+## Verification (Phase A)
 
-- `pnpm typecheck` — green.
-- `pnpm test` — **8 files, 37 passed, 10 skipped** (live tests properly gated).
-- `pnpm lint` — **fails with 11 pre-existing errors** in
-  `src/app/coach/page.tsx` (1: `<a>` to `/api/auth/signout`),
-  `src/app/page.tsx` (2: unescaped apostrophes), and
-  `src/app/signin/page.tsx` (8: unescaped apostrophes). **None are in files
-  this branch touched** — they exist on `main` already and are out of scope
-  here. Fix them on a separate `chore/eslint-cleanup` branch.
+- `pnpm typecheck` — **green**.
+- `pnpm test` — **green**: 8 files / 39 passed, 1 file (key-gated `coach.eval`)
+  skipped. Includes the new `tests/topology.test.ts`.
+- `pnpm lint` — changed files are **error-free** (one warning in `topology.test.ts`
+  mirroring the accepted `coach.wiring.test.ts` pattern). The 10 errors are
+  **pre-existing** in `src/app/{coach,page,signin}` pages and unchanged from the
+  `course/lesson-00` baseline (`git diff course/lesson-00 -- src/app/...` is empty).
+  Out of scope here; fix on a separate `chore/eslint-cleanup` branch.
+- Tags `course/lesson-00..04` created; `git checkout` verified to switch states.
+
+## Tagging caveat (Phase B finalization)
+
+All artifact-scaffold code (evals, `langgraph.json`, topology test) landed up front,
+so tags `course/lesson-01..04` (Module 0) include code that belongs to later
+modules. This is cosmetic — Module 0's lessons run fine against it — and the
+per-lesson tag purity (each module's code at its own lessons) is the documented
+post-authoring finalization pass once Modules 1–6 land.
 
 ## Stop conditions
 
-None tripped. The 8 LLM call sites are migrated; the eval suite is unchanged;
-LangSmith tracing is unaffected (the layer is provider-agnostic). Branch
-pushed, not merged. BAM merges after reviewing this file.
-
-## Sibling work
-
-- `witus-triage-agent` `feat/llm-provider-swap` — the same swap, three nodes
-  instead of three roles. Land first; this branch follows the same shape.
-- `wanderlearn-field-reporter` — pending. Bigger change because it has no
-  `/admin` dashboard yet (it picks provider per-run from the capture form).
+None tripped. Branch committed + pushed; **not merged** (BAM merges). Single branch
+per the kickoff — no bundle needed. Paused at the planned Module 0 checkpoint for
+tone + citation-format approval before Modules 1–6.
