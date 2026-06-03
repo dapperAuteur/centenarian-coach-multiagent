@@ -1,4 +1,4 @@
-# Lesson 3 — Per-agent retrieval: every specialist owns a namespace
+# Lesson 3 · Per-agent retrieval: every specialist owns a namespace
 
 In a single-agent RAG system there is one retriever over one corpus. In a
 multi-agent system you have a choice, and the choice matters: do the specialists
@@ -12,7 +12,7 @@ Suppose the coach had one `coach_kb` table and every specialist queried all of
 it. Ask a workout question and the top-k results are a blend of training theory
 *and* whatever recipe text happened to be near it in embedding space. The model
 then grounds a training answer in nutrition documents. The answer is not wrong
-because the model is bad — it is wrong because it was handed the wrong evidence.
+because the model is bad, it is wrong because it was handed the wrong evidence.
 
 Giving each specialist its own retrieval slice fixes this and buys more:
 
@@ -33,7 +33,7 @@ for.** That responsibility should be visible in the code, not assumed.
 
 You can isolate corpora with separate tables (`nutrition_kb`, `workout_kb`, …)
 or with one table and a `namespace` column. This repo uses one namespaced
-table — fewer migrations, one retrieval function, and adding a specialist is a
+table, fewer migrations, one retrieval function, and adding a specialist is a
 new namespace string rather than new DDL:
 
 ```sql
@@ -71,7 +71,7 @@ rows that survive the filter.
 ## Each specialist's retrieval module
 
 The isolation is then made concrete per specialist. The Nutrition specialist has
-a retrieval module that *hard-codes* its namespace — it is not a parameter the
+a retrieval module that *hard-codes* its namespace, it is not a parameter the
 caller can get wrong:
 
 ```ts
@@ -87,7 +87,7 @@ export async function retrieveNutritionKb(query: string, k = 5): Promise<Citatio
 
 The Workout specialist has the mirror module bound to `"workout_kb"`. A
 specialist *cannot* retrieve from the wrong namespace without editing its own
-retrieval file — isolation enforced by module boundaries, not by remembering to
+retrieval file, isolation enforced by module boundaries, not by remembering to
 pass the right string.
 
 Note the return type: `Citation[]`, already tagged with `agent: "nutrition"`.
@@ -99,12 +99,12 @@ correct without any later bookkeeping.
 
 The one mistake that silently destroys a vector store: embedding the documents
 with one model (or dimensionality) and the queries with another. Cosine
-similarity between vectors from different models is meaningless — retrieval
+similarity between vectors from different models is meaningless, retrieval
 still "works", it just returns near-random rows, and you will chase the symptom
 for a long time.
 
-This repo pins one embedding path for both seeding and querying — Gemini
-`gemini-embedding-001` at 768 dimensions — and the `coach_kb.embedding` column
+This repo pins one embedding path for both seeding and querying, Gemini
+`gemini-embedding-001` at 768 dimensions, and the `coach_kb.embedding` column
 is `vector(768)` to match. Whatever you choose: pick one embedding model and one
 dimensionality, use it for documents *and* queries, and encode the dimension in
 the schema so a mismatch fails loudly instead of quietly.
@@ -114,8 +114,7 @@ the schema so a mismatch fails loudly instead of quietly.
 Continue the support desk (Billing, Technical, Account).
 
 **Exercise.** Give the desk a `support_kb` table with a `namespace` column and
-a `match_support_kb` function, mirroring `coach_kb`. Seed three namespaces —
-`billing_kb`, `technical_kb`, `account_kb` — with a handful of fixture
+a `match_support_kb` function, mirroring `coach_kb`. Seed three namespaces, `billing_kb`, `technical_kb`, `account_kb`, with a handful of fixture
 documents each. Then write three retrieval modules (`retrieveBillingKb`,
 `retrieveTechnicalKb`, `retrieveAccountKb`), each hard-coding its namespace and
 returning citation objects tagged with the agent. Verify that a billing query
@@ -123,5 +122,5 @@ never returns a technical document.
 
 ---
 
-Next: **[Lesson 4 — State passing](./04-state-passing.md)** — sharing state across
+Next: **[Lesson 4 · State passing](./04-state-passing.md)**, sharing state across
 nested subgraphs without specialists stomping on each other.

@@ -1,0 +1,8 @@
+{
+  "node_version": "20",
+  "dependencies": ["."],
+  "graphs": {
+    "coach": "./src/deployment/graph.ts:coachGraph"
+  },
+  "env": ".env"
+}

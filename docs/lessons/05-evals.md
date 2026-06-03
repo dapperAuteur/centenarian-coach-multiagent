@@ -1,4 +1,4 @@
-# Lesson 5 — Evals: catching the failures you actually care about
+# Lesson 5 · Evals: catching the failures you actually care about
 
 > The eval **dataset and runner** now ship in this repo: `evals/dataset.json`,
 > `evals/rubric.ts`, and `pnpm eval`. This lesson walks through how they work.
@@ -23,7 +23,7 @@ evaluate them independently:
    did the model add plausible facts that no source backs?
 
 Routing and citation coverage are checkable with plain code. Grounding needs a
-judge — usually an LLM scoring the answer against its sources.
+judge, usually an LLM scoring the answer against its sources.
 
 ## The dataset
 
@@ -40,7 +40,7 @@ questions, two-domain questions, and three-domain questions.
 ```
 
 Keep `expectedAgents` deliberately small and certain. If you cannot confidently
-say how a question *should* route, it is a bad eval example — drop it.
+say how a question *should* route, it is a bad eval example, drop it.
 
 ## Evaluators
 
@@ -48,7 +48,7 @@ An evaluator takes a run's output and returns a score. The deterministic ones
 are simple functions:
 
 ```ts
-// routing accuracy — exact-set match
+// routing accuracy, exact-set match
 function routingScore(output: CoachState, example: { expectedAgents: Agent[] }) {
   const got = [...(output.routing?.agents ?? [])].sort();
   const want = [...example.expectedAgents].sort();
@@ -56,7 +56,7 @@ function routingScore(output: CoachState, example: { expectedAgents: Agent[] }) 
   return { key: "routing_correct", score: correct ? 1 : 0 };
 }
 
-// citation coverage — every finding must carry citations
+// citation coverage, every finding must carry citations
 function citationScore(output: CoachState) {
   const findings = Object.values(output.findings);
   const ok = findings.length > 0 && findings.every((f) => f.citations.length > 0);
@@ -67,7 +67,7 @@ function citationScore(output: CoachState) {
 The grounding evaluator is LLM-as-judge: give a model the answer and the
 specialist findings (which carry the source snippets) and ask it to score, 0–1,
 how well every claim is supported. Pin that judge at `temperature: 0` and give
-it a tight rubric — "1 only if every sentence is traceable to a snippet."
+it a tight rubric, "1 only if every sentence is traceable to a snippet."
 
 ## Running it
 
@@ -105,8 +105,8 @@ LangSmith. The local runner here keeps the gate dependency-free and CI-cheap.
 
 Watch the scores as a set, not a single number. Low **routing** with high
 **grounding** means the specialists are good but the supervisor sends them the
-wrong questions — fix the supervisor prompt or schema. High routing with low
-**grounding** means retrieval or the composer is the problem — the right
+wrong questions, fix the supervisor prompt or schema. High routing with low
+**grounding** means retrieval or the composer is the problem, the right
 specialist is answering, just not from its sources. Decomposed scores tell you
 *where* to look; a single blended "quality" score does not.
 
@@ -126,7 +126,7 @@ Continue the support desk (Billing, Technical, Account).
 cross-domain, and one edge case (a question no specialist should handle). For
 each, write down `expectedAgents`. Then implement the `routingScore` and
 `citationScore` evaluators for the desk and run them over your five examples by
-hand. Which example is hardest to assign an expected route to — and what does
+hand. Which example is hardest to assign an expected route to, and what does
 that tell you about the question?
 
 ---
