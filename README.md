@@ -240,9 +240,8 @@ centenarian-coach-multiagent/
 ├── README.md                       <- you are here
 ├── docs/
 │   ├── architecture.md             <- diagrams + design notes
-│   ├── course/                     <- the academy course (6 modules, 28 lessons)
-│   ├── video/                      <- video production guide + script blueprint
-│   └── lessons/                    <- legacy lessons (folding into docs/course/)
+│   ├── course/                     <- academy course (28 lessons) + video/ (production + scripts)
+│   └── lessons/                    <- legacy 5 lessons (deprecated; served at /guide/lessons)
 ├── src/
 │   ├── agents/
 │   │   ├── supervisor/             <- routing logic

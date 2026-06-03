@@ -76,5 +76,5 @@ measured, not assumed.
 > `feat/langchain-academy-project-refactor` branch, decomposed and expanded from
 > the repo's original five lessons (now superseded; see
 > [`../lessons/`](../lessons/)). The video production package lives in
-> [`../video/`](../video/); recording is gated on sign-off, and the verbatim
+> [`./video/`](./video/); recording is gated on sign-off, and the verbatim
 > narration plus screen-recording descriptions are written last, per module.
