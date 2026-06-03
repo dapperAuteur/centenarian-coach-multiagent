@@ -22,9 +22,9 @@ The supervisor classifies the user's question, decides which specialists to invo
 
 This repo demonstrates three LangGraph patterns: supervisor routing, per-agent retrieval, and state passing across nested subgraphs.
 
-Companion 5-lesson course (Module 2 of the series): *coming soon.*
+This repo is the artifact for a LangChain Academy **Project** course (see [The course](#the-course)) — 6 modules, 28 lessons, with a ~2.5-hour video walkthrough in production.
 Companion podcast (S1E3 — coming after S1E1): *coming soon.*
-Sister projects in the same curriculum: [Triage Agent](https://github.com/dapperAuteur/witus-triage-agent), [Field Reporter](https://github.com/dapperAuteur/wanderlearn-field-reporter)
+Sister courses in the same curriculum: [Triage Agent](https://github.com/dapperAuteur/witus-triage-agent) (Quickstart tier), [Field Reporter](https://github.com/dapperAuteur/wanderlearn-field-reporter) (Foundation tier).
 
 ---
 
@@ -180,17 +180,36 @@ If clone-to-running takes longer than 20 minutes, that is a bug. Open an issue.
 
 ---
 
-## What you can learn from this repo
+## The course
 
-Five lessons under `/docs/lessons/`. Each is ~1,200 words plus inline code.
+This repo is the artifact for a LangChain Academy **Project** course,
+*Domain-Specialist Multi-Agent with Per-Agent RAG* — 6 modules, 28 lessons, with a
+~2.5-hour video walkthrough in production. It is the first project-tier course to
+teach **per-agent RAG**: every specialist owns its own retrieval namespace, and
+answers carry citations grounded in that specialist's corpus.
 
-- [Lesson 1 — Single vs Multi-Agent](./docs/lessons/01-single-vs-multi-agent.md). When the extra complexity actually pays.
-- [Lesson 2 — Supervisor Routing](./docs/lessons/02-supervisor-routing.md). Writing a router that returns structured decisions.
-- [Lesson 3 — Per-Agent Retrieval](./docs/lessons/03-per-agent-retrieval.md). Why each specialist needs its own retrieval namespace.
-- [Lesson 4 — State Passing](./docs/lessons/04-state-passing.md). Sharing context across nested subgraphs without stomping.
-- [Lesson 5 — Evals](./docs/lessons/05-evals.md). Building a LangSmith eval dataset and rubric for multi-agent answers.
+Lessons live in [`docs/course/`](./docs/course/). Every lesson names the exact
+files it touches and pins a LangSmith trace, and the branch carries a **tagged
+commit per lesson** so you can check out any lesson's starting state:
 
-The lessons teach with this repo's own specialists (Nutrition, Workout, Recovery, Corrective Exercise), and each ends with a build-it-yourself exercise that rebuilds the pattern on a separate domain — a fictional customer-support desk — so the architecture transfers cleanly to your own problem.
+```bash
+git checkout course/lesson-04   # the first-run smoke test, ready to run
+```
+
+| Module | Lessons | What you build |
+|---|---|---|
+| **0 · Setup + scope** | 4 | Clone → seed → ask a question → read the trace. The coach runs before any architecture lesson. |
+| **1 · The supervisor** | 4 | The Zod routing schema, temperature-0 classification, and the topology that *enforces* ordering. |
+| **2 · Specialist #1 (Nutrition)** | 4 | Per-agent retrieval namespacing, the embedding-consistency trap, and type-enforced specialist isolation. |
+| **3 · Specialists #2 + #3** | 3 | Workout + Recovery: the specialist template, and state fan-in without stomping. |
+| **4 · LangSmith evaluation** | 5 | Routing + citation evaluators, an LLM-judge grounding evaluator, and the find-bug → add-example → re-run loop on a growing dataset. |
+| **5 · Deployment + multi-tenant** | 4 | LangGraph Platform deployment, per-user state, and cost/latency dashboards. |
+| **6 · Extension launching pad** | 4 | How to add a new specialist (worked with the `corrective` agent), plus 3–5 extensions with file paths. |
+
+Module 0 is live; Modules 1–6 are being authored on the
+`feat/langchain-academy-project-refactor` branch. The course holds to one
+artifact — the coach — and every lesson contributes to it (no separate transfer
+exercise on an unrelated domain).
 
 ---
 
@@ -221,7 +240,9 @@ centenarian-coach-multiagent/
 ├── README.md                       <- you are here
 ├── docs/
 │   ├── architecture.md             <- diagrams + design notes
-│   └── lessons/                    <- 5 companion lessons
+│   ├── course/                     <- the academy course (6 modules, 28 lessons)
+│   ├── video/                      <- video production guide + script blueprint
+│   └── lessons/                    <- legacy lessons (folding into docs/course/)
 ├── src/
 │   ├── agents/
 │   │   ├── supervisor/             <- routing logic
@@ -230,6 +251,7 @@ centenarian-coach-multiagent/
 │   │   ├── recovery/               <- specialist subgraph + tools
 │   │   └── corrective/             <- specialist subgraph + tools
 │   ├── synthesizer/                <- weaves findings into final answer
+│   ├── deployment/                 <- graph entry for LangGraph Platform
 │   ├── state.ts                    <- typed state object
 │   ├── app/
 │   │   ├── api/coach/              <- streaming REST routes
@@ -242,8 +264,10 @@ centenarian-coach-multiagent/
 │       ├── langsmith.ts
 │       ├── embeddings.ts
 │       └── pgvector.ts
-├── tests/                          <- unit + graph tests
-├── kb-fixtures/                    <- empty by design; drop your own corpus here, then `pnpm kb:seed`
+├── evals/                          <- dataset + rubric + grounding judge + LangSmith runner
+├── tests/                          <- unit + graph + topology tests
+├── kb-fixtures/                    <- drop your own corpus here, then `pnpm kb:seed`
+├── langgraph.json                  <- LangGraph Platform graph declaration
 └── package.json
 ```
 
@@ -274,19 +298,53 @@ fail-soft — the app runs fine without `LANGSMITH_API_KEY`.
 
 ---
 
-## Testing
+## Evaluation & testing
 
 ```bash
-pnpm test                       # deterministic suite — unit + mocked graph wiring
-RUN_LIVE_TESTS=1 pnpm test       # also runs the live supervisor+specialist tests
-pnpm eval                        # 20-question routing + citation eval -> scored summary
-pnpm review                      # 10-question manual quality review (needs the dev server)
+pnpm test                    # deterministic suite — unit + mocked graph wiring (no keys)
+RUN_LIVE_TESTS=1 pnpm test   # also runs the live supervisor + specialist tests
+pnpm eval                    # 23-question routing + citation gate -> scored summary
+RUN_GROUNDING=1 pnpm eval    # + the LLM-judge grounding score per example
+pnpm eval:langsmith          # push the dataset + run experiments in LangSmith (needs LANGSMITH_API_KEY)
+pnpm review                  # 10-question manual quality review (needs the dev server)
 ```
 
-`pnpm test` runs with no API keys and no network: pure-function unit tests plus
-mocked wiring tests that verify supervisor routing, fan-out, and the synthesizer
-fan-in. The live tests (opt-in via `RUN_LIVE_TESTS=1`) run real questions through
-the graph and assert that citations are non-empty.
+Evaluation is built into the artifact, not bolted on. Three things fail
+independently in a multi-agent system, so three evaluators check them:
+**routing accuracy** and **citation coverage** (deterministic, pure functions in
+[`evals/rubric.ts`](./evals/rubric.ts)) and **grounding** — an LLM-as-judge that
+scores whether every claim traces to a retrieved snippet
+([`evals/grounding.ts`](./evals/grounding.ts)). `pnpm eval` is the dependency-free
+CI gate; `pnpm eval:langsmith` ([`evals/run-langsmith.ts`](./evals/run-langsmith.ts))
+runs the same evaluators as tracked LangSmith experiments you can diff over time.
+The dataset ([`evals/dataset.json`](./evals/dataset.json)) **grows across the
+course** — each new example tagged with the bug it pins (`addedIn` / `note`).
+
+`pnpm test` needs no API keys and no network: pure-function unit tests plus mocked
+wiring and topology tests that verify supervisor routing, fan-out, the synthesizer
+fan-in, and that node ordering is enforced by graph structure (not prompt
+discipline). The live tests (opt-in via `RUN_LIVE_TESTS=1`) run real questions and
+assert citations are non-empty.
+
+---
+
+## Deployment
+
+Two targets:
+
+- **The app** (chat UI + history + admin dashboard) deploys to **Vercel** as a
+  Next.js App Router app.
+- **The graph** deploys to **LangGraph Platform** (LangSmith Deployment).
+  [`langgraph.json`](./langgraph.json) declares the `coach` graph through a thin
+  entry, [`src/deployment/graph.ts`](./src/deployment/graph.ts). Boot it locally:
+
+```bash
+pnpm deploy:dev   # npx @langchain/langgraph-cli dev — runs the graph from langgraph.json
+```
+
+The deployed graph needs `DATABASE_URL` (Neon + pgvector, with `coach_kb` seeded
+in that database), an embeddings key, and an LLM key. The live LangSmith
+Deployment URL is added here once provisioned (Module 5).
 
 ---
 
@@ -314,10 +372,12 @@ Two more provider-shaped bugs showed up the same week: `gemini-2.5-pro` has no f
 
 ## Roadmap
 
-This repo ships v2 — four specialists and a 20-question eval. The visible roadmap:
+This repo ships v2 — four specialists and a 23-question eval — and is being
+refactored into a LangChain Academy Project course. The visible roadmap:
 
 - [x] v2 — Recovery specialist with sleep + HRV tools.
-- [x] v2.1 — LangSmith eval dataset (20 questions).
+- [x] v2.1 — LangSmith eval dataset.
+- [ ] **Academy course refactor** — 6 modules, 28 lessons, LangSmith eval iteration arc, LangGraph Platform deployment, video. In progress on `feat/langchain-academy-project-refactor`.
 - [ ] v1.1 — Streaming improvements. Show partial specialist findings as they arrive.
 - [ ] v3 — Conversation memory across sessions (with user opt-in).
 - [ ] v3.1 — Custom specialist plugin API for adding domain experts without touching core.
@@ -367,3 +427,13 @@ If you are hiring for Developer Relations, Education Engineering, or Solutions E
 MIT. See [LICENSE](./LICENSE).
 
 Fork it. Ship it. Teach from it. Attribution appreciated, not required.
+
+### Attribution
+
+The LangSmith **eval-suite shape** (dataset → evaluator functions → tracked
+experiments → growing dataset) and the **LangGraph Platform deployment
+scaffolding** are adapted from
+[`langchain-ai/open_deep_research`](https://github.com/langchain-ai/open_deep_research)
+(MIT). Those patterns were ported to TypeScript and to this repo's domain; the
+coach, its supervisor + per-agent-RAG architecture, and all curriculum prose are
+original to this project.
