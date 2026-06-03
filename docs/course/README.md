@@ -64,13 +64,17 @@ measured, not assumed.
 23. [Per-user state and auth on the live coach](./module-5-deployment/23-per-user-state-and-auth.md), `course/lesson-23`
 24. [Cost and latency dashboards](./module-5-deployment/24-cost-and-latency-dashboards.md), `course/lesson-24`
 
-### Module 6 · Extension launching pad, *in progress*
-How to add a new specialist (worked with the `corrective` agent) · 3–5 extensions
-with starting file paths · extending the eval suite · capstone.
+### Module 6 · Extension launching pad, *live*
+25. [How to add a new specialist (worked with Corrective)](./module-6-extension/25-how-to-add-a-new-specialist.md), `course/lesson-25`
+26. [Five extensions, with starting file paths](./module-6-extension/26-extensions-with-file-paths.md), `course/lesson-26`
+27. [Extending the eval suite as you extend the system](./module-6-extension/27-extending-the-eval-suite.md), `course/lesson-27`
+28. [Capstone: ship your own specialist](./module-6-extension/28-capstone.md), `course/lesson-28`
 
 ---
 
-> **Status.** Modules 0–5 are authored; Module 6 is being written on the
+> **Status.** All 28 lessons across 6 modules are authored on the
 > `feat/langchain-academy-project-refactor` branch, decomposed and expanded from
-> the repo's original five lessons in [`../lessons/`](../lessons/). The video
-> production package lives in [`../video/`](../video/).
+> the repo's original five lessons (now superseded; see
+> [`../lessons/`](../lessons/)). The video production package lives in
+> [`../video/`](../video/); recording is gated on sign-off, and the verbatim
+> narration plus screen-recording descriptions are written last, per module.
