@@ -3,7 +3,7 @@
 > Verbatim narration and shot directions for the two on-camera bookends. The intro
 > also serves as the landing-page embed (PRD section 7). On-camera segments use a
 > teleprompter; keep them tight. Pace ~150 wpm. No em-dashes in any on-screen text.
-> See [`../production-guide.md`](../production-guide.md) for the recording stack.
+> See [`./production-guide.md`](./production-guide.md) for the recording stack.
 
 ---
 
