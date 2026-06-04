@@ -12,6 +12,7 @@ import { getStoredSettings, providerOverride } from "@/lib/settings";
 import { COACH_PROVIDERS, type LlmProvider } from "@/lib/llm-config";
 import { SettingsForm } from "./SettingsForm";
 import { signOutAction } from "@/app/actions/auth";
+import { Logo } from "@/components/Logo";
 
 // Always render fresh — settings and waitlist rows both change at any time.
 export const dynamic = "force-dynamic";
@@ -43,9 +44,12 @@ export default async function AdminPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <div className="flex items-start justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Admin · Dashboard
-        </h1>
+        <div>
+          <Logo className="mb-2 h-8 w-auto" />
+          <h1 className="text-2xl font-bold tracking-tight">
+            Admin · Dashboard
+          </h1>
+        </div>
         <nav className="flex shrink-0 items-center gap-3 text-xs">
           <Link href="/coach" className="text-sky-700 hover:underline">
             Coach
