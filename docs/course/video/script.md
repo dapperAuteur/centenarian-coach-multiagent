@@ -18,8 +18,11 @@ for tone approval before the rest:
   (also the landing-page embed) + outro. **Written.**
 - [`scripts/module-0.md`](./scripts/module-0.md), lessons 1 to 4, verbatim narration
   + shot-by-shot screen-recording directions. **Written.**
-- `scripts/module-1.md` through `scripts/module-6.md`, **pending tone sign-off** on
-  the intro + Module 0, then authored module by module against the final lessons.
+- [`scripts/module-1.md`](./scripts/module-1.md), the supervisor (lessons 5 to 8). **Written.**
+- [`scripts/module-2.md`](./scripts/module-2.md), Nutrition specialist (lessons 9 to 12). **Written.**
+- [`scripts/module-3.md`](./scripts/module-3.md), Workout + Recovery (lessons 13 to 15). **Written.**
+- `scripts/module-4.md` through `scripts/module-6.md`, **pending**, authored module
+  by module against the final lessons (same beginner-friendly, em-dash-free format).
 
 The template, runtime budget, and coverage checklist below are what each
 `scripts/module-N.md` is filled from.
