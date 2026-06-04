@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
     "@langchain/anthropic",
     "langsmith",
   ],
+  // The app logo is served from Cloudinary (CDN-optimized), so allowlist the host
+  // for next/image.
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
+  },
 };
 
 export default nextConfig;
