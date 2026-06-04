@@ -1,8 +1,8 @@
 // src/lib/langsmith.ts
 // LangSmith tracing gate. Tracing is on by default, but only actually enabled
-// when LANGSMITH_API_KEY is present — with no key this is a clean no-op and the
-// graph still runs (fail-soft). Call configureLangSmith() once before building
-// any graph.
+// when a LangSmith API key is present (LANGSMITH_API_KEY or the legacy
+// LANGCHAIN_API_KEY) -- with no key this is a clean no-op and the graph still
+// runs (fail-soft). Call configureLangSmith() once before building any graph.
 
 let configured = false;
 
@@ -11,13 +11,23 @@ export interface LangSmithStatus {
 }
 
 /**
+ * True when a LangSmith API key is present under either supported name. The
+ * langsmith SDK accepts both LANGSMITH_API_KEY and the legacy LANGCHAIN_API_KEY,
+ * so the tracing gate must too. Otherwise a key set under the legacy name
+ * silently disables tracing.
+ */
+export function hasLangsmithApiKey(): boolean {
+  return Boolean(process.env.LANGSMITH_API_KEY ?? process.env.LANGCHAIN_API_KEY);
+}
+
+/**
  * Apply a runtime tracing on/off decision (the /admin dashboard toggle).
- * Tracing only actually runs when a LANGSMITH_API_KEY is present, so
- * `enabled: true` with no key resolves to off. Returns whether tracing is
- * now effectively on. Call this per request, before running the graph.
+ * Tracing only actually runs when an API key is present, so `enabled: true`
+ * with no key resolves to off. Returns whether tracing is now effectively on.
+ * Call this per request, before running the graph.
  */
 export function setTracing(enabled: boolean): boolean {
-  const on = enabled && Boolean(process.env.LANGSMITH_API_KEY);
+  const on = enabled && hasLangsmithApiKey();
   process.env.LANGSMITH_TRACING = on ? "true" : "false";
   process.env.LANGCHAIN_TRACING_V2 = on ? "true" : "false";
   if (on && !process.env.LANGSMITH_PROJECT) {
@@ -29,8 +39,7 @@ export function setTracing(enabled: boolean): boolean {
 export function configureLangSmith(): LangSmithStatus {
   if (!configured) {
     configured = true;
-    const key = process.env.LANGSMITH_API_KEY;
-    if (key) {
+    if (hasLangsmithApiKey()) {
       // LangChain reads both the LANGSMITH_* and legacy LANGCHAIN_* names.
       process.env.LANGSMITH_TRACING = "true";
       process.env.LANGCHAIN_TRACING_V2 = "true";
