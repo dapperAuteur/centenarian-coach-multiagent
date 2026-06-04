@@ -3,10 +3,12 @@
 // create-next-app scaffold.
 
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
+      <Logo className="mb-6 h-14 w-auto" />
       <h1 className="text-3xl font-bold tracking-tight">
         Centenarian Coach Multi-Agent
       </h1>
@@ -58,9 +60,9 @@ export default function HomePage() {
       </div>
 
       <p className="mt-12 text-xs text-gray-500">
-        The architecture's design decisions are walked through in the{" "}
+        The architecture&rsquo;s design decisions are walked through in the{" "}
         <a
-          href="https://github.com/dapperAuteur/centenarian-coach-multiagent/blob/main/docs/lessons/README.md"
+          href="https://github.com/dapperAuteur/centenarian-coach-multiagent/blob/main/docs/course/README.md"
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:text-gray-700"
