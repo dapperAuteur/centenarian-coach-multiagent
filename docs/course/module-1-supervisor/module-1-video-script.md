@@ -155,8 +155,16 @@
 2. Open `tests/topology.test.ts`; highlight the `stream(..., { streamMode: "updates" })`
    loop that records node order and the assertions (first/last/between).
 3. Terminal: `pnpm test tests/topology.test.ts`; show it pass green.
-4. Optional: in a scratch copy, add a bad edge (specialist back to supervisor),
-   re-run, show the ordering assertion catch it. Revert.
+4. **BONUS FOOTAGE (optional; label it on screen as a bonus clip).** Prove the
+   guarantee is structural by trying to break it:
+   a. Copy `src/graph.ts` to a scratch file (do not edit the real graph on camera).
+   b. Add a wrong edge, a specialist back to the supervisor, e.g.
+      `.addEdge("nutrition", "supervisor")`.
+   c. Point the topology test at the scratch graph and run
+      `pnpm test tests/topology.test.ts`.
+   d. Show the "supervisor first, synthesize last" assertion fail. That red is the
+      structure refusing the wrong order.
+   e. Delete the scratch file; the real graph is untouched.
 
 ---
 
@@ -201,8 +209,12 @@
    specialist nodes running side by side (the fan-out). Point at the routing
    `agents` array.
 3. Open `supervisor.node.ts`; highlight `temperature: 0`.
-4. Optional: ask the same question twice at temp 0, show identical routing; mention
-   (do not necessarily demo) that raising temperature would make it flicker.
+4. **BONUS FOOTAGE (optional).** Determinism, on camera:
+   a. Ask the same cross-domain question twice; show the routing `agents` array is
+      identical both runs (temperature 0).
+   b. Talk-only (do not change the running config): explain that at a higher
+      temperature the same question could route differently run to run, which is why
+      routing is pinned to 0.
 
 ---
 
