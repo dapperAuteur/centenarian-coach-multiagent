@@ -20,8 +20,12 @@ The verbatim scripts live with their lessons: each module dir holds its
 - [`../module-1-supervisor/module-1-video-script.md`](../module-1-supervisor/module-1-video-script.md), Module 1, the supervisor (lessons 5 to 8). **Written.**
 - [`../module-2-nutrition/module-2-video-script.md`](../module-2-nutrition/module-2-video-script.md), Module 2, Nutrition (lessons 9 to 12). **Written.**
 - [`../module-3-workout-recovery/module-3-video-script.md`](../module-3-workout-recovery/module-3-video-script.md), Module 3, Workout + Recovery (lessons 13 to 15). **Written.**
-- Modules 4 to 6 video scripts, **pending**, authored into each module dir (same
-  beginner-friendly, em-dash-free format).
+- [`../module-4-evaluation/module-4-video-script.md`](../module-4-evaluation/module-4-video-script.md), Module 4, LangSmith evaluation (lessons 16 to 20). **Written.**
+- [`../module-5-deployment/module-5-video-script.md`](../module-5-deployment/module-5-video-script.md), Module 5, Deployment + multi-tenant (lessons 21 to 24). **Written.**
+- [`../module-6-extension/module-6-video-script.md`](../module-6-extension/module-6-video-script.md), Module 6, Extension launching pad (lessons 25 to 28). **Written.**
+
+All 28 lesson scripts + the on-camera intro/outro are now drafted (~2h25m). Next:
+record per the production guide, after sign-off.
 
 The template, runtime budget, and coverage checklist below are what each module's
 video script is filled from.
