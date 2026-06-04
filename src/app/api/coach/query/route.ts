@@ -13,6 +13,7 @@
 
 import { randomUUID } from "node:crypto";
 import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
+import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 import { coachGraph } from "@/graph";
 import { setTracing } from "@/lib/langsmith";
 import { getSettings } from "@/lib/settings";
@@ -99,6 +100,14 @@ export async function POST(req: Request): Promise<Response> {
               send({ type: "answer", finalAnswer: value.finalAnswer });
             }
           }
+        }
+
+        // Flush tracer callbacks so the run uploads to LangSmith before this
+        // (serverless) function returns. On Vercel, background callback uploads
+        // can be dropped when the function freezes after the response ends, so
+        // traces silently never appear even with a valid key.
+        if (tracingEnabled) {
+          await awaitAllCallbacks();
         }
 
         // The root run is the named "centenarian-coach" run. Only meaningful
