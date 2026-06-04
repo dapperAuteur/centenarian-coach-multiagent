@@ -9,6 +9,21 @@
 > re-records. See [`README.md`](./README.md) for why;
 > [`production-guide.md`](./production-guide.md) for how it's recorded.
 
+## Written scripts (in `scripts/`)
+
+The lessons are final, so the verbatim scripts are now being written, sample-first
+for tone approval before the rest:
+
+- [`scripts/00-intro-and-outro.md`](./scripts/00-intro-and-outro.md), on-camera intro
+  (also the landing-page embed) + outro. **Written.**
+- [`scripts/module-0.md`](./scripts/module-0.md), lessons 1 to 4, verbatim narration
+  + shot-by-shot screen-recording directions. **Written.**
+- `scripts/module-1.md` through `scripts/module-6.md`, **pending tone sign-off** on
+  the intro + Module 0, then authored module by module against the final lessons.
+
+The template, runtime budget, and coverage checklist below are what each
+`scripts/module-N.md` is filled from.
+
 ## Script-writing workflow (per module)
 
 1. The module's lessons in [the course](../README.md) are authored + approved.
