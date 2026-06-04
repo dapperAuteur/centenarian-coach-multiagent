@@ -11,6 +11,7 @@ import { waitlist } from "@/db/schema";
 import { getStoredSettings, providerOverride } from "@/lib/settings";
 import { COACH_PROVIDERS, type LlmProvider } from "@/lib/llm-config";
 import { SettingsForm } from "./SettingsForm";
+import { signOutAction } from "@/app/actions/auth";
 
 // Always render fresh — settings and waitlist rows both change at any time.
 export const dynamic = "force-dynamic";
@@ -58,12 +59,14 @@ export default async function AdminPage() {
           <Link href="/guide" className="text-sky-700 hover:underline">
             Guide
           </Link>
-          <a
-            href="/api/auth/signout?callbackUrl=/"
-            className="text-gray-500 hover:text-gray-800 hover:underline"
-          >
-            Sign out
-          </a>
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              className="cursor-pointer border-0 bg-transparent p-0 text-gray-500 hover:text-gray-800 hover:underline"
+            >
+              Sign out
+            </button>
+          </form>
         </nav>
       </div>
 

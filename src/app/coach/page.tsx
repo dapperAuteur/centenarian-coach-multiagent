@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ErrorNotice from "@/components/ErrorNotice";
 import { extractApiError } from "@/lib/client-errors";
+import { signOutAction } from "@/app/actions/auth";
 import type {
   Agent,
   Citation,
@@ -141,12 +142,14 @@ export default function CoachPage() {
           <Link href="/admin" className="text-sky-700 hover:underline">
             Admin
           </Link>
-          <a
-            href="/api/auth/signout?callbackUrl=/"
-            className="text-gray-500 hover:text-gray-800 hover:underline"
-          >
-            Sign out
-          </a>
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              className="cursor-pointer border-0 bg-transparent p-0 text-gray-500 hover:text-gray-800 hover:underline"
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       </div>
 
