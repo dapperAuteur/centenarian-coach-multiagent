@@ -9,23 +9,22 @@
 > re-records. See [`README.md`](./README.md) for why;
 > [`production-guide.md`](./production-guide.md) for how it's recorded.
 
-## Written scripts (in `scripts/`)
+## Written scripts (per module, alongside each module's lessons)
 
-The lessons are final, so the verbatim scripts are now being written, sample-first
-for tone approval before the rest:
+The verbatim scripts live with their lessons: each module dir holds its
+`module-N-video-script.md`. The course-level intro/outro lives in this `video/` dir.
 
-- [`scripts/00-intro-and-outro.md`](./scripts/00-intro-and-outro.md), on-camera intro
+- [`intro-outro-video-script.md`](./intro-outro-video-script.md), on-camera intro
   (also the landing-page embed) + outro. **Written.**
-- [`scripts/module-0.md`](./scripts/module-0.md), lessons 1 to 4, verbatim narration
-  + shot-by-shot screen-recording directions. **Written.**
-- [`scripts/module-1.md`](./scripts/module-1.md), the supervisor (lessons 5 to 8). **Written.**
-- [`scripts/module-2.md`](./scripts/module-2.md), Nutrition specialist (lessons 9 to 12). **Written.**
-- [`scripts/module-3.md`](./scripts/module-3.md), Workout + Recovery (lessons 13 to 15). **Written.**
-- `scripts/module-4.md` through `scripts/module-6.md`, **pending**, authored module
-  by module against the final lessons (same beginner-friendly, em-dash-free format).
+- [`../module-0-setup/module-0-video-script.md`](../module-0-setup/module-0-video-script.md), Module 0, lessons 1 to 4. **Written.**
+- [`../module-1-supervisor/module-1-video-script.md`](../module-1-supervisor/module-1-video-script.md), Module 1, the supervisor (lessons 5 to 8). **Written.**
+- [`../module-2-nutrition/module-2-video-script.md`](../module-2-nutrition/module-2-video-script.md), Module 2, Nutrition (lessons 9 to 12). **Written.**
+- [`../module-3-workout-recovery/module-3-video-script.md`](../module-3-workout-recovery/module-3-video-script.md), Module 3, Workout + Recovery (lessons 13 to 15). **Written.**
+- Modules 4 to 6 video scripts, **pending**, authored into each module dir (same
+  beginner-friendly, em-dash-free format).
 
-The template, runtime budget, and coverage checklist below are what each
-`scripts/module-N.md` is filled from.
+The template, runtime budget, and coverage checklist below are what each module's
+video script is filled from.
 
 ## Script-writing workflow (per module)
 
