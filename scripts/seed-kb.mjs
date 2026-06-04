@@ -2,10 +2,13 @@
 // Seeds the coach_kb table from kb-fixtures/. Each *.json file's basename is
 // the namespace (e.g. nutrition_kb.json -> namespace 'nutrition_kb').
 // Two source dirs:
-//   - kb-fixtures/*.json          public; tracked by git (currently empty).
+//   - kb-fixtures/*.json          public; tracked by git. Ships a real starter
+//                                 corpus (~296 open-access study abstracts) so a
+//                                 fresh clone has a working coach with no extra files.
 //   - kb-fixtures/private/*.json  gitignored; the operator's own corpus
 //                                 (e.g. ingested PDFs via `pnpm kb:ingest`).
-// When the same namespace exists in both, the private file wins.
+// When the same namespace exists in both, the private file wins. The private dir is
+// optional: with no private/, seeding runs on the public corpus alone.
 //
 // Prerequisite: apply the migration in src/db/migrations first.
 //
