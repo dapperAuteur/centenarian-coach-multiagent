@@ -35,6 +35,13 @@ video script is filled from.
    on-screen code is exactly the lesson's starting point.
 4. Keep each script within its **runtime budget** (table below). If a draft runs
    long, cut narration, not the demo, the demo + trace are the payoff.
+5. **Optional steps are explicit bonus footage.** Any optional or bonus demo is
+   written as a numbered `BONUS FOOTAGE (optional)` block with concrete steps to
+   record, never a vague "optionally try X." If the bonus needs code that is not in
+   the lesson's tagged state, ship it as commented-out code in the repo with a
+   comment naming the bonus step, so the recorder can uncomment, demo, and revert.
+   (Module 1's "break the topology" and "determinism at temperature 0" clips are
+   the worked examples.)
 
 ## Per-lesson script template
 

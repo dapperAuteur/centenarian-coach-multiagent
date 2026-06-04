@@ -74,8 +74,11 @@
 > Step two, configure. Copy the example env file, open it, and fill in three things:
 > an Anthropic or Gemini key for the chat models, a Gemini key for embeddings, and
 > your database connection string. Embeddings default to Gemini, so set the Gemini
-> key even if you run chat on Claude. Optionally set a LangSmith key for tracing. You
-> will want it by the next lesson.
+> key even if you run chat on Claude. Or, if you would rather not sign up for a paid
+> API, you can run the whole coach free and local with Ollama: install it, pull a
+> chat model and the nomic-embed-text embedding model, and set COACH_LLM_PROVIDER and
+> COACH_EMBED_PROVIDER to ollama. No keys needed. The lesson has the exact commands.
+> Optionally set a LangSmith key for tracing. You will want it by the next lesson.
 >
 > Step three, apply the schema with pnpm db migrate. This runs the Drizzle migrations
 > against your database. The first one creates the coach_kb table, one table with a
@@ -162,8 +165,9 @@
 > make that happen: seed a corpus, ask one question, read the answer and its trace.
 >
 > Step one, seed a corpus. Each specialist retrieves from its own namespace in the
-> coach_kb table, so the table needs documents first. Drop a corpus into kb-fixtures
-> following the shape in the kb-fixtures readme, then run pnpm kb seed. This embeds
+> coach_kb table, so the table needs documents first. The repo ships a small public
+> starter corpus: peer-reviewed studies, the science behind leading science-based
+> fitness and health certifications, chunked per specialist. Run pnpm kb seed. This embeds
 > every document with the same model the coach uses at query time and writes a
 > 768-dimension vector per row. That same-model rule is the embedding-consistency
 > trap you will meet in Module 2. Confirm it worked with pnpm kb status, which prints
