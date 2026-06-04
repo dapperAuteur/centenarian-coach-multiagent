@@ -10,10 +10,12 @@ run.
 ## 1. Seed a corpus
 
 Each specialist retrieves from its own namespace in the `coach_kb` table, so the
-table needs documents before retrieval returns anything. Drop a corpus into
-`kb-fixtures/` following the shape documented in
-[`kb-fixtures/README.md`](../../../kb-fixtures/README.md) (the course provides
-example nutrition / workout / recovery corpora; you can also bring your own), then:
+table needs documents before retrieval returns anything. The repo ships a small
+**public starter corpus** in [`kb-fixtures/`](../../../kb-fixtures/): peer-reviewed
+studies, the kind of science behind leading science-based fitness and health
+certifications, chunked per specialist (nutrition, workout, recovery, corrective).
+You can extend or replace it with your own corpus (see
+[`kb-fixtures/README.md`](../../../kb-fixtures/README.md)). Seed it:
 
 ```bash
 pnpm kb:seed      # embeds each document and inserts it into coach_kb, by namespace

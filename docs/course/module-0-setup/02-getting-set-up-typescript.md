@@ -12,8 +12,10 @@ installed and its database ready. Lesson 4 runs it.
 - **A Postgres database with the `pgvector` extension.** Neon's free tier works and
   is what the course assumes (Neon, 2025); pgvector adds the vector type and
   similarity operators retrieval depends on (pgvector, 2025).
-- **An LLM key**, `ANTHROPIC_API_KEY` (Claude) and/or `GEMINI_API_KEY`. Embeddings
-  default to Gemini, so set `GEMINI_API_KEY` even if you run chat on Claude.
+- **An LLM provider.** Either an API key, `ANTHROPIC_API_KEY` (Claude) and/or
+  `GEMINI_API_KEY` (embeddings default to Gemini, so set `GEMINI_API_KEY` even if
+  you run chat on Claude), **or run the whole coach free and local with Ollama, no
+  key required** (see "Running it free with Ollama" below).
 - **Optional:** `LANGSMITH_API_KEY` for tracing. Tracing is fail-soft, the app
   runs without it, but you will want it by Lesson 4 to see the trace.
 
@@ -57,6 +59,32 @@ older tutorials. If you are extending the app's routes or pages, read the bundle
 guides under `node_modules/next/dist/docs/` rather than relying on memory, the
 App Router's data-fetching and route-handler APIs move between majors (Vercel,
 2025).
+
+## Running it free with Ollama (optional, no API keys)
+
+Do not want to sign up for a paid API to try the course? You can run the whole
+coach **free and local** with [Ollama](https://ollama.com), which serves open
+models on your own machine. There is no API key: the coach just points at your
+local Ollama server.
+
+```bash
+# 1. Install Ollama (https://ollama.com), then pull two models:
+ollama pull nomic-embed-text   # embeddings (768-dim, matches the coach_kb column)
+ollama pull llama3.1           # a local chat model; match the name to the coach's
+                               #   Ollama default in src/lib/llm-config.ts, or pick
+                               #   the model later in the /admin dashboard
+
+# 2. In .env.local, point chat AND embeddings at Ollama:
+COACH_LLM_PROVIDER=ollama
+COACH_EMBED_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434   # the default; override only if needed
+```
+
+That is the whole setup, no `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` needed. You can
+also mix providers (for example Claude for chat, Ollama for embeddings). One rule,
+covered in Lesson 10: seed and query must use the **same** embedding backend, so if
+you switch `COACH_EMBED_PROVIDER` after seeding, re-seed
+(`pnpm kb:clear --all && pnpm kb:seed --fresh`).
 
 ## Checkpoint
 

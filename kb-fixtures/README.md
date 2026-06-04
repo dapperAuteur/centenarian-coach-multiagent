@@ -1,10 +1,13 @@
 # kb-fixtures/
 
-**This directory is intentionally empty in the public repo.** Bring your own
-corpus.
+**This directory ships a small public starter corpus** for the course: a few
+peer-reviewed studies per specialist (the kind of science behind leading
+science-based fitness and health certifications), one `*.json` per namespace.
+Extend or replace it with your own corpus. Only open-access / redistributable
+content belongs in these tracked files; proprietary material goes in `private/`.
 
 `pnpm kb:seed` reads `*.json` files here (and from `private/`, which is
-gitignored — use it for proprietary or copyrighted content). Each file's
+gitignored, use it for proprietary or copyrighted content). Each file's
 basename becomes a coach knowledge-base namespace:
 
 | File                              | Namespace        | Specialist |
@@ -12,6 +15,7 @@ basename becomes a coach knowledge-base namespace:
 | `nutrition_kb.json`               | `nutrition_kb`   | Nutrition  |
 | `workout_kb.json`                 | `workout_kb`     | Workout    |
 | `recovery_kb.json`                | `recovery_kb`    | Recovery   |
+| `corrective_kb.json`              | `corrective_kb`  | Corrective |
 
 ## File shape
 
@@ -31,10 +35,10 @@ Each file is a JSON array of `{ source, content }` documents:
 
 ## Public vs private
 
-- **`kb-fixtures/*.json`** — tracked by git. Use only for content you are
+- **`kb-fixtures/*.json`**, tracked by git. Use only for content you are
   comfortable publishing (public-domain, properly licensed, or content you
   authored).
-- **`kb-fixtures/private/*.json`** — gitignored. Use for proprietary or
+- **`kb-fixtures/private/*.json`**, gitignored. Use for proprietary or
   copyrighted material you own a personal-use license for. Private files
   override the public file of the same namespace at seed time.
 
@@ -59,16 +63,16 @@ seed script can resume safely after any kind of interruption.
   resume scope.
 
 ```bash
-# Machine A — first half of nutrition_kb
+# Machine A, first half of nutrition_kb
 pnpm kb:seed nutrition_kb --start=0 --end=3793
 
-# Machine B — second half, runs at the same time on a different laptop
+# Machine B, second half, runs at the same time on a different laptop
 pnpm kb:seed nutrition_kb --start=3793 --end=7585
 ```
 
 If A dies at row 1500 (within its 0–3793 range), re-running the **same
 command** on A resumes at 1500 and continues through 3792. B's resume is
-independent — it counts only rows in `[3793, 7585)`.
+independent, it counts only rows in `[3793, 7585)`.
 
 Range-mode rules:
 - Exactly one namespace argument; ranges across multiple namespaces are
@@ -83,8 +87,8 @@ Range-mode rules:
 
 ## Adding content to a finished namespace
 
-To add new PDFs to a namespace that's already seeded — without re-embedding
-what's already there — use append mode. It keeps existing rows untouched and
+To add new PDFs to a namespace that's already seeded, without re-embedding
+what's already there, use append mode. It keeps existing rows untouched and
 puts new chunks at the end, so `pnpm kb:seed` only embeds the new tail.
 
 ```bash
@@ -96,7 +100,7 @@ puts new chunks at the end, so `pnpm kb:seed` only embeds the new tail.
 pnpm kb:ingest --append --dry-run   # preview: shows skipped vs new files
 pnpm kb:ingest --append             # writes the appended JSON
 
-# 3. Seed — resume picks up at the first new doc_index and embeds only
+# 3. Seed, resume picks up at the first new doc_index and embeds only
 #    the appended chunks.
 pnpm kb:seed workout_kb
 ```
@@ -105,7 +109,7 @@ Append mode skips any file already represented in the JSON (matched by the
 basename in its source label), so re-running it is safe. Do NOT run a plain
 `pnpm kb:ingest` (without `--append`) to add content: that rebuilds the JSON
 from scratch and, if a new file sorts into the middle, shifts every later
-`doc_index` — which breaks the alignment between the JSON and the rows
+`doc_index`, which breaks the alignment between the JSON and the rows
 already in the DB.
 
 ## Embedding backend
@@ -135,8 +139,8 @@ COACH_EMBED_PROVIDER=ollama
 ```
 
 Optional Ollama env vars:
-- `OLLAMA_BASE_URL` — default `http://localhost:11434`.
-- `OLLAMA_EMBED_MODEL` — default `nomic-embed-text`; must be a 768-dim model.
-- `OLLAMA_EMBED_BATCH` — default `10`. Increase on Apple Silicon for faster
+- `OLLAMA_BASE_URL`, default `http://localhost:11434`.
+- `OLLAMA_EMBED_MODEL`, default `nomic-embed-text`; must be a 768-dim model.
+- `OLLAMA_EMBED_BATCH`, default `10`. Increase on Apple Silicon for faster
   throughput; decrease to 3-5 on slower Intel CPUs if a batch is hitting the
   30-minute fetch timeout.
