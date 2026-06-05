@@ -3,7 +3,12 @@
 // of the default `pnpm test` (unlike the live eval runner, which is opt-in).
 
 import { describe, it, expect } from "vitest";
-import { routingScore, citationScore, type EvalExample } from "../evals/rubric";
+import {
+  routingScore,
+  citationScore,
+  emptyRetrievalScore,
+  type EvalExample,
+} from "../evals/rubric";
 import type { Citation, CoachState } from "@/state";
 
 const cite = (agent: Citation["agent"]): Citation => ({
@@ -82,5 +87,34 @@ describe("citationScore", () => {
     const state = stateFor(["nutrition"]);
     state.finalAnswer!.citations = [];
     expect(citationScore(state).score).toBe(0);
+  });
+});
+
+describe("emptyRetrievalScore", () => {
+  it("scores 1 on a productive run (findings cited, no refusal)", () => {
+    expect(emptyRetrievalScore(stateFor(["workout", "recovery"])).score).toBe(
+      1,
+    );
+  });
+
+  it("scores 0 when a specialist returned zero sources", () => {
+    const state = stateFor(["workout"]);
+    state.findings.workout!.citations = [];
+    const result = emptyRetrievalScore(state);
+    expect(result.score).toBe(0);
+    expect(result.comment).toContain("zero sources");
+  });
+
+  it("scores 0 when the answer reads as a no-sources refusal", () => {
+    const state = stateFor(["workout"]);
+    state.finalAnswer!.text =
+      "The sources provided do not contain information about fall prevention.";
+    const result = emptyRetrievalScore(state);
+    expect(result.score).toBe(0);
+    expect(result.comment).toContain("refusal");
+  });
+
+  it("scores 0 when no findings were produced", () => {
+    expect(emptyRetrievalScore(stateFor([])).score).toBe(0);
   });
 });

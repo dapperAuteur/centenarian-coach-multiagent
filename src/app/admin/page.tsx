@@ -7,7 +7,7 @@
 import Link from "next/link";
 import { desc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { waitlist } from "@/db/schema";
+import { coachFeedback, waitlist } from "@/db/schema";
 import { getStoredSettings, providerOverride } from "@/lib/settings";
 import { COACH_PROVIDERS, type LlmProvider } from "@/lib/llm-config";
 import { SettingsForm } from "./SettingsForm";
@@ -25,7 +25,7 @@ const DATE_FMT = new Intl.DateTimeFormat("en-US", {
 });
 
 export default async function AdminPage() {
-  const [rows, settings] = await Promise.all([
+  const [rows, settings, feedbackRows] = await Promise.all([
     getDb()
       .select({
         id: waitlist.id,
@@ -35,6 +35,17 @@ export default async function AdminPage() {
       .from(waitlist)
       .orderBy(desc(waitlist.createdAt)),
     getStoredSettings(),
+    getDb()
+      .select({
+        id: coachFeedback.id,
+        runId: coachFeedback.runId,
+        score: coachFeedback.score,
+        comment: coachFeedback.comment,
+        createdAt: coachFeedback.createdAt,
+      })
+      .from(coachFeedback)
+      .orderBy(desc(coachFeedback.createdAt))
+      .limit(25),
   ]);
   const envProviderOverride = providerOverride();
   const hasLangsmithKey = Boolean(process.env.LANGSMITH_API_KEY);
@@ -139,6 +150,48 @@ export default async function AdminPage() {
             Open in WitUS Inbox ↗
           </a>
         </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+          Recent feedback
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          {feedbackRows.length === 0
+            ? "No coach feedback yet."
+            : `${feedbackRows.length} most recent (👍🏾 helpful / 👎🏾 not helpful).`}
+        </p>
+
+        {feedbackRows.length > 0 && (
+          <ul className="mt-4 space-y-2">
+            {feedbackRows.map((row) => (
+              <li
+                key={row.id}
+                className="flex items-start gap-3 rounded-md border border-gray-200 px-4 py-2 text-sm"
+              >
+                <span aria-hidden className="text-base leading-none">
+                  {row.score === 1 ? "👍🏾" : "👎🏾"}
+                </span>
+                <div className="min-w-0 flex-1">
+                  {row.comment && (
+                    <p className="text-gray-800">{row.comment}</p>
+                  )}
+                  <p className="text-xs text-gray-400">
+                    <time dateTime={row.createdAt.toISOString()}>
+                      {DATE_FMT.format(row.createdAt)}
+                    </time>
+                    {row.runId && (
+                      <>
+                        {" · "}
+                        <span className="font-mono">{row.runId}</span>
+                      </>
+                    )}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );
