@@ -48,6 +48,27 @@ export default function CoachPage() {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [showCitations, setShowCitations] = useState(false);
   const [runId, setRunId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<"idle" | "sending" | "sent">("idle");
+  const [feedbackScore, setFeedbackScore] = useState<0 | 1 | null>(null);
+
+  async function sendFeedback(score: 0 | 1) {
+    if (feedback === "sending" || feedback === "sent") return;
+    setFeedback("sending");
+    setFeedbackScore(score);
+    try {
+      await fetch("/api/coach/feedback", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ runId, sessionId, score }),
+      });
+      setFeedback("sent");
+    } catch {
+      // Feedback is non-critical: on failure, reset so the user can retry.
+      setFeedback("idle");
+      setFeedbackScore(null);
+    }
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -62,6 +83,9 @@ export default function CoachPage() {
     setRequestId(null);
     setShowCitations(false);
     setRunId(null);
+    setSessionId(null);
+    setFeedback("idle");
+    setFeedbackScore(null);
 
     try {
       const res = await fetch("/api/coach/query", {
@@ -91,7 +115,9 @@ export default function CoachPage() {
         for (const line of lines) {
           if (!line.trim()) continue;
           const event = JSON.parse(line) as StreamEvent;
-          if (event.type === "routing" && event.routing) {
+          if (event.type === "session" && event.sessionId) {
+            setSessionId(event.sessionId);
+          } else if (event.type === "routing" && event.routing) {
             setRouting(event.routing);
           } else if (event.type === "finding" && event.finding) {
             const finding = event.finding;
@@ -249,6 +275,36 @@ export default function CoachPage() {
               LangSmith tracing is off. Set LANGSMITH_API_KEY to trace runs.
             </p>
           )}
+
+          <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
+            {feedback === "sent" ? (
+              <span>
+                Thanks for the feedback {feedbackScore === 1 ? "👍🏾" : "👎🏾"}
+              </span>
+            ) : (
+              <>
+                <span>Was this helpful?</span>
+                <button
+                  type="button"
+                  aria-label="Helpful"
+                  onClick={() => sendFeedback(1)}
+                  disabled={feedback === "sending"}
+                  className="rounded-md border border-gray-300 px-2 py-1 leading-none hover:bg-gray-50 disabled:opacity-40 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+                >
+                  👍🏾
+                </button>
+                <button
+                  type="button"
+                  aria-label="Not helpful"
+                  onClick={() => sendFeedback(0)}
+                  disabled={feedback === "sending"}
+                  className="rounded-md border border-gray-300 px-2 py-1 leading-none hover:bg-gray-50 disabled:opacity-40 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+                >
+                  👎🏾
+                </button>
+              </>
+            )}
+          </div>
         </section>
       )}
     </main>

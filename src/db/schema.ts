@@ -49,6 +49,23 @@ export const coachSpecialistCalls = pgTable("coach_specialist_calls", {
     .defaultNow(),
 });
 
+/**
+ * User feedback on a coach answer (thumbs up/down). Kept loosely coupled:
+ * runId and sessionId are plain nullable text, so feedback is recorded even
+ * when tracing is off or the session row was not persisted. score is 1 (up) or
+ * 0 (down). Mirrored to LangSmith best-effort by the feedback route.
+ */
+export const coachFeedback = pgTable("coach_feedback", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  runId: text("run_id"),
+  sessionId: text("session_id"),
+  score: integer("score").notNull(), // 1 = thumbs up, 0 = thumbs down
+  comment: text("comment"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 /** Namespaced pgvector knowledge base. One table, namespace per specialist. */
 export const coachKb = pgTable(
   "coach_kb",

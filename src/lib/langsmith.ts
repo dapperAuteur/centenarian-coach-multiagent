@@ -4,6 +4,8 @@
 // LANGCHAIN_API_KEY) -- with no key this is a clean no-op and the graph still
 // runs (fail-soft). Call configureLangSmith() once before building any graph.
 
+import { Client } from "langsmith";
+
 let configured = false;
 
 export interface LangSmithStatus {
@@ -34,6 +36,16 @@ export function setTracing(enabled: boolean): boolean {
     process.env.LANGSMITH_PROJECT = "centenarian-coach-multiagent";
   }
   return on;
+}
+
+/**
+ * A LangSmith API client, or null when no API key is configured. Used to attach
+ * user feedback to a run (client.createFeedback). The SDK reads the key from
+ * LANGSMITH_API_KEY / LANGCHAIN_API_KEY itself; callers should treat a null
+ * return (and any client error) as a soft no-op.
+ */
+export function getLangsmithClient(): Client | null {
+  return hasLangsmithApiKey() ? new Client() : null;
 }
 
 export function configureLangSmith(): LangSmithStatus {
