@@ -1521,7 +1521,8 @@
     "year": 2014,
     "url": "https://meridian.allenpress.com/jat/article-pdf/50/1/5/2276619/1062-6050-50_1_01.pdf",
     "agents": [
-      "workout"
+      "workout",
+      "corrective"
     ]
   },
   {
@@ -1601,7 +1602,8 @@
     "year": 2016,
     "url": "https://bmjopen.bmj.com/content/bmjopen/6/1/e010053.full.pdf",
     "agents": [
-      "general"
+      "general",
+      "corrective"
     ]
   },
   {
@@ -2152,7 +2154,8 @@
     "year": 2018,
     "url": "https://natajournals.org/doi/pdf/10.4085/1062-6050-99-16",
     "agents": [
-      "workout"
+      "workout",
+      "corrective"
     ]
   },
   {
@@ -3975,6 +3978,696 @@
     "url": "https://www.mdpi.com/1422-0067/18/3/555/pdf?version=1488622664",
     "agents": [
       "nutrition"
+    ]
+  },
+  {
+    "doi": "10.1177/2325967117726267",
+    "title": "ACL Injury Prevention Training Results in Modification of Hip and Knee Mechanics During a Drop-Landing Task",
+    "journal": "Orthopaedic Journal of Sports Medicine",
+    "year": 2017,
+    "url": "https://journals.sagepub.com/doi/pdf/10.1177/2325967117726267",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.21037/tp.2017.04.08",
+    "title": "Epidemiology of sports-related musculoskeletal injuries in young athletes in United States",
+    "journal": "Translational Pediatrics",
+    "year": 2017,
+    "url": "https://tp.amegroups.com/article/viewFile/15161/pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1007/s12551-017-0269-3",
+    "title": "An historical perspective of the discovery of titin filaments",
+    "journal": "Biophysical Reviews",
+    "year": 2017,
+    "url": "https://link.springer.com/content/pdf/10.1007/s12551-017-0269-3.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.5435/jaaos-d-15-00740",
+    "title": "Differentiating Hip Pathology From Lumbar Spine Pathology: Key Points of Evaluation and Management",
+    "journal": "Journal of the American Academy of Orthopaedic Surgeons",
+    "year": 2016,
+    "url": "https://doi.org/10.5435/jaaos-d-15-00740",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1016/j.joca.2015.02.163",
+    "title": "Pain sensitization in people with knee osteoarthritis: a systematic review and meta-analysis",
+    "journal": "Osteoarthritis and Cartilage",
+    "year": 2015,
+    "url": "http://www.oarsijournal.com/article/S1063458415002071/pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.4066/biomedicalresearch.29-18-1015",
+    "title": "Knowledge, attitudes, and perceptions of cupping therapy (CT) in Saudi Arabia-a cross-sectional survey among the Saudi population",
+    "journal": "Biomedical Research - India",
+    "year": 2018,
+    "url": "https://www.alliedacademies.org/articles/knowledge-attitudes-and-perceptions-of-cupping-therapy-ct-in-saudi-arabiaa-crosssectional-survey-among-the-saudi-population.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1093/ptj/77.10.1090",
+    "title": "The Effect of Time and Frequency of Static Stretching on Flexibility of the Hamstring Muscles",
+    "journal": "Physical Therapy",
+    "year": 1997,
+    "url": "https://academic.oup.com/ptj/article-pdf/77/10/1090/10761602/ptj1090.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1080/15438627.2016.1258640",
+    "title": "Impact of stretching on the performance and injury risk of long-distance runners",
+    "journal": "Research in Sports Medicine",
+    "year": 2016,
+    "url": "https://research.edgehill.ac.uk/ws/files/20181444/_c1staffhome1_STAFFHOME1_Mcnaughl_Desktop_Impact%20of%20Stretching%20Revision%202.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.17784/mtprehabjournal.2016.14.378",
+    "title": "The effect of eccentric training on tissue repair in individuals with Achilles tendinopathy: a literature review",
+    "journal": "Manual Therapy Posturology & Rehabilitation Journal",
+    "year": 2016,
+    "url": "https://submission-mtprehabjournal.com/revista/article/download/1055/429",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1590/s1413-35552012005000141",
+    "title": "The influence of resistance exercise with emphasis on specific contractions (concentric vs. eccentric) on muscle strength and post-exercise autonomic modulation: a randomized clinical trial",
+    "journal": "Brazilian Journal of Physical Therapy",
+    "year": 2014,
+    "url": "http://www.scielo.br/pdf/rbfis/v18n1/1413-3555-rbfis-18-01-00030.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1007/s40279-016-0628-4",
+    "title": "Chronic Adaptations to Eccentric Training: A Systematic Review",
+    "journal": "Sports Medicine",
+    "year": 2016,
+    "url": "https://ro.ecu.edu.au/ecuworkspost2013/2880",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.3389/fphys.2019.00536",
+    "title": "Eccentric Muscle Contractions: Risks and Benefits",
+    "journal": "Frontiers in Physiology",
+    "year": 2019,
+    "url": "https://www.frontiersin.org/articles/10.3389/fphys.2019.00536/pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.4085/1062-6050-49.3.24",
+    "title": "Cross-Education Strength and Activation After Eccentric Exercise",
+    "journal": "Journal of Athletic Training",
+    "year": 2014,
+    "url": "https://meridian.allenpress.com/jat/article-pdf/49/5/582/1455927/1062-6050-49_3_24.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1249/mss.0000000000001611",
+    "title": "Neuromuscular Adaptations to Work-matched Maximal Eccentric versus Concentric Training",
+    "journal": "Medicine & Science in Sports & Exercise",
+    "year": 2018,
+    "url": "https://doi.org/10.1249/mss.0000000000001611",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1177/0363546516686080",
+    "title": "Preventive Biomechanics: A Paradigm Shift With a Translational Approach to Injury Prevention",
+    "journal": "The American Journal of Sports Medicine",
+    "year": 2017,
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/6405413",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1186/s12970-017-0179-6",
+    "title": "Effects of a combined protein and antioxidant supplement on recovery of muscle function and soreness following eccentric exercise",
+    "journal": "Journal of the International Society of Sports Nutrition",
+    "year": 2017,
+    "url": "https://jissn.biomedcentral.com/track/pdf/10.1186/s12970-017-0179-6",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1007/s40279-015-0384-x",
+    "title": "Effects of Strength Training Using Unstable Surfaces on Strength, Power and Balance Performance Across the Lifespan: A Systematic Review and Meta-analysis",
+    "journal": "Sports Medicine",
+    "year": 2015,
+    "url": "https://link.springer.com/content/pdf/10.1007/s40279-015-0384-x.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1186/s40634-019-0170-z",
+    "title": "Knee biomechanics changes under dual task during single‐leg drop landing",
+    "journal": "Journal of Experimental Orthopaedics",
+    "year": 2019,
+    "url": "https://jeo-esska.springeropen.com/track/pdf/10.1186/s40634-019-0170-z",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1249/mss.0000000000001331",
+    "title": "Applying the ACSM Preparticipation Screening Algorithm to U.S. Adults",
+    "journal": "Medicine & Science in Sports & Exercise",
+    "year": 2017,
+    "url": "https://digitalcommons.uri.edu/kinesiology_facpubs/178",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.3390/ijerph15081678",
+    "title": "The Short Term Musculoskeletal and Cognitive Effects of Prolonged Sitting During Office Computer Work",
+    "journal": "International Journal of Environmental Research and Public Health",
+    "year": 2018,
+    "url": "https://www.mdpi.com/1660-4601/15/8/1678/pdf?version=1533631425",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.5271/sjweh.3592",
+    "title": "Association between occupational lifting and day-to-day change in low-back pain intensity based on\n                    company records and text messages",
+    "journal": "Scandinavian Journal of Work Environment & Health",
+    "year": 2016,
+    "url": "http://www.sjweh.fi/download.php?abstract_id=3592&file_nro=1",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1177/1941738116686545",
+    "title": "The Relationship Between Pitching Mechanics and Injury: A Review of Current Concepts",
+    "journal": "Sports Health A Multidisciplinary Approach",
+    "year": 2017,
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/5435152",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1002/jor.23894",
+    "title": "Quadriceps weakness preferentially predicts detrimental gait compensations among common impairments after total knee arthroplasty",
+    "journal": "Journal of Orthopaedic Research®",
+    "year": 2018,
+    "url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/jor.23894",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1016/j.amjmed.2016.04.023",
+    "title": "An Evidence-Based Approach to Differentiating the Cause of Shoulder and Cervical Spine Pain",
+    "journal": "The American Journal of Medicine",
+    "year": 2016,
+    "url": "http://www.amjmed.com/article/S0002934316304624/pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.4103/sni.sni_445_16",
+    "title": "Musculoskeletal neck pain in children and adolescents: Risk factors and complications",
+    "journal": "Surgical Neurology International",
+    "year": 2017,
+    "url": "http://surgicalneurologyint.com/wp-content/uploads/2017/05/8395/SNI-8-72.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1186/1471-2474-6-17",
+    "title": "Reliability of videotaped observational gait analysis in patients with orthopedic impairments",
+    "journal": "BMC Musculoskeletal Disorders",
+    "year": 2005,
+    "url": "https://bmcmusculoskeletdisord.biomedcentral.com/counter/pdf/10.1186/1471-2474-6-17",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1080/001401300184477",
+    "title": "Force direction and physical load in dynamic pushing and pulling",
+    "journal": "Ergonomics",
+    "year": 2000,
+    "url": "https://research.vu.nl/ws/files/1657589/126999.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1123/jsr.2015-0166",
+    "title": "Changes in Hamstring Range of Motion After Neurodynamic Sciatic Sliders: A Critically Appraised Topic",
+    "journal": "Journal of Sport Rehabilitation",
+    "year": 2016,
+    "url": "https://journals.humankinetics.com/doi/pdf/10.1123/jsr.2015-0166",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1242/jeb.025767",
+    "title": "A dynamic model of the windlass mechanism of the foot: evidence for early stance phase preloading of the plantar aponeurosis",
+    "journal": "Journal of Experimental Biology",
+    "year": 2009,
+    "url": "https://journals.biologists.com/jeb/article-pdf/212/15/2491/1414527/2491.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1136/bjsm.2008.051193",
+    "title": "Is tendon pathology a continuum? A pathology model to explain the clinical presentation of load-induced tendinopathy",
+    "journal": "British Journal of Sports Medicine",
+    "year": 2008,
+    "url": "https://bjsm.bmj.com/content/bjsports/43/6/409.full.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1002/jor.23338",
+    "title": "Insertional achilles tendinopathy associated with altered transverse compressive and axial tensile strain during ankle dorsiflexion",
+    "journal": "Journal of Orthopaedic Research®",
+    "year": 2016,
+    "url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/jor.23338",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.2165/00007256-200737010-00006",
+    "title": "A Systematic Review on Ankle Injury and Ankle Sprain in Sports",
+    "journal": "Sports Medicine",
+    "year": 2007,
+    "url": "https://dspace.lboro.ac.uk/2134/21255",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.4085/1062-6050-447-17",
+    "title": "Epidemiology of Ankle Sprains and Chronic Ankle Instability",
+    "journal": "Journal of Athletic Training",
+    "year": 2019,
+    "url": "https://watermark.silverchair.com/1062-6050-447-17.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAArQwggKwBgkqhkiG9w0BBwagggKhMIICnQIBADCCApYGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMj_v9CFIGMv0mQXXBAgEQgIICZy5LilgCSu37XuCZH2EaNqBL7lesEr4tiv2h54vlaU-ys3fCMM6syPJpCxXCSTxUfuTOZXut-czuulXo_8LseGa3wPeHtqoP-nUcKksdFIwLKAqmclkZUmSAAYzVCoX3w_iI_hr1cERU4R4hZ-CgJ4zrqWpwkO5n0LE3DOExMscKEwHX_cR5_yTBxBOU9aSryes4XPvnIUci_VYn-zjbM6NeIA-KSuT_ym4BM7aqev1hlHybOhAtWuVDC99LCroTOuka54wfU2ZJlhqF332OiqbwOYA8Awu6aXcIfrjuslc-xIrVteCRQhA4vpmytQTthlMTQ7AUEI7b7zrdcihFetsW3himcpOeDgJ7TucDWRK0djY0D6Q04b5lDt-780BIYfU5LPq3YGR-0t_JRlGo-euB8Avx6OLYEOJXfmfNYKR6GRPdWHJYwGiEqdK7RkoqjskIeeH2yb8765LOt_23s8OapSGgdGfXVe3tYgjWtBPhNwUWE_csUoYq1CqbjpZkPHnVwLJ-Ke5XIIFBvRUYuzNjrYCqtSpEpAM_o2f_RTl914YdFC3agHy6c54-Yo-TGyFE_z1I-jE_67rJHK0Le51Mqsxc_73eyAqhn5Amp6CMdDSJDGR5vWJoDbXra2UKSZmqdnmMMqcabcE1fvxlyQhoCdTtW5aOt2sFVzZe_Ruck2ADR3Ui5hW9r_67lV4d42abvysD2eUlz4tHy3_5x1_21ilJXIi803EbvnlzMFHkaeqJGhaMViv7XgIWmUzcGQDoQmNhEQ1jZyA_8H3qra_E8L46Vj6NDFOdrjuihAI5uI-ayjPgxA",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1177/1535370216661646",
+    "title": "The role of adaptive bone formation in the etiology of stress fracture",
+    "journal": "Experimental Biology and Medicine",
+    "year": 2016,
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/5407583",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1016/j.rboe.2016.01.010",
+    "title": "Q-angle in patellofemoral pain: relationship with dynamic knee valgus, hip abductor torque, pain and function",
+    "journal": "Revista Brasileira de Ortopedia (English Edition)",
+    "year": 2016,
+    "url": "https://doi.org/10.1016/j.rboe.2016.01.010",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1177/2325967119873059",
+    "title": "Rates and Patterns of Lower Extremity Sports Injuries in All Gender-Comparable US High School Sports",
+    "journal": "Orthopaedic Journal of Sports Medicine",
+    "year": 2019,
+    "url": "https://doi.org/10.1177/2325967119873059",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1371/journal.pone.0144063",
+    "title": "Effectiveness of Knee Injury and Anterior Cruciate Ligament Tear Prevention Programs: A Meta-Analysis",
+    "journal": "PLoS ONE",
+    "year": 2015,
+    "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0144063&type=printable",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1111/j.1469-7580.2006.00531.x",
+    "title": "The functional anatomy of the iliotibial band during flexion and extension of the knee: implications for understanding iliotibial band syndrome",
+    "journal": "Journal of Anatomy",
+    "year": 2006,
+    "url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/j.1469-7580.2006.00531.x",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.4103/ua.ua_123_18",
+    "title": "Prevalence of neuropathic pain and pelvic floor disorders among females seeking physical therapy for chronic low back pain",
+    "journal": "Urology Annals",
+    "year": 2018,
+    "url": "https://doi.org/10.4103/ua.ua_123_18",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1371/journal.pone.0177008",
+    "title": "Atrophy of gluteus maximus among women with a history of chronic low back pain",
+    "journal": "PLoS ONE",
+    "year": 2017,
+    "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0177008&type=printable",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.3390/ijerph15091975",
+    "title": "Evaluating Short-Term Musculoskeletal Pain Changes in Desk-Based Workers Receiving a Workplace Sitting-Reduction Intervention",
+    "journal": "International Journal of Environmental Research and Public Health",
+    "year": 2018,
+    "url": "https://www.mdpi.com/1660-4601/15/9/1975/pdf?version=1536581592",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1136/bjsports-2016-096037",
+    "title": "Injuries among weightlifters and powerlifters: a systematic review",
+    "journal": "British Journal of Sports Medicine",
+    "year": 2016,
+    "url": "https://bjsm.bmj.com/content/bjsports/51/4/211.full.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1371/journal.pone.0169318",
+    "title": "Correlations of Neck/Shoulder Perfusion Characteristics and Pain Symptoms of the Female Office Workers with Sedentary Lifestyle",
+    "journal": "PLoS ONE",
+    "year": 2017,
+    "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0169318&type=printable",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.4085/1062-6050-44.1.76",
+    "title": "Shoulder Injuries Among United States High School Athletes During the 2005–2006 and 2006–2007 School Years",
+    "journal": "Journal of Athletic Training",
+    "year": 2009,
+    "url": "https://meridian.allenpress.com/jat/article-pdf/44/1/76/1454488/1062-6050-44_1_76.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1093/ptj/86.4.549",
+    "title": "Resting Position Variables at the Shoulder: Evidence to Support a Posture-Impairment Association",
+    "journal": "Physical Therapy",
+    "year": 2006,
+    "url": "https://academic.oup.com/ptj/article-pdf/86/4/549/31671541/ptj0549.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1539/joh.k8007",
+    "title": "Prevalence and Associated Factors for Thoracic Spine Pain in the Adult Working Population: A Literature Review",
+    "journal": "Journal of Occupational Health",
+    "year": 2009,
+    "url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1539/joh.K8007",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1007/s00221-008-1668-2",
+    "title": "Anticipatory postural adjustments stabilise the whole upper-limb prior to a gentle index finger tap",
+    "journal": "Experimental Brain Research",
+    "year": 2008,
+    "url": "http://hdl.handle.net/2434/70572",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.2522/ptj.20060119",
+    "title": "Thoracic Kyphosis Affects Spinal Loads and Trunk Muscle Force",
+    "journal": "Physical Therapy",
+    "year": 2007,
+    "url": "https://academic.oup.com/ptj/article-pdf/87/5/595/31669463/ptj0595.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1186/s13018-016-0432-8",
+    "title": "Sports-related wrist and hand injuries: a review",
+    "journal": "Journal of Orthopaedic Surgery and Research",
+    "year": 2016,
+    "url": "https://josr-online.biomedcentral.com/track/pdf/10.1186/s13018-016-0432-8",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1177/2325967119835375",
+    "title": "Epidemiology of Hand and Wrist Injuries in NCAA Men’s Football: 2009–2010 to 2013–2014",
+    "journal": "Orthopaedic Journal of Sports Medicine",
+    "year": 2019,
+    "url": "https://journals.sagepub.com/doi/pdf/10.1177/2325967119835375",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1093/ptj/82.2.173",
+    "title": "Pathophysiological Tissue Changes Associated With Repetitive Movement: A Review of the Evidence",
+    "journal": "Physical Therapy",
+    "year": 2002,
+    "url": "https://academic.oup.com/ptj/article-pdf/82/2/173/10444614/ptj0173.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1016/j.jmpt.2016.10.003",
+    "title": "Robot-Assisted Rehabilitation of Hand Paralysis After Stroke Reduces Wrist Edema and Pain: A Prospective Clinical Trial",
+    "journal": "Journal of Manipulative and Physiological Therapeutics",
+    "year": 2016,
+    "url": "http://www.jmptonline.org/article/S0161475416302457/pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.3822/ijtmb.v5i1.153",
+    "title": "Tendinopathy: Why the Difference Between Tendinitis and Tendinosis Matters",
+    "journal": "International Journal of Therapeutic Massage & Bodywork Research Education & Practice",
+    "year": 2012,
+    "url": "https://ijtmb.org/index.php/ijtmb/article/download/153/207",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.12965/jer.36292.146",
+    "title": "Duration of wrist immobilization is associated with shoulder pain in patients with after wrist immobilization: an observational study",
+    "journal": "Journal of Exercise Rehabilitation",
+    "year": 2018,
+    "url": "https://www.e-jer.org/upload/jer-14-4-694.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1177/1558944717708031",
+    "title": "Necessity of Immobilizing the Metacarpophalangeal Joint in Carpometacarpal Osteoarthritis: Short-term Effect",
+    "journal": "Hand",
+    "year": 2017,
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/6081785",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.5271/sjweh.3380",
+    "title": "Work-related risk factors for incidence of lateral epicondylitis in a large working population",
+    "journal": "Scandinavian Journal of Work Environment & Health",
+    "year": 2013,
+    "url": "https://www.sjweh.fi/download.php?abstract_id=3380&file_nro=1",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1186/1471-2474-7-7",
+    "title": "Incidence and prevalence of upper-extremity musculoskeletal disorders. A systematic appraisal of the literature",
+    "journal": "BMC Musculoskeletal Disorders",
+    "year": 2006,
+    "url": "https://bmcmusculoskeletdisord.biomedcentral.com/counter/pdf/10.1186/1471-2474-7-7",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1055/s-0039-1677741",
+    "title": "Dispelling the Myth of Work-Related de Quervain's Tenosynovitis",
+    "journal": "Journal of Wrist Surgery",
+    "year": 2019,
+    "url": "http://www.thieme-connect.de/products/ejournals/pdf/10.1055/s-0039-1677741.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1093/sleep/zsz097",
+    "title": "Challenging the stigma of workplace napping",
+    "journal": "SLEEP",
+    "year": 2019,
+    "url": "https://academic.oup.com/sleep/article-pdf/42/8/zsz097/29106482/zsz097.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.26603/ijspt20171111",
+    "title": "POSTURAL ALTERATIONS IN PATIENTS WITH SUBACROMIAL IMPINGEMENT SYNDROME",
+    "journal": "International Journal of Sports Physical Therapy",
+    "year": 2017,
+    "url": "https://doi.org/10.26603/ijspt20171111",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1186/1550-2783-10-5",
+    "title": "Nutrient timing revisited: is there a post-exercise anabolic window?",
+    "journal": "Journal of the International Society of Sports Nutrition",
+    "year": 2013,
+    "url": "https://www.tandfonline.com/doi/pdf/10.1186/1550-2783-10-5?needAccess=true&role=button",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1007/s40279-015-0320-0",
+    "title": "A Review of Resistance Training-Induced Changes in Skeletal Muscle Protein Synthesis and Their Contribution to Hypertrophy",
+    "journal": "Sports Medicine",
+    "year": 2015,
+    "url": "http://dx.doi.org/10.1007/s40279-015-0320-0",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.3389/fphys.2019.00034",
+    "title": "Monitoring Training Loads and Perceived Stress in Young Elite University Athletes",
+    "journal": "Frontiers in Physiology",
+    "year": 2019,
+    "url": "https://www.frontiersin.org/articles/10.3389/fphys.2019.00034/pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.4085/1062-6050-48.3.16",
+    "title": "Two- and 3-Dimensional Knee Valgus Are Reduced After an Exercise Intervention in Young Adults With Demonstrable Valgus During Squatting",
+    "journal": "Journal of Athletic Training",
+    "year": 2013,
+    "url": "https://meridian.allenpress.com/jat/article-pdf/48/4/442/1609163/1062-6050-48_3_16.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1136/bjsports-2013-092215",
+    "title": "Injuries affect team performance negatively in professional football: an 11-year follow-up of the UEFA Champions League injury study",
+    "journal": "British Journal of Sports Medicine",
+    "year": 2013,
+    "url": "https://bjsm.bmj.com/content/bjsports/47/12/738.full.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1136/bjsm.2004.013672",
+    "title": "Injury history as a risk factor for incident injury in youth soccer",
+    "journal": "British Journal of Sports Medicine",
+    "year": 2005,
+    "url": "https://bjsm.bmj.com/content/bjsports/39/7/462.full.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1016/j.csm.2014.06.012",
+    "title": "Seven Steps for Developing and Implementing a Preventive Training Program",
+    "journal": "Clinics in Sports Medicine",
+    "year": 2014,
+    "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/4185282",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.1136/bmjsem-2017-000245",
+    "title": "Effect of a gluteal activation warm-up on explosive exercise performance",
+    "journal": "BMJ Open Sport & Exercise Medicine",
+    "year": 2017,
+    "url": "https://bmjopensem.bmj.com/content/bmjosem/3/1/e000245.full.pdf",
+    "agents": [
+      "corrective"
+    ]
+  },
+  {
+    "doi": "10.4085/1062-6050-48.4.06",
+    "title": "Different Exercise Training Interventions and Drop-Landing Biomechanics in High School Female Athletes",
+    "journal": "Journal of Athletic Training",
+    "year": 2013,
+    "url": "https://meridian.allenpress.com/jat/article-pdf/48/4/450/1609899/1062-6050-48_4_06.pdf",
+    "agents": [
+      "corrective"
     ]
   }
 ]
