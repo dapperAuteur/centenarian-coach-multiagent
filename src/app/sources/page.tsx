@@ -4,9 +4,7 @@
 // (extracted from the certification reference lists, filtered to open-access via
 // Unpaywall). The "in corpus" badge cross-references the seeded coach_kb sources.
 
-import Link from "next/link";
 import { sql } from "drizzle-orm";
-import { Logo } from "@/components/Logo";
 import { getDb } from "@/lib/db";
 import bibliographyData from "@/data/bibliography.json";
 import { SourcesList, type Study } from "./SourcesList";
@@ -43,20 +41,7 @@ export default async function SourcesPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <Logo className="mb-2 h-8 w-auto" />
-          <h1 className="text-2xl font-bold tracking-tight">Sources</h1>
-        </div>
-        <nav className="flex shrink-0 items-center gap-3 text-xs">
-          <Link href="/coach" className="text-sky-700 hover:underline">
-            Coach
-          </Link>
-          <Link href="/guide" className="text-sky-700 hover:underline">
-            Guide
-          </Link>
-        </nav>
-      </div>
+      <h1 className="text-2xl font-bold tracking-tight">Sources</h1>
 
       <p className="mt-4 text-sm leading-relaxed text-gray-600">
         The open-access, peer-reviewed studies behind Fit T. Cent, the kind of
