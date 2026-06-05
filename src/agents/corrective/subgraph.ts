@@ -23,6 +23,9 @@ import { CORRECTIVE_COMPOSE_SYSTEM } from "./prompts";
 
 const CorrectiveAnnotation = Annotation.Root({
   subQuestion: Annotation<string>(),
+  // The user's original wording, retrieved alongside the sub-question to widen
+  // recall (see retrieveNode). Optional; falls back to the sub-question.
+  userQuery: Annotation<string>(),
   citations: Annotation<Citation[]>({
     reducer: (prev, next) => [...prev, ...next],
     default: () => [],
@@ -41,7 +44,11 @@ type CorrectiveUpdate = typeof CorrectiveAnnotation.Update;
 async function retrieveNode(
   state: CorrectiveState,
 ): Promise<CorrectiveUpdate> {
-  const citations = await retrieveCorrectiveKb(state.subQuestion, 5);
+  const citations = await retrieveCorrectiveKb(
+    state.subQuestion,
+    8,
+    state.userQuery,
+  );
   return { citations };
 }
 
@@ -96,7 +103,10 @@ export async function correctiveNode(
     state.routing?.subQuestions.corrective ?? state.userQuery;
   const startedAt = Date.now();
 
-  const result = await correctiveSubgraph.invoke({ subQuestion });
+  const result = await correctiveSubgraph.invoke({
+    subQuestion,
+    userQuery: state.userQuery,
+  });
 
   const finding: SpecialistFinding = {
     agent: "corrective",
