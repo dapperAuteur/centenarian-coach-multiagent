@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import ErrorNotice from "@/components/ErrorNotice";
 import { extractApiError } from "@/lib/client-errors";
 import { signOutAction } from "@/app/actions/auth";
-import { Logo } from "@/components/Logo";
 import type {
   Agent,
   Citation,
@@ -126,7 +125,6 @@ export default function CoachPage() {
     <main className="mx-auto max-w-2xl px-6 py-12">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Logo className="mb-2 h-8 w-auto" />
           <h1 className="text-2xl font-bold">Centenarian Coach</h1>
           <p className="mt-1 text-sm text-gray-500">
             A multi-agent coach: a supervisor routes your question to
@@ -137,12 +135,6 @@ export default function CoachPage() {
         <div className="flex shrink-0 items-center gap-3 text-xs">
           <Link href="/coach/history" className="text-sky-700 hover:underline">
             History
-          </Link>
-          <Link href="/guide" className="text-sky-700 hover:underline">
-            Guide
-          </Link>
-          <Link href="/admin" className="text-sky-700 hover:underline">
-            Admin
           </Link>
           <form action={signOutAction}>
             <button
