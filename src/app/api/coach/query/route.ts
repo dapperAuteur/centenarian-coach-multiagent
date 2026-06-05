@@ -73,8 +73,18 @@ export async function POST(req: Request): Promise<Response> {
             streamMode: "updates",
             callbacks: [runCollector],
             runName: "centenarian-coach",
-            tags: ["coach"],
-            metadata: { sessionId },
+            // Tags + metadata so LangSmith dashboards/evaluators can group by
+            // the active provider and corpus mode (the two /admin levers).
+            tags: [
+              "coach",
+              `provider:${settings.provider}`,
+              `corpus:${settings.corpusMode}`,
+            ],
+            metadata: {
+              sessionId,
+              provider: settings.provider,
+              corpusMode: settings.corpusMode,
+            },
           },
         );
         for await (const chunk of events) {

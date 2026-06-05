@@ -47,6 +47,43 @@ export function routingScore(
   };
 }
 
+/**
+ * Phrases a specialist or the synthesizer uses to punt when retrieval came back
+ * empty or off-topic ("the sources provided do not contain..."). A grounded
+ * coach should not produce these when the corpus actually covers the question;
+ * see the fall-prevention retrieval bug.
+ */
+const REFUSAL_RE =
+  /not able to (locate|find)|do not contain|does not contain|no (relevant )?sources|could not find/i;
+
+/**
+ * 1 when retrieval was productive: every present specialist finding has at least
+ * one citation AND the final answer does not read as a "no sources" refusal.
+ * 0 flags the silent failure where the coach declines despite a corpus that
+ * covers the topic. Deterministic, so it works as a cheap online evaluator too.
+ */
+export function emptyRetrievalScore(state: CoachState): EvalScore {
+  const findings = Object.values(state.findings).filter(
+    (finding): finding is NonNullable<typeof finding> => Boolean(finding),
+  );
+  const anyFindingEmpty = findings.some(
+    (finding) => finding.citations.length === 0,
+  );
+  const answerRefuses = REFUSAL_RE.test(state.finalAnswer?.text ?? "");
+  const ok = findings.length > 0 && !anyFindingEmpty && !answerRefuses;
+  return {
+    key: "no_empty_retrieval",
+    score: ok ? 1 : 0,
+    comment: ok
+      ? undefined
+      : anyFindingEmpty
+        ? "a specialist returned zero sources"
+        : answerRefuses
+          ? "the answer reads as a no-sources refusal"
+          : "no specialist findings were produced",
+  };
+}
+
 /** 1 when every produced specialist finding carries at least one citation
  * and the synthesized final answer has citations. */
 export function citationScore(state: CoachState): EvalScore {
