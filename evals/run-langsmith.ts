@@ -19,6 +19,7 @@ import datasetJson from "./dataset.json";
 import {
   routingScore,
   citationScore,
+  emptyRetrievalScore,
   type EvalExample,
   type EvalScore,
 } from "./rubric";
@@ -86,15 +87,29 @@ function citationEvaluator(args: {
   return citationScore(args.outputs.state as CoachState);
 }
 
+function emptyRetrievalEvaluator(args: {
+  outputs: Record<string, unknown>;
+}): EvalScore {
+  return emptyRetrievalScore(args.outputs.state as CoachState);
+}
+
 /** Push the dataset, run evaluate() over the live graph, report the experiment. */
 export async function runLangsmithEval() {
   await pushDataset();
   return evaluate(runCoach, {
     data: DATASET_NAME,
-    evaluators: [routingEvaluator, citationEvaluator, groundingEvaluator],
+    evaluators: [
+      routingEvaluator,
+      citationEvaluator,
+      emptyRetrievalEvaluator,
+      groundingEvaluator,
+    ],
     experimentPrefix: "coach-eval",
     maxConcurrency: 2, // gentle on free-tier LLM rate limits
-    metadata: { provider: process.env.COACH_LLM_PROVIDER ?? "google" },
+    metadata: {
+      provider: process.env.COACH_LLM_PROVIDER ?? "google",
+      corpusMode: process.env.COACH_CORPUS_MODE ?? "both",
+    },
   });
 }
 
