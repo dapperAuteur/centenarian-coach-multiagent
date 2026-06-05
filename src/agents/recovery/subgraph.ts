@@ -31,6 +31,9 @@ import { RECOVERY_ASSESS_SYSTEM, RECOVERY_COMPOSE_SYSTEM } from "./prompts";
 
 const RecoveryAnnotation = Annotation.Root({
   subQuestion: Annotation<string>(),
+  // The user's original wording, retrieved alongside the sub-question to widen
+  // recall (see retrieveNode). Optional; falls back to the sub-question.
+  userQuery: Annotation<string>(),
   citations: Annotation<Citation[]>({
     reducer: (prev, next) => [...prev, ...next],
     default: () => [],
@@ -49,7 +52,11 @@ type RecoveryUpdate = typeof RecoveryAnnotation.Update;
 
 /** Retrieve grounding documents from the recovery_kb namespace. */
 async function retrieveNode(state: RecoveryState): Promise<RecoveryUpdate> {
-  const citations = await retrieveRecoveryKb(state.subQuestion, 5);
+  const citations = await retrieveRecoveryKb(
+    state.subQuestion,
+    8,
+    state.userQuery,
+  );
   return { citations };
 }
 
@@ -154,7 +161,10 @@ export async function recoveryNode(state: CoachState): Promise<CoachUpdate> {
   const subQuestion = state.routing?.subQuestions.recovery ?? state.userQuery;
   const startedAt = Date.now();
 
-  const result = await recoverySubgraph.invoke({ subQuestion });
+  const result = await recoverySubgraph.invoke({
+    subQuestion,
+    userQuery: state.userQuery,
+  });
 
   const finding: SpecialistFinding = {
     agent: "recovery",

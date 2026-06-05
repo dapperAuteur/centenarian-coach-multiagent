@@ -31,6 +31,9 @@ import { WORKOUT_ASSESS_SYSTEM, WORKOUT_COMPOSE_SYSTEM } from "./prompts";
 
 const WorkoutAnnotation = Annotation.Root({
   subQuestion: Annotation<string>(),
+  // The user's original wording, retrieved alongside the sub-question to widen
+  // recall (see retrieveNode). Optional; falls back to the sub-question.
+  userQuery: Annotation<string>(),
   citations: Annotation<Citation[]>({
     reducer: (prev, next) => [...prev, ...next],
     default: () => [],
@@ -49,7 +52,7 @@ type WorkoutUpdate = typeof WorkoutAnnotation.Update;
 
 /** Retrieve grounding documents from the workout_kb namespace. */
 async function retrieveNode(state: WorkoutState): Promise<WorkoutUpdate> {
-  const citations = await retrieveWorkoutKb(state.subQuestion, 5);
+  const citations = await retrieveWorkoutKb(state.subQuestion, 8, state.userQuery);
   return { citations };
 }
 
@@ -164,7 +167,10 @@ export async function workoutNode(state: CoachState): Promise<CoachUpdate> {
   const subQuestion = state.routing?.subQuestions.workout ?? state.userQuery;
   const startedAt = Date.now();
 
-  const result = await workoutSubgraph.invoke({ subQuestion });
+  const result = await workoutSubgraph.invoke({
+    subQuestion,
+    userQuery: state.userQuery,
+  });
 
   const finding: SpecialistFinding = {
     agent: "workout",

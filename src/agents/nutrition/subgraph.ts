@@ -26,6 +26,9 @@ import { NUTRITION_ASSESS_SYSTEM, NUTRITION_COMPOSE_SYSTEM } from "./prompts";
 
 const NutritionAnnotation = Annotation.Root({
   subQuestion: Annotation<string>(),
+  // The user's original wording, retrieved alongside the sub-question to widen
+  // recall (see retrieveNode). Optional; falls back to the sub-question.
+  userQuery: Annotation<string>(),
   citations: Annotation<Citation[]>({
     reducer: (prev, next) => [...prev, ...next],
     default: () => [],
@@ -44,7 +47,11 @@ type NutritionUpdate = typeof NutritionAnnotation.Update;
 
 /** Retrieve grounding documents from the nutrition_kb namespace. */
 async function retrieveNode(state: NutritionState): Promise<NutritionUpdate> {
-  const citations = await retrieveNutritionKb(state.subQuestion, 5);
+  const citations = await retrieveNutritionKb(
+    state.subQuestion,
+    8,
+    state.userQuery,
+  );
   return { citations };
 }
 
@@ -152,7 +159,10 @@ export async function nutritionNode(state: CoachState): Promise<CoachUpdate> {
   const subQuestion = state.routing?.subQuestions.nutrition ?? state.userQuery;
   const startedAt = Date.now();
 
-  const result = await nutritionSubgraph.invoke({ subQuestion });
+  const result = await nutritionSubgraph.invoke({
+    subQuestion,
+    userQuery: state.userQuery,
+  });
 
   const finding: SpecialistFinding = {
     agent: "nutrition",
