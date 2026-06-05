@@ -39,8 +39,32 @@ Each file is a JSON array of `{ source, content }` documents:
   comfortable publishing (public-domain, properly licensed, or content you
   authored).
 - **`kb-fixtures/private/*.json`**, gitignored. Use for proprietary or
-  copyrighted material you own a personal-use license for. Private files
-  override the public file of the same namespace at seed time.
+  copyrighted material you own a personal-use license for.
+
+### Visibility layers + the corpus toggle
+
+Every seeded row carries a `visibility` column (`public` from `*.json`,
+`private` from `private/*.json`). Both layers can live in **one** database, and
+the `/admin` **Knowledge base** selector (`app_settings.corpus_mode`) chooses
+what the coach retrieves: `public`, `private`, or `both`. Defaults are safe:
+`visibility` defaults to `private` (existing rows are never served publicly by
+accident) and the SQL retrieval function filters on the active mode.
+
+Two ways to seed:
+
+- **Plain `pnpm kb:seed`** (no layer flag): if a namespace exists in both dirs,
+  the private file wins for that namespace (single-corpus convenience).
+- **`pnpm kb:seed --layer=public` / `--layer=private`**: seed exactly one layer,
+  tagged with that visibility. The layers are independent rows keyed by
+  `(namespace, visibility, doc_index)`, so adding the public layer never touches
+  your private rows (no re-embedding). To hold both in one DB, run each:
+
+  ```bash
+  pnpm kb:seed --layer=private   # your proprietary corpus
+  pnpm kb:seed --layer=public    # the open-access starter corpus
+  ```
+
+  Then pick the mode in `/admin`. See `plans/user-tasks/19` for the full rollout.
 
 ## Wiping the database
 
@@ -74,9 +98,25 @@ If A dies at row 1500 (within its 0–3793 range), re-running the **same
 command** on A resumes at 1500 and continues through 3792. B's resume is
 independent, it counts only rows in `[3793, 7585)`.
 
+Meet-in-the-middle works for **any** fixture content, including the public
+starter corpus and either visibility layer. Combine it with `--layer` to split a
+specific layer across machines; resume scope is per `(namespace, visibility,
+range)`, so the layers and ranges stay independent:
+
+```bash
+# Split the private corrective layer across two laptops
+pnpm kb:seed corrective_kb --layer=private --start=0 --end=2500   # machine A
+pnpm kb:seed corrective_kb --layer=private --start=2500 --end=5000 # machine B
+```
+
+In practice you only need this for a **large** corpus (thousands of chunks, e.g.
+an ingested private library). The tracked public corpus is small (tens to ~125
+docs per namespace) and seeds in seconds, so `pnpm kb:seed --layer=public` alone
+is enough there.
+
 Range-mode rules:
 - Exactly one namespace argument; ranges across multiple namespaces are
-  rejected.
+  rejected. (A `--layer` flag does not count as a namespace.)
 - `--fresh` in range mode wipes only the targeted range, so two machines
   with disjoint ranges plus `--fresh` don't wipe each other.
 - You're responsible for keeping the ranges disjoint across machines.
