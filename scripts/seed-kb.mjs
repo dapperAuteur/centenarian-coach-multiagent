@@ -17,8 +17,19 @@
 //   pnpm kb:seed nutrition_kb workout_kb  # only the listed namespaces
 //   pnpm kb:seed --fresh                  # delete + re-seed (default
 //                                         #   is resume from where DB left off)
+//   pnpm kb:seed --layer=public           # seed ONLY the public fixtures,
+//                                         #   tagged coach_kb.visibility='public'
+//   pnpm kb:seed --layer=private          # seed ONLY kb-fixtures/private/*
 //   pnpm kb:seed nutrition_kb --start=0 --end=3793     # meet-in-the-middle
 //   pnpm kb:seed nutrition_kb --start=3793 --end=7585  # on a second machine
+//
+// Visibility layers: every row carries coach_kb.visibility ('public' from
+// kb-fixtures/*, 'private' from kb-fixtures/private/*). The /admin corpus
+// toggle (app_settings.corpus_mode) then serves public-only, private-only, or
+// both. The two layers are independent rows keyed by (namespace, visibility,
+// doc_index), so adding the public layer never touches existing private rows
+// and vice versa. To hold BOTH in one DB, seed each: `--layer=public` then
+// `--layer=private`.
 //
 // Requires: STORAGE_DATABASE_URL (or DATABASE_URL). For the Gemini
 // backend, also GOOGLE_GEMINI_API_KEY. For the Ollama backend, a local
@@ -117,11 +128,20 @@ class GeminiRateLimitError extends Error {
   }
 }
 
-/** Discover all fixture files. Private overrides public for a given
- * namespace. Returns Map<namespace, { path, source }>. */
-function discoverFixtures() {
+/** Discover fixture files. Each row is tagged with a `visibility` matching its
+ * source dir ('public' for kb-fixtures/*, 'private' for kb-fixtures/private/*),
+ * stored in coach_kb.visibility so the /admin corpus toggle can serve one layer
+ * or both. The two layers are independent rows, so a namespace can hold both.
+ *
+ * `layer` ('public' | 'private' | null) restricts discovery to one dir. With no
+ * layer, private overrides public per namespace (back-compat: a single seed of
+ * an operator who keeps private copies of the public namespaces). To run BOTH
+ * layers into one DB, seed each explicitly: `--layer public` then
+ * `--layer private`. Returns Map<namespace, { path, source }> (source ===
+ * visibility). */
+function discoverFixtures(layer = null) {
   const map = new Map();
-  if (existsSync(FIXTURES_DIR)) {
+  if (layer !== "private" && existsSync(FIXTURES_DIR)) {
     for (const file of readdirSync(FIXTURES_DIR)) {
       if (!file.endsWith(".json")) continue;
       map.set(basename(file, ".json"), {
@@ -130,7 +150,7 @@ function discoverFixtures() {
       });
     }
   }
-  if (existsSync(PRIVATE_DIR)) {
+  if (layer !== "public" && existsSync(PRIVATE_DIR)) {
     for (const file of readdirSync(PRIVATE_DIR)) {
       if (!file.endsWith(".json")) continue;
       map.set(basename(file, ".json"), {
@@ -449,6 +469,20 @@ async function main() {
 
   const args = process.argv.slice(2);
   const fresh = args.includes("--fresh");
+  const layerIdx = args.findIndex((a) => a === "--layer" || a.startsWith("--layer="));
+  let layer = null;
+  if (layerIdx !== -1) {
+    const inline = args[layerIdx].includes("=")
+      ? args[layerIdx].split("=")[1]
+      : args[layerIdx + 1];
+    layer = (inline ?? "").toLowerCase();
+    if (layer !== "public" && layer !== "private") {
+      throw new Error(
+        `--layer must be 'public' or 'private' (got '${inline ?? ""}'). ` +
+          "Example: pnpm kb:seed --layer=public",
+      );
+    }
+  }
   const startFlag = parseRangeFlag(args, "start");
   const endFlag = parseRangeFlag(args, "end");
   if (startFlag != null && endFlag != null && startFlag >= endFlag) {
@@ -457,7 +491,13 @@ async function main() {
     );
   }
   const isRangeMode = startFlag != null || endFlag != null;
-  const onlyNamespaces = args.filter((a) => !a.startsWith("--"));
+  // The bare `--layer public` form consumes the next token as its value, so it
+  // must not also be read as a namespace.
+  const layerValueIdx =
+    layerIdx !== -1 && !args[layerIdx].includes("=") ? layerIdx + 1 : -1;
+  const onlyNamespaces = args.filter(
+    (a, i) => !a.startsWith("--") && i !== layerValueIdx,
+  );
   if (isRangeMode && onlyNamespaces.length !== 1) {
     throw new Error(
       "--start/--end requires exactly one namespace. " +
@@ -466,7 +506,7 @@ async function main() {
     );
   }
 
-  const fixtures = discoverFixtures();
+  const fixtures = discoverFixtures(layer);
   if (fixtures.size === 0) {
     throw new Error(
       `No *.json fixtures found in ${FIXTURES_DIR} or ${PRIVATE_DIR}. ` +
@@ -537,6 +577,7 @@ async function main() {
       await sql`
         DELETE FROM coach_kb
         WHERE namespace = ${namespace}
+          AND visibility = ${source}
           AND doc_index >= ${rangeStart}
           AND doc_index < ${rangeEnd}
       `;
@@ -551,7 +592,8 @@ async function main() {
       // are backfilled (migration 0003).
       const legacy = await sql`
         SELECT count(*)::int AS n FROM coach_kb
-        WHERE namespace = ${namespace} AND doc_index IS NULL
+        WHERE namespace = ${namespace} AND visibility = ${source}
+          AND doc_index IS NULL
       `;
       const legacyCount = legacy[0]?.n ?? 0;
       if (legacyCount > 0) {
@@ -565,6 +607,7 @@ async function main() {
       const maxRows = await sql`
         SELECT max(doc_index)::int AS m FROM coach_kb
         WHERE namespace = ${namespace}
+          AND visibility = ${source}
           AND doc_index >= ${rangeStart}
           AND doc_index < ${rangeEnd}
       `;
@@ -629,8 +672,8 @@ async function main() {
         const docIdx = i + j;
         const literal = `[${embeddings[j].join(",")}]`;
         await sql`
-          INSERT INTO coach_kb (namespace, source, content, embedding, doc_index)
-          VALUES (${namespace}, ${doc.source}, ${doc.content}, ${literal}::vector(768), ${docIdx})
+          INSERT INTO coach_kb (namespace, source, content, embedding, doc_index, visibility)
+          VALUES (${namespace}, ${doc.source}, ${doc.content}, ${literal}::vector(768), ${docIdx}, ${source})
         `;
       }
       console.log(`  embedded + inserted ${batchEnd}/${rangeEnd}`);

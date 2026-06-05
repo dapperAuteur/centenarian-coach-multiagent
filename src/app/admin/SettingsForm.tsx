@@ -21,7 +21,26 @@ import {
   type LlmProvider,
   type LlmRole,
 } from "@/lib/llm-config";
-import type { CoachSettings } from "@/lib/settings";
+import type { CoachSettings, CorpusMode } from "@/lib/settings";
+
+const CORPUS_MODE_OPTIONS: { value: CorpusMode; label: string; hint: string }[] =
+  [
+    {
+      value: "public",
+      label: "Public only",
+      hint: "Open-access sources only. Safe to screen-share or deploy publicly.",
+    },
+    {
+      value: "private",
+      label: "Private only",
+      hint: "Your proprietary/ingested corpus only.",
+    },
+    {
+      value: "both",
+      label: "Both",
+      hint: "Draw on public and private sources together.",
+    },
+  ];
 
 const FREE_PROVIDERS = COACH_PROVIDERS.filter(
   (p) => PROVIDER_COST_CLASS[p] === "free",
@@ -329,6 +348,43 @@ export function SettingsForm({
           <p className="mt-2 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
             No <code>LANGSMITH_API_KEY</code> is configured, so tracing stays
             off regardless of this toggle.
+          </p>
+        )}
+      </div>
+
+      {/* Knowledge base / corpus visibility */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">Knowledge base</h3>
+        <p className="mt-1 text-xs text-gray-500">
+          Which sources the coach retrieves from. Public ships with the repo;
+          private is your own ingested corpus. Both layers live in one database,
+          distinguished by a per-row visibility flag.
+        </p>
+        <select
+          aria-label="Corpus mode"
+          value={settings.corpusMode}
+          onChange={(e) =>
+            patch({ corpusMode: e.target.value as CorpusMode })
+          }
+          className={`mt-2 ${FIELD_CLASS}`}
+        >
+          {CORPUS_MODE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-gray-500">
+          {
+            CORPUS_MODE_OPTIONS.find((o) => o.value === settings.corpusMode)
+              ?.hint
+          }
+        </p>
+        {settings.corpusMode !== "public" && (
+          <p className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            Private sources are being served. Switch to{" "}
+            <strong>Public only</strong> before sharing the coach publicly or
+            recording marketing videos.
           </p>
         )}
       </div>

@@ -17,6 +17,7 @@ function row(overrides: Partial<Row> = {}): Row {
     temperature: 0,
     maxTokens: 1024,
     tracingEnabled: true,
+    corpusMode: "both",
     updatedAt: new Date(),
     ...overrides,
   };
@@ -68,6 +69,22 @@ describe("resolveSettings", () => {
   it("treats an unknown provider string as anthropic", () => {
     expect(resolveSettings(row({ provider: "bogus" })).provider).toBe(
       "anthropic",
+    );
+  });
+
+  it("defaults corpusMode to both when absent or invalid", () => {
+    expect(resolveSettings(null).corpusMode).toBe("both");
+    expect(resolveSettings(row({ corpusMode: "bogus" })).corpusMode).toBe(
+      "both",
+    );
+  });
+
+  it("maps a valid corpusMode", () => {
+    expect(resolveSettings(row({ corpusMode: "public" })).corpusMode).toBe(
+      "public",
+    );
+    expect(resolveSettings(row({ corpusMode: "private" })).corpusMode).toBe(
+      "private",
     );
   });
 });
