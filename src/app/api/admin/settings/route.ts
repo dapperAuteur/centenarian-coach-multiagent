@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 import {
+  CORPUS_MODES,
   getStoredSettings,
   providerOverride,
   updateSettings,
@@ -35,6 +36,7 @@ const settingsSchema = z.object({
   temperature: z.number().min(0).max(2),
   maxTokens: z.number().int().min(64).max(8192),
   tracingEnabled: z.boolean(),
+  corpusMode: z.enum(CORPUS_MODES),
 });
 
 /** Env context the dashboard needs to render correctly. */

@@ -39,6 +39,7 @@ function stubSettings(provider: LlmProvider) {
     temperature: 0,
     maxTokens: 1024,
     tracingEnabled: false,
+    corpusMode: "both" as const,
   };
 }
 

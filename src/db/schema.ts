@@ -57,6 +57,12 @@ export const coachKb = pgTable(
     namespace: text("namespace").notNull(), // 'nutrition_kb' | 'workout_kb' | 'recovery_kb' | 'corrective_kb'
     source: text("source").notNull(),
     content: text("content").notNull(),
+    // 'public'  -> redistributable, open-access content (ships in the repo).
+    // 'private' -> the operator's own/proprietary corpus (e.g. ingested PDFs).
+    // Defaults to 'private' so rows that predate this column, and any new
+    // private import, are never served publicly by accident. Retrieval is
+    // filtered by app_settings.corpus_mode through match_coach_kb().
+    visibility: text("visibility").notNull().default("private"),
     embedding: vector("embedding", { dimensions: 768 }),
     // Zero-based index into the fixture JSON for this row, populated by
     // scripts/seed-kb.mjs. Lets the seed script resume cleanly within an
@@ -72,6 +78,10 @@ export const coachKb = pgTable(
     index("coach_kb_namespace_doc_index_idx").on(
       table.namespace,
       table.docIndex,
+    ),
+    index("coach_kb_namespace_visibility_idx").on(
+      table.namespace,
+      table.visibility,
     ),
   ],
 );
@@ -94,6 +104,11 @@ export const appSettings = pgTable("app_settings", {
   temperature: real("temperature").notNull().default(0),
   maxTokens: integer("max_tokens").notNull().default(1024),
   tracingEnabled: boolean("tracing_enabled").notNull().default(true),
+  // Which knowledge-base layer the coach retrieves from:
+  // 'public' (open-access only), 'private' (operator's corpus only), or
+  // 'both'. Defaults to 'both' so an existing single-corpus install is not
+  // silently emptied on upgrade; set 'public' for a public/marketing instance.
+  corpusMode: text("corpus_mode").notNull().default("both"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

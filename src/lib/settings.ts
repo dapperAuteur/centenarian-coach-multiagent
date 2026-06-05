@@ -28,17 +28,29 @@ const CACHE_TTL_MS = 10_000;
 const DEFAULT_TEMPERATURE = 0;
 const DEFAULT_MAX_TOKENS = 1024;
 
+/**
+ * Which knowledge-base layer the coach retrieves from. 'public' serves only
+ * open-access content, 'private' only the operator's own corpus, 'both' draws
+ * on the union. Maps to app_settings.corpus_mode and the visibility_filter
+ * argument of match_coach_kb(); see src/lib/pgvector.ts.
+ */
+export const CORPUS_MODES = ["public", "private", "both"] as const;
+export type CorpusMode = (typeof CORPUS_MODES)[number];
+const DEFAULT_CORPUS_MODE: CorpusMode = "both";
+
 export interface CoachSettings {
   provider: LlmProvider;
   models: Record<LlmProvider, Record<LlmRole, string>>;
   temperature: number;
   maxTokens: number;
   tracingEnabled: boolean;
+  corpusMode: CorpusMode;
 }
 
 type RawRow = typeof appSettings.$inferSelect;
 
 const VALID_PROVIDERS: ReadonlySet<LlmProvider> = new Set(COACH_PROVIDERS);
+const VALID_CORPUS_MODES: ReadonlySet<CorpusMode> = new Set(CORPUS_MODES);
 
 /**
  * Build the per-provider model map by spreading the built-in defaults under
@@ -72,12 +84,18 @@ export function resolveSettings(
     storedProvider && VALID_PROVIDERS.has(storedProvider)
       ? storedProvider
       : "anthropic";
+  const storedCorpusMode = row?.corpusMode as CorpusMode | undefined;
+  const corpusMode =
+    storedCorpusMode && VALID_CORPUS_MODES.has(storedCorpusMode)
+      ? storedCorpusMode
+      : DEFAULT_CORPUS_MODE;
   return {
     provider,
     models: mergedModels(stored),
     temperature: row?.temperature ?? DEFAULT_TEMPERATURE,
     maxTokens: row?.maxTokens ?? DEFAULT_MAX_TOKENS,
     tracingEnabled: row ? row.tracingEnabled : Boolean(opts.hasLangsmithKey),
+    corpusMode,
   };
 }
 
@@ -132,6 +150,19 @@ export function invalidateSettingsCache(): void {
   cache = null;
 }
 
+/**
+ * The active corpus mode (public / private / both). Falls back to the default
+ * if settings are unreadable, so retrieval degrades to a safe, predictable
+ * layer rather than throwing. Reads the same cached settings as the coach.
+ */
+export async function getCorpusMode(): Promise<CorpusMode> {
+  try {
+    return (await getSettings()).corpusMode;
+  } catch {
+    return DEFAULT_CORPUS_MODE;
+  }
+}
+
 /** Upsert the single settings row and clear the cache. */
 export async function updateSettings(
   input: CoachSettings,
@@ -144,6 +175,7 @@ export async function updateSettings(
     temperature: input.temperature,
     maxTokens: input.maxTokens,
     tracingEnabled: input.tracingEnabled,
+    corpusMode: input.corpusMode,
     updatedAt: new Date(),
   };
   await db
