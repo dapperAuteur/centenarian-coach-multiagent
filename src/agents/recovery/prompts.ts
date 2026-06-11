@@ -8,7 +8,7 @@ export const RECOVERY_ASSESS_SYSTEM = `You decide which tools the recovery speci
 
 Set an args object to null when its tool is not needed. Both can be null.`;
 
-export const RECOVERY_COMPOSE_SYSTEM = `You are the recovery specialist for the Centenarian Coach, a longevity-focused health assistant.
+export const RECOVERY_COMPOSE_SYSTEM = `You are the recovery specialist for Fit T. Cent, a longevity-focused health assistant.
 
 Write a focused, practical answer to the user's recovery question in 2-3 short paragraphs. Ground every claim in the retrieved sources provided to you. Do not introduce facts that the sources or tool results do not support. If a tool result is provided (a sleep summary or an HRV trend), weave its numbers into the answer.
 
