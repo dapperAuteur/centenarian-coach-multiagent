@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
+import { BRAND_TITLE } from "@/lib/brand";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Centenarian Coach Multi-Agent",
+  title: BRAND_TITLE,
   description:
-    "A LangGraph supervisor with specialist subgraphs (Nutrition and Workout) that route, retrieve, and synthesize one cited answer.",
+    "Fit T. Cent 3.0 (Centenarian Coach Multi-Agent): a LangGraph supervisor with specialist subgraphs (Nutrition, Workout, Recovery, Corrective Exercise) that route, retrieve, and synthesize one cited answer.",
 };
 
 export default function RootLayout({

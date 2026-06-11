@@ -8,7 +8,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Walkthrough | Centenarian Coach Multi-Agent",
+  title: "Walkthrough | Fit T. Cent 3.0 — Centenarian Coach Multi-Agent",
   description:
     "An 8-minute tour of the supervisor + specialist architecture and a live cross-domain query.",
 };
@@ -33,7 +33,7 @@ export default function WalkthroughPage() {
         <div className="mt-8 aspect-video w-full overflow-hidden rounded-lg border border-gray-200 bg-black">
           <iframe
             src={embedUrl}
-            title="Centenarian Coach walkthrough"
+            title="Fit T. Cent 3.0 (Centenarian Coach Multi-Agent) walkthrough"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             className="h-full w-full"

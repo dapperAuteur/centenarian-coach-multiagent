@@ -151,7 +151,10 @@ export default function CoachPage() {
     <main className="mx-auto max-w-2xl px-6 py-12">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Centenarian Coach</h1>
+          <h1 className="text-2xl font-bold">Fit T. Cent 3.0</h1>
+          <p className="text-xs font-medium text-gray-400">
+            Centenarian Coach Multi-Agent
+          </p>
           <p className="mt-1 text-sm text-gray-500">
             A multi-agent coach: a supervisor routes your question to
             nutrition, workout, recovery, and corrective exercise

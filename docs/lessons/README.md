@@ -5,7 +5,8 @@
 > per-lesson `course/lesson-NN` tags). They are kept for history; start with the
 > course.
 
-A five-lesson walkthrough of the architecture behind the Centenarian Coach.
+A five-lesson walkthrough of the architecture behind Fit T. Cent 3.0
+(Centenarian Coach Multi-Agent).
 Each lesson explains one design decision, shows the code in this repo, and ends
 with a **build-this-yourself** exercise that applies the pattern to a different
 domain, a SaaS customer support desk with Billing, Technical, and Account

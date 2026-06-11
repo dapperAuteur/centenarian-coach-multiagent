@@ -32,7 +32,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "what-it-is",
     audience: "users",
-    title: "What the Centenarian Coach is",
+    title: "What Fit T. Cent 3.0 (Centenarian Coach) is",
     blocks: [
       {
         type: "p",

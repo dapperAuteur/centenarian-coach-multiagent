@@ -22,8 +22,8 @@ export async function generateMetadata({
   const lesson = listLessons().find((l) => l.slug === slug);
   return {
     title: lesson
-      ? `${lesson.title} | Centenarian Coach Guide`
-      : "Lesson | Centenarian Coach Guide",
+      ? `${lesson.title} | Fit T. Cent 3.0 Guide`
+      : "Lesson | Fit T. Cent 3.0 Guide",
     description:
       "A lesson from the multi-agent coach curriculum: supervisor routing, per-agent retrieval, state passing, and evals.",
   };
