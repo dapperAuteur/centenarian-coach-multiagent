@@ -1,4 +1,6 @@
-# Centenarian Coach Multi-Agent
+# Fit T. Cent 3.0 — Centenarian Coach Multi-Agent
+
+> **Fit T. Cent 3.0** (the third version of the Fit T. Cent app), also known by its descriptive name **Centenarian Coach Multi-Agent**. Tagline: *Get Fit and Learn Tryin'*.
 
 > **This is a portfolio + course artifact.** The live demo is gated to a single admin email, anyone else can join a paid-access waitlist.
 

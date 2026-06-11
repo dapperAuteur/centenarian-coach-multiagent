@@ -1,6 +1,7 @@
 # Architecture
 
-The Centenarian Coach is a LangGraph **supervisor + specialists** system. One
+Fit T. Cent 3.0 (Centenarian Coach Multi-Agent) is a LangGraph
+**supervisor + specialists** system. One
 question goes in; a supervisor decides which specialists answer it; each
 specialist runs its own retrieval and tools; a synthesizer weaves the findings
 into one cited answer.

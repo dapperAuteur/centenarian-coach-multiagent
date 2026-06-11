@@ -8,9 +8,9 @@ import { GuideBrowser } from "./GuideBrowser";
 import { GUIDE_SECTIONS } from "./guide-content";
 
 export const metadata = {
-  title: "Guide | Centenarian Coach Multi-Agent",
+  title: "Guide | Fit T. Cent 3.0 — Centenarian Coach Multi-Agent",
   description:
-    "How to use and run the Centenarian Coach: asking the multi-agent coach, the architecture, and operating the science-based knowledge base (PDF ingest, embeddings, choosing LLMs).",
+    "How to use and run Fit T. Cent 3.0 (Centenarian Coach Multi-Agent): asking the multi-agent coach, the architecture, and operating the science-based knowledge base (PDF ingest, embeddings, choosing LLMs).",
 };
 
 export default function GuidePage() {

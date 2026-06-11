@@ -8,7 +8,8 @@ several", and defend the answer in an interview.
 
 ## The problem a single agent has
 
-The Centenarian Coach answers health questions. Early versions were one prompt:
+Fit T. Cent 3.0 (Centenarian Coach Multi-Agent) answers health questions. Early
+versions were one prompt:
 a long system message that made the model a nutrition expert, a strength-training
 expert, a recovery expert, and a careful synthesizer, all at once. It worked for
 narrow questions. It fell apart on a question like:

@@ -53,9 +53,11 @@ export default function SiteFooter() {
               className="h-8 w-8"
             />
           </span>
-          <p className="font-extrabold text-gray-900">Centenarian Coach Multi-Agent</p>
+          <p className="font-extrabold text-gray-900">Fit T. Cent 3.0</p>
+          <p className="text-xs text-gray-600">Centenarian Coach Multi-Agent</p>
           <p className="text-xs text-gray-500">
-            A multi-agent longevity coach: supervisor + specialist subgraphs
+            A multi-agent longevity coach: supervisor + specialist subgraphs.
+            Get Fit and Learn Tryin&rsquo;
           </p>
         </div>
 
@@ -82,7 +84,7 @@ export default function SiteFooter() {
           </div>
 
           <div>
-            <p className="text-gray-900 font-semibold mb-2">Centenarian Coach</p>
+            <p className="text-gray-900 font-semibold mb-2">Fit T. Cent 3.0</p>
             <ul className="space-y-1">
               <li><Link href="/" className={linkClasses}>Home</Link></li>
               <li><Link href="/walkthrough" className={linkClasses}>Walkthrough</Link></li>

@@ -4,15 +4,18 @@
 
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { BRAND } from "@/lib/brand";
 
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
       <Logo className="mb-6 h-14 w-auto" />
-      <h1 className="text-3xl font-bold tracking-tight">
-        Centenarian Coach Multi-Agent
-      </h1>
-      <p className="mt-2 text-sm text-gray-500">
+      <h1 className="text-3xl font-bold tracking-tight">{BRAND.name}</h1>
+      <p className="mt-1 text-lg text-gray-600">{BRAND.descriptor}</p>
+      <p className="mt-2 text-sm font-medium text-gray-500">
+        {BRAND.tagline}
+      </p>
+      <p className="mt-4 text-sm text-gray-500">
         This is a portfolio + course artifact. The demo runs without
         authentication.
       </p>

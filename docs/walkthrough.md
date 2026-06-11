@@ -1,6 +1,7 @@
 # 8-minute walkthrough — script & shot list
 
-A timed script for recording the project demo. Each section has the talking
+A timed script for recording the Fit T. Cent 3.0 (Centenarian Coach Multi-Agent)
+demo. Each section has the talking
 points and what to show on screen. Aim for clean transitions and let pauses
 sit; ~8 minutes total.
 
