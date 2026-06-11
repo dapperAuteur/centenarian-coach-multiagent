@@ -7,7 +7,7 @@ import { withRoleFallback } from "@/lib/with-fallback";
 import type { CoachState, CoachUpdate, RoutingDecision } from "@/state";
 import { RoutingSchema } from "./routing.schema";
 
-const SUPERVISOR_SYSTEM = `You are the routing supervisor for the Centenarian Coach, a longevity-focused health assistant. There are four specialist agents:
+const SUPERVISOR_SYSTEM = `You are the routing supervisor for Fit T. Cent, a longevity-focused health assistant. There are four specialist agents:
 - nutrition: diet, macros, calories, protein, recipes, supplements, eating patterns, fasting.
 - workout: strength training, cardio, exercise programming, progression, periodization.
 - recovery: sleep, HRV, rest days, stress, readiness.
