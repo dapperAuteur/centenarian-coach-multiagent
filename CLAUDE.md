@@ -1,3 +1,9 @@
+## ⚠️ Ecosystem repo identity (don't confuse these)
+
+This repo — **centenarian-coach-multiagent** — is **Centenarian Coach**: a LangGraph multi-agent supervisor (ask one question, specialists each run their own retrieval and tools, the answer returns synthesized with citations). Full ecosystem identity + product index: `gemini/witus/CLAUDE.md` and `gemini/witus/lib/products.ts`.
+
+---
+
 @AGENTS.md
 
 ---
