@@ -30,6 +30,44 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       server: process.env.EMAIL_SERVER,
       from: process.env.EMAIL_FROM,
     }),
+    // "Sign in with WitUS" — the ecosystem OIDC IdP (accounts.witus.online,
+    // mounted under /api/idp). Added only when the client env is provisioned, so
+    // a missing secret never breaks the build and the button stays hidden until
+    // BAM sets the env (incremental rollout — see
+    // gemini/witus/lib/identity/clients.ts). NOTE: the signIn callback below still
+    // gates completion to ADMIN_EMAIL, so WitUS SSO succeeds only for the admin.
+    ...(process.env.WITUS_OIDC_CLIENT_ID
+      ? [
+          {
+            id: "witus",
+            name: "WitUS",
+            type: "oidc" as const,
+            issuer: "https://accounts.witus.online/api/idp",
+            wellKnown:
+              process.env.WITUS_OIDC_DISCOVERY_URL ??
+              "https://accounts.witus.online/api/idp/.well-known/openid-configuration",
+            clientId: process.env.WITUS_OIDC_CLIENT_ID,
+            clientSecret: process.env.WITUS_OIDC_CLIENT_SECRET ?? "",
+            authorization: { params: { scope: "openid email profile" } },
+            checks: ["pkce", "state"] as ("pkce" | "state")[],
+            profile(profile: {
+              sub: string;
+              email?: string | null;
+              name?: string | null;
+            }) {
+              return {
+                id: profile.sub,
+                email: profile.email ?? null,
+                name: profile.name ?? null,
+              };
+            },
+          } satisfies import("next-auth/providers").OIDCConfig<{
+            sub: string;
+            email?: string | null;
+            name?: string | null;
+          }>,
+        ]
+      : []),
   ],
   callbacks: {
     ...authConfig.callbacks,
