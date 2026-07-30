@@ -227,7 +227,7 @@ exercise on an unrelated domain).
 | Embeddings       | Gemini `gemini-embedding-001` (768-dim)     |
 | ORM + vector     | Drizzle ORM · Postgres + pgvector (Neon)    |
 | Auth             | Auth.js v5 email magic link (Mailgun), single-admin gate, waitlist for everyone else |
-| Observability    | LangSmith (fail-soft)                       |
+| Observability    | LangSmith (fail-soft) · Better Stack error monitoring via `@sentry/nextjs`, inert without a DSN, health-privacy scrubber in `src/lib/sentry-scrub.ts` |
 | UI streaming     | NDJSON stream from a Next.js route handler  |
 | Testing          | Vitest                                      |
 
@@ -254,6 +254,8 @@ centenarian-coach-multiagent/
 │   ├── synthesizer/                <- weaves findings into final answer
 │   ├── deployment/                 <- graph entry for LangGraph Platform
 │   ├── state.ts                    <- typed state object
+│   ├── instrumentation.ts          <- Sentry per-runtime init + onRequestError
+│   ├── instrumentation-client.ts   <- browser Sentry init (guarded on the DSN)
 │   ├── app/
 │   │   ├── api/coach/              <- streaming REST routes
 │   │   ├── api/admin/              <- runtime settings (provider + models)
@@ -264,11 +266,14 @@ centenarian-coach-multiagent/
 │   └── lib/
 │       ├── langsmith.ts
 │       ├── embeddings.ts
-│       └── pgvector.ts
+│       ├── pgvector.ts
+│       └── sentry-scrub.ts         <- health-privacy scrubber for crash reports
 ├── evals/                          <- dataset + rubric + grounding judge + LangSmith runner
 ├── tests/                          <- unit + graph + topology tests
 ├── kb-fixtures/                    <- drop your own corpus here, then `pnpm kb:seed`
 ├── langgraph.json                  <- LangGraph Platform graph declaration
+├── sentry.server.config.ts         <- Node-runtime error monitoring (DSN-guarded)
+├── sentry.edge.config.ts           <- edge-runtime error monitoring (DSN-guarded)
 └── package.json
 ```
 
@@ -292,10 +297,44 @@ ADMIN_EMAIL=                     # the only address allowed to sign in; the
                                  #   server-side in /api/access-request
 EMAIL_SERVER=                    # Mailgun SMTP connection string
 EMAIL_FROM="WitUS Inbox <forms@mg.witus.online>"
+
+# Error monitoring (optional): Better Stack via the Sentry SDK
+SENTRY_DSN=                      # server + edge; unset = SDK fully inert
+NEXT_PUBLIC_SENTRY_DSN=          # browser; same value, public by design
 ```
 
 See `.env.example` for the annotated list. LangSmith tracing is on by default but
 fail-soft, the app runs fine without `LANGSMITH_API_KEY`.
+
+### Error monitoring and what it refuses to send
+
+Crash reporting runs through `@sentry/nextjs` pointed at a **Better Stack** source
+(Better Stack speaks the Sentry ingest protocol). It is **inert until a DSN is
+set**: all three `Sentry.init()` calls are guarded, so with no `SENTRY_DSN` the
+SDK never initialises and nothing leaves the process.
+
+Because this app is an **LLM health coach**, the scrubber in
+[`src/lib/sentry-scrub.ts`](./src/lib/sentry-scrub.ts) is deliberately more
+aggressive than a normal `beforeSend`. Prompts and model responses are ordinary
+prose that no regex can classify, so they are **dropped by key, not filtered**:
+
+| Removed from every event | Why |
+| --- | --- |
+| The whole `event.user` object, id included | The user id and coach session id join to `coach_sessions.query` |
+| `event.message` | Duplicates the exception value; the likeliest place code interpolates request context |
+| `request.data`, `request.query_string`, `request.cookies`, `request.env` | The POST body of `/api/coach/query` **is** the health question |
+| Any value under a prompt/response key (`query`, `question`, `finding`, `answer`, `snippet`, `comment`, `input`, `output`, …) | Model input and output, dropped wholesale |
+| Stack-frame local variables | A local named `userQuery` is the disclosure itself |
+| `console` breadcrumbs | An app log can echo an answer verbatim |
+| LLM provider keys by shape, labelled or not (`sk-ant-`, `sk-`, `AIza`, `lsv2_`, `csk-`, `Bearer`, JWTs, Postgres/SMTP DSNs) | Each match is a live credential |
+
+Tracing is `0`, **session replay is `0` and stays there** (a replay of `/coach` is
+a video of somebody typing their symptoms), and `sendDefaultPii` is `false`. What
+survives is the crash signal: exception type, stack trace, route, and
+`contexts.trace`. The contract is pinned by
+[`tests/sentry-scrub.test.ts`](./tests/sentry-scrub.test.ts), which asserts against
+the serialized event and pairs every leak test with a counter-assertion so the
+scrubber cannot quietly start redacting everything.
 
 ---
 
