@@ -4,6 +4,9 @@
 // Last-resort boundary for errors thrown in the root layout itself. It replaces
 // the root layout when it fires, so it must render its own <html>/<body> and
 // stay dependency-light.
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
 export default function GlobalError({
   error,
   reset,
@@ -11,6 +14,12 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // A root-layout crash never reaches onRequestError on the client side, so
+    // this is the only report for it. A no-op when no DSN is configured.
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <html lang="en">
       <body className="antialiased">
