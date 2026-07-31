@@ -5,6 +5,7 @@
 // layout and shows a friendly recovery screen instead of a blank page.
 import { useEffect } from "react";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
 
 export default function Error({
@@ -16,6 +17,11 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error("[app/error]", error);
+    // Errors caught by a route boundary are not reported by onRequestError, so
+    // without this they would only ever land in the user's own devtools. A no-op
+    // when no DSN is configured. (The console.error above is deliberately kept
+    // for local dev; sentry-scrub drops console breadcrumbs, so it cannot leak.)
+    Sentry.captureException(error);
   }, [error]);
 
   return (
