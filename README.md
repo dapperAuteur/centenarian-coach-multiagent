@@ -259,6 +259,7 @@ centenarian-coach-multiagent/
 │   ├── app/
 │   │   ├── api/coach/              <- streaming REST routes
 │   │   ├── api/admin/              <- runtime settings (provider + models)
+│   │   ├── api/health/             <- public uptime probe (select 1, no user data)
 │   │   ├── coach/                  <- chat-style UI + /coach/history
 │   │   └── admin/                  <- runtime model-config dashboard
 │   ├── db/
@@ -385,6 +386,52 @@ pnpm deploy:dev   # npx @langchain/langgraph-cli dev, runs the graph from langgr
 The deployed graph needs `DATABASE_URL` (Neon + pgvector, with `coach_kb` seeded
 in that database), an embeddings key, and an LLM key. The live LangSmith
 Deployment URL is added here once provisioned (Module 5).
+
+### Health check: `/api/health`
+
+**Point uptime monitors at `/api/health`, not at `/`.** The homepage can serve a
+cached 200 from the CDN while the database is face down, so a green check on `/`
+proves only that the CDN is alive.
+
+```bash
+curl -i https://<host>/api/health
+```
+
+| Result | Status | Body |
+| --- | --- | --- |
+| Database answered | `200` | `{"ok":true,"service":"centenarian-coach-multiagent","checks":{"database":"ok"}}` |
+| Database unreachable, erroring, or slower than 4s | `503` | `{"ok":false,"error":"dependency_unavailable"}` |
+
+`HEAD /api/health` runs the same check and returns the same status with no body.
+Both responses send `Cache-Control: no-store`, and the route is `force-dynamic`
+with `revalidate = 0`, so neither the CDN nor the monitor can serve a stale
+verdict.
+
+What it checks and what it refuses to, in
+[`src/app/api/health/route.ts`](./src/app/api/health/route.ts):
+
+- **Checks:** one `select 1` against the app database through the normal Drizzle
+  client, with a **4 second timeout** so a hung socket fails instead of hanging.
+  That proves the connection string resolves, the network path is open, and
+  Postgres is answering.
+- **Reads no user data.** `select 1` is a constant, not a table. The endpoint is
+  public and unauthenticated, so it never reads, counts, or hints at a user,
+  session, query, or finding row, and it reports no volume of any kind. On a
+  health coach a row count is itself a disclosure, the same reasoning that makes
+  the Sentry scrubber drop `event.user` wholesale.
+- **Calls no LLM or embeddings provider.** A vendor outage must not redden the
+  monitor, provider error bodies carry live API keys, and a probe that bills per
+  hit is a probe nobody keeps. It follows that a green check here does not mean
+  the model providers are up.
+- **Never echoes an error.** The failure path is a fixed token and a fixed log
+  literal; the catch blocks bind no variable at all, so the driver's message
+  (which contains the DSN, user, and host) has nowhere to go. Real errors still
+  reach Better Stack from the routes that do the work.
+
+The Auth.js middleware matcher covers `/coach`, `/admin`, and their API routes
+only, so `/api/health` is reachable without a session by design.
+[`tests/health.test.ts`](./tests/health.test.ts) pins the contract, including the
+negative assertion that a failing probe leaks no connection detail.
 
 ---
 
