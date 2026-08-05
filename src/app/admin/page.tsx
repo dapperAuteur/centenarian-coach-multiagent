@@ -60,6 +60,9 @@ export default async function AdminPage() {
           </h1>
         </div>
         <nav className="flex shrink-0 items-center gap-3 text-xs">
+          <Link href="/admin/safety" className="text-sky-700 hover:underline">
+            Safety
+          </Link>
           <Link
             href="/coach/history"
             className="text-sky-700 hover:underline"

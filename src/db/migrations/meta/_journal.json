@@ -43,6 +43,13 @@
       "when": 1780682509669,
       "tag": "0005_tearful_joystick",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785899722247,
+      "tag": "0006_kind_meteorite",
+      "breakpoints": true
     }
   ]
 }

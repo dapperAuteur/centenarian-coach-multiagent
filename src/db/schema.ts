@@ -104,6 +104,31 @@ export const coachKb = pgTable(
 );
 
 /**
+ * One row per coach response that tripped at least one safety trigger.
+ * Written fire-and-forget by src/lib/safety-classifier.ts after the answer
+ * has been produced; responses with no triggers write no row. Reviewed by
+ * the admin at /admin/safety (BAM's safety-report requirement, plans/09).
+ */
+export const safetyEvents = pgTable("safety_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id")
+    .notNull()
+    .references(() => coachSessions.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  // Which of the five safety triggers fired (see SAFETY_TRIGGERS in
+  // src/lib/safety-classifier.ts).
+  triggers: text("triggers").array().notNull().default([]),
+  // Did the final answer include a professional-referral recommendation?
+  referralIncluded: boolean("referral_included").notNull().default(false),
+  // One-sentence classifier note about what it saw.
+  summary: text("summary").notNull().default(""),
+  // First ~200 chars of the user's query, for admin triage context.
+  userQueryExcerpt: text("user_query_excerpt").notNull().default(""),
+});
+
+/**
  * Single-row runtime configuration managed from the /admin dashboard:
  * which LLM provider and per-role models the coach uses, generation
  * defaults, and the LangSmith tracing toggle. Always exactly one row,
