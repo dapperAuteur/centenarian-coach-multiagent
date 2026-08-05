@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession, type SpecialistCallRow } from "@/lib/sessions";
+import { ResponseSafetyNotice } from "@/components/InformationalNotice";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,7 @@ export default async function CoachHistoryDetailPage({
       )}
 
       <section className="mt-6">
+        <ResponseSafetyNotice className="mb-3" />
         <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
           Answer
         </h2>
