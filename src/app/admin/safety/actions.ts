@@ -59,7 +59,7 @@ export async function generateSafetySuggestions(): Promise<SafetySuggestionsResu
     if (events.length === 0) {
       return {
         report: null,
-        error: "No safety events recorded yet — nothing to analyze.",
+        error: "No safety events recorded yet, so there is nothing to analyze.",
       };
     }
 

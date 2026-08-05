@@ -23,8 +23,8 @@ export const BRAND = {
   tagline: "Get Fit and Learn Tryin'",
 } as const;
 
-/** "Fit T. Cent 3.0 — Centenarian Coach Multi-Agent" (em dash lockup). */
-export const BRAND_LOCKUP = `${BRAND.name} — ${BRAND.descriptor}`;
+/** "Fit T. Cent 3.0: Centenarian Coach Multi-Agent" (title lockup). */
+export const BRAND_LOCKUP = `${BRAND.name}: ${BRAND.descriptor}`;
 
 /** Title-bar lockup for page <title> tags. */
 export const BRAND_TITLE = BRAND_LOCKUP;

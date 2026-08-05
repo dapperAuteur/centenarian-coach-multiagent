@@ -17,7 +17,7 @@ a seeded Neon database, and a LangSmith project open for traces.
 
 Each lesson is a **voice-over screencast**. The course opens and closes with one
 short **on-camera** segment each (intro doubles as the landing-page embed). Target
-total **2h25m**, squarely in the Project-tier P3=5 band (120–180 min, 25–30
+total **2h25m**, squarely in the Project-tier P3=5 band (120-180 min, 25-30
 lessons).
 
 | Module | Lessons | Budget |
@@ -33,7 +33,7 @@ lessons).
 | Course outro (on-camera) | - | 1 min |
 | **Total** | **28 lessons** | **~146 min (2h26m)** |
 
-Per-lesson timings live in `script.md`. Pace screencast narration at ~135–150
+Per-lesson timings live in `script.md`. Pace screencast narration at ~135-150
 wpm, slower than conversation; learners are reading code while listening.
 
 ### A2. Recording stack (the gear the operator task buys)
@@ -42,7 +42,7 @@ wpm, slower than conversation; learners are reading code while listening.
 
 | Role | Recommended | Budget alt | Notes |
 |---|---|---|---|
-| Microphone | Shure MV7+ (USB/XLR dynamic) | Samson Q2U | Dynamic rejects room noise; speak 4–8 in. away. |
+| Microphone | Shure MV7+ (USB/XLR dynamic) | Samson Q2U | Dynamic rejects room noise; speak 4-8 in. away. |
 | Pop filter / arm | Boom arm + foam windscreen | Desk stand | Kills plosives and desk thumps. |
 | Screen capture | ScreenFlow (macOS) | OBS Studio (free) | ScreenFlow's built-in zoom/callouts speed up edit. |
 | On-camera | Sony ZV-E10 / any mirrorless via HDMI capture | 1080p webcam (Logitech Brio) | Only the ~2.5 min of bookends are on-camera. |
@@ -65,7 +65,7 @@ Legible code on a 1080p embed is non-negotiable. Before recording:
   26 lessons (consistency reads as polish). Hide the minimap and noisy gutters.
 - **Silence the machine.** macOS Focus / Do Not Disturb on; quit Slack/Mail;
   hide the dock; clear the menu-bar; empty the browser bookmark bar.
-- **Browser at 125–150 % zoom** for the LangSmith dashboard and the coach UI so
+- **Browser at 125-150 % zoom** for the LangSmith dashboard and the coach UI so
   trace trees and citations are readable.
 - **Checkout the right tag.** Each lesson records against its
   `git checkout course/lesson-NN` state so the on-screen code matches the lesson.
@@ -115,7 +115,7 @@ matching the `course/lesson-NN` tag. Stash raw captures in
   code, drop a highlight box or arrow. This is what makes a screencast teach.
 - **Title card** per module (3 s) and a **lower-third** with the lesson title +
   the `course/lesson-NN` tag for the first 5 s of each lesson.
-- **Speed-ramp** install/seed/long-run segments to 2–4× with a "⏩" marker; never
+- **Speed-ramp** install/seed/long-run segments to 2-4× with a "⏩" marker; never
   make the viewer wait on a progress bar in real time.
 
 ### B2. Audio master

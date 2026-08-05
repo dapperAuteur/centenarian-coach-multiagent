@@ -175,7 +175,7 @@ export const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "decisions",
     audience: "architecture",
-    title: "Engineering decisions worth noting",
+    title: "Engineering decisions that shaped the build",
     blocks: [
       {
         type: "list",

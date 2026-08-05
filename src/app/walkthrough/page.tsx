@@ -8,7 +8,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Walkthrough | Fit T. Cent 3.0 — Centenarian Coach Multi-Agent",
+  title: "Walkthrough | Fit T. Cent 3.0: Centenarian Coach Multi-Agent",
   description:
     "An 8-minute tour of the supervisor + specialist architecture and a live cross-domain query.",
 };

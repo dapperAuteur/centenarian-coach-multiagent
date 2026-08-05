@@ -40,7 +40,7 @@ way keeps each specialist's logic self-contained and testable in isolation
   `needsCalorieTool` and extracted `calorieArgs`. Deciding-then-acting, reason
   about whether a tool is warranted, then act, is the ReAct pattern applied to one
   specialist (Yao et al., 2023).
-- **`compose`** writes the 2–3 paragraph finding, and it is given **only** the
+- **`compose`** writes the 2-3 paragraph finding, and it is given **only** the
   retrieved sources and any tool results:
 
   ```ts

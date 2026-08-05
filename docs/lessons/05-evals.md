@@ -65,7 +65,7 @@ function citationScore(output: CoachState) {
 ```
 
 The grounding evaluator is LLM-as-judge: give a model the answer and the
-specialist findings (which carry the source snippets) and ask it to score, 0–1,
+specialist findings (which carry the source snippets) and ask it to score, 0-1,
 how well every claim is supported. Pin that judge at `temperature: 0` and give
 it a tight rubric, "1 only if every sentence is traceable to a snippet."
 

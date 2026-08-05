@@ -57,13 +57,13 @@ shot by shot). They are numbered so the editor can line audio against video.
 LESSON mNN-lNN, <title>            [tag: course/lesson-NN] [budget: N min]
 
 NARRATION
-  [HOOK, 10–15s]      The failure or question this lesson resolves. One sentence.
-  [WHY, 20–40s]       Why it matters for a multi-agent coach; the design tension.
+  [HOOK, 10-15s]      The failure or question this lesson resolves. One sentence.
+  [WHY, 20-40s]       Why it matters for a multi-agent coach; the design tension.
   [CODE WALK]          Read the key lines aloud; name each file path. Mark every
                        claim needing an [on-screen cite: <source from lesson Refs>].
   [DEMO]               Narrate the run and the trace as they happen.
-  [TAKEAWAY, 15–25s]  The one rule to remember. Restate it as a sentence.
-  [BRIDGE, 5–10s]     One line pointing to the next lesson / the exercise.
+  [TAKEAWAY, 15-25s]  The one rule to remember. Restate it as a sentence.
+  [BRIDGE, 5-10s]     One line pointing to the next lesson / the exercise.
 
 SCREEN-RECORDING DESCRIPTION (shot list, written last, with the narration)
   0. Checkout state: `git checkout course/lesson-NN`; clean `git status`.
@@ -149,7 +149,7 @@ are what the shot list (written last) is built from.
 | Tag | Lesson | min | On-screen | Demo / trace | Takeaway |
 |---|---|---|---|---|---|
 | l-25 | How to add a new specialist (worked: `corrective`) | 5 | `src/agents/corrective/*`, the registration in `src/graph.ts` | trace: a 4th specialist answering | The extension shape itself, copy the template, own a namespace, register. |
-| l-26 | 3–5 named extensions + file paths + difficulty | 5 | a table: MCP tool, streaming, memory/checkpointer, multi-tenant corpora, each with a starting path | - | Concrete launching pads, not "now go build." |
+| l-26 | 3-5 named extensions + file paths + difficulty | 5 | a table: MCP tool, streaming, memory/checkpointer, multi-tenant corpora, each with a starting path | - | Concrete launching pads, not "now go build." |
 | l-27 | Extending the eval suite as you extend the system | 3 | add specialist examples to `dataset.json`; a new evaluator | `pnpm eval` over the extended set | New capability ships with new evals. |
 | l-28 | Capstone: ship your own specialist | 3 | recap the full arc; the checkout-any-lesson tag flow | - | You can now own a domain end to end. |
 
