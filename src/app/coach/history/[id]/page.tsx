@@ -124,11 +124,15 @@ function SpecialistCall({ call }: { call: SpecialistCallRow }) {
 
       {call.citations.length > 0 && (
         <ul className="mt-2 space-y-1">
+          {/* The finding's inline [n] markers use the specialist's LOCAL
+              numbering (the synthesizer renumbers only for the final
+              answer), so number this list 1..n to match. */}
           {call.citations.map((citation, i) => (
             <li
               key={i}
               className="rounded border border-gray-200 px-2 py-1 text-xs text-gray-700"
             >
+              <span className="font-mono text-gray-400">[{i + 1}]</span>{" "}
               <span className="font-medium">{citation.source}</span>
               <span className="text-gray-500">: {citation.snippet}</span>
             </li>

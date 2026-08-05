@@ -8,11 +8,22 @@
 //
 //   compose -> verify -> (pass ? END : one revision) -> END
 //
-// The verifier is a second, temperature-0 model call that sentence-splits the
-// draft and lists every substantive claim not supported by the retrieved
-// sources or tool results. Its prompt embeds CITE_OR_DROP_RULE from
-// shared-rules.ts so the compose rule and the verify rule can never drift
-// apart. Max ONE revision, by design: no second verification loop.
+// Since the inline-citation upgrade (BAM's 2026-08-05 decision, fixing the
+// 66.7% cx.no_uncited_claims traceability gap) the gate has two layers:
+//
+//   1. DETERMINISTIC pre-check (no model call): regex-extract the draft's
+//      "[n]" markers and flag any that fall outside 1..citations.length.
+//      Recorded as citationCheck.markersOutOfRange and included in the
+//      revision instruction.
+//   2. LLM check: a second, temperature-0 model call that sentence-splits
+//      the draft and lists (a) substantive claims with no supporting source
+//      or tool result, (b) substantive claims carrying no marker when a
+//      numbered source grounds them, and (c) claims whose cited marker
+//      points at a source that does NOT actually support them (aptness).
+//
+// The verifier prompt embeds CITE_OR_DROP_RULE from shared-rules.ts so the
+// compose rule and the verify rule can never drift apart. Max ONE revision,
+// by design: no second verification loop.
 //
 // Failure policy: a failed or malformed verifier call must never block the
 // user. It logs with context and passes the draft through with
@@ -20,6 +31,7 @@
 
 import { z } from "zod";
 import { withRoleFallback } from "@/lib/with-fallback";
+import { findOutOfRangeMarkers } from "@/lib/citation-markers";
 import type { Citation, CitationCheck, ToolCallRecord } from "@/state";
 import { CITE_OR_DROP_RULE } from "./shared-rules";
 
@@ -27,19 +39,22 @@ export const VERIFY_CITATIONS_SYSTEM = `You are a citation-coverage verifier for
 
 ${CITE_OR_DROP_RULE}
 
-Your job: check whether the draft obeys it. Sentence-split the draft. For every sentence, decide whether it makes a SUBSTANTIVE claim or recommendation — a factual statement or a piece of advice — and if so, whether the provided retrieved sources or tool results support it. List every substantive claim or recommendation that is NOT supported by them, quoting or closely paraphrasing each one.
+Your job: check whether the draft obeys it. Sentence-split the draft. For every sentence, decide whether it makes a SUBSTANTIVE claim or recommendation — a factual statement or a piece of advice. List every substantive claim or recommendation that breaks the rule, quoting or closely paraphrasing each one. A claim breaks the rule when:
+- No provided retrieved source or tool result supports it, OR
+- It carries no inline [n] marker even though a numbered retrieved source grounds it (a claim grounded only in a tool result is fine without a marker), OR
+- It carries a marker [n] but source number n does not actually support THAT claim — check each marker's aptness against the specific numbered source it points to, not merely whether some source somewhere supports the claim.
 
 Exemptions — do NOT list these:
 - Conversational framing: greetings, transitions, restating the user's situation or question.
 - Safety referrals such as "consult a physician / physical therapist / registered dietitian" — these are policy, not factual claims.
 
-If every substantive claim is supported, return an empty list.`;
+If every substantive claim is supported and correctly marked, return an empty list.`;
 
 const VerifySchema = z.object({
   unsupportedClaims: z
     .array(z.string())
     .describe(
-      "Every substantive claim or recommendation in the draft not supported by the provided sources or tool results. Empty when the draft is fully covered.",
+      "Every substantive claim or recommendation in the draft that is unsupported by the provided sources or tool results, lacks a required inline [n] marker, or cites a source that does not support it. Empty when the draft is fully covered and correctly marked.",
     ),
 });
 
@@ -71,21 +86,34 @@ export function formatToolBlock(toolCalls: ToolCallRecord[]): string {
 export interface VerifyResult {
   pass: boolean;
   unsupportedClaims: string[];
+  /**
+   * Distinct "[n]" markers in the draft outside 1..citations.length, found
+   * by the deterministic pre-check. Non-empty forces a revision even when
+   * the LLM check passes (or fails infrastructurally).
+   */
+  outOfRangeMarkers: number[];
   /** Set when the verifier call failed or returned a malformed shape. */
   verifierError?: boolean;
 }
 
 /**
- * One temperature-0 LLM call that checks the draft against its sources and
- * tool results. Never throws: on any failure it logs and returns
- * `pass: true` with `verifierError: true` — the user is not blocked on
- * verifier infrastructure, but the failure is recorded.
+ * Two-layer check of the draft against its sources and tool results: a
+ * deterministic marker-range pre-check (pure regex, cannot fail), then one
+ * temperature-0 LLM call for coverage and marker aptness. Never throws: on
+ * any LLM failure it logs and passes the LLM layer with
+ * `verifierError: true` — the user is not blocked on verifier
+ * infrastructure, but the failure is recorded. The deterministic layer
+ * still gates in that case.
  */
 export async function verifyCitationCoverage(input: {
   draftText: string;
   citations: Citation[];
   toolCalls: ToolCallRecord[];
 }): Promise<VerifyResult> {
+  const outOfRangeMarkers = findOutOfRangeMarkers(
+    input.draftText,
+    input.citations.length,
+  );
   try {
     const model = await withRoleFallback(
       { role: "composer", temperature: 0 },
@@ -107,7 +135,11 @@ export async function verifyCitationCoverage(input: {
       );
     }
     const unsupportedClaims = parsed.data.unsupportedClaims;
-    return { pass: unsupportedClaims.length === 0, unsupportedClaims };
+    return {
+      pass: unsupportedClaims.length === 0 && outOfRangeMarkers.length === 0,
+      unsupportedClaims,
+      outOfRangeMarkers,
+    };
   } catch (err) {
     console.error(
       "[coach] citation verifier failed; passing draft through unverified",
@@ -118,7 +150,14 @@ export async function verifyCitationCoverage(input: {
         toolCallCount: input.toolCalls.length,
       },
     );
-    return { pass: true, unsupportedClaims: [], verifierError: true };
+    // The deterministic layer needs no model: out-of-range markers still
+    // force a revision attempt even when the LLM verifier is down.
+    return {
+      pass: outOfRangeMarkers.length === 0,
+      unsupportedClaims: [],
+      outOfRangeMarkers,
+      verifierError: true,
+    };
   }
 }
 
@@ -152,6 +191,11 @@ export function makeVerifyReviseNode(options: {
       toolCalls: state.toolCalls,
     });
 
+    const markersOutOfRangeTelemetry =
+      check.outOfRangeMarkers.length > 0
+        ? { markersOutOfRange: check.outOfRangeMarkers.length }
+        : {};
+
     if (check.pass) {
       return {
         citationCheck: {
@@ -168,9 +212,14 @@ export function makeVerifyReviseNode(options: {
     const composeContent = options.includeToolBlock
       ? `Question: ${state.subQuestion}\n\nRetrieved sources:\n${sourcesBlock}\n\nTool results:\n${formatToolBlock(state.toolCalls)}`
       : `Question: ${state.subQuestion}\n\nRetrieved sources:\n${sourcesBlock}`;
-    const claimsList = check.unsupportedClaims
-      .map((c) => `- ${c}`)
-      .join("\n");
+    const problems = [
+      ...check.outOfRangeMarkers.map(
+        (n) =>
+          `- The inline marker [${n}] does not refer to any of the ${state.citations.length} numbered retrieved sources. Replace it with the correct source number, or cut the claim if no provided source supports it.`,
+      ),
+      ...check.unsupportedClaims.map((c) => `- ${c}`),
+    ];
+    const claimsList = problems.join("\n");
 
     try {
       const model = await withRoleFallback(
@@ -183,7 +232,7 @@ export function makeVerifyReviseNode(options: {
         { role: "assistant", content: state.draftText },
         {
           role: "user",
-          content: `A citation review found the following claims in your answer unsupported by the provided sources and tool results:\n${claimsList}\n\nRevise your answer: for each listed claim, either ground it in the provided sources/tool results or cut it entirely. Change nothing else.`,
+          content: `A citation review found the following problems in your answer (claims unsupported by the provided sources and tool results, missing or wrong inline [n] markers, or markers pointing at nonexistent sources):\n${claimsList}\n\nRevise your answer: for each listed problem, either ground the claim in the provided sources/tool results with the correct inline [n] marker(s), or cut it entirely. Change nothing else.`,
         },
       ]);
       return {
@@ -191,6 +240,8 @@ export function makeVerifyReviseNode(options: {
         citationCheck: {
           unsupportedCount: check.unsupportedClaims.length,
           revised: true,
+          ...markersOutOfRangeTelemetry,
+          ...(check.verifierError ? { verifierError: true } : {}),
         },
       };
     } catch (err) {
@@ -200,12 +251,14 @@ export function makeVerifyReviseNode(options: {
         {
           error: err instanceof Error ? err.message : String(err),
           unsupportedCount: check.unsupportedClaims.length,
+          markersOutOfRange: check.outOfRangeMarkers.length,
         },
       );
       return {
         citationCheck: {
           unsupportedCount: check.unsupportedClaims.length,
           revised: false,
+          ...markersOutOfRangeTelemetry,
           verifierError: true,
         },
       };
