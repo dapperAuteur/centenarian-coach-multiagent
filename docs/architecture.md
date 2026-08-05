@@ -58,7 +58,7 @@ type CoachState = {
   sessionId: string;
   userQuery: string;
   routing?: RoutingDecision;          // who to consult + per-agent sub-questions
-  findings: {                          // object-merge reducer — parallel-safe
+  findings: {                          // object-merge reducer (parallel-safe)
     nutrition?: SpecialistFinding;
     workout?: SpecialistFinding;
     recovery?: SpecialistFinding;

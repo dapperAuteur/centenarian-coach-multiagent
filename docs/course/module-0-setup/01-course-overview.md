@@ -37,7 +37,7 @@ Every lesson contributes to the same coach. Concretely:
 
 - **By the end of Module 0**, the coach runs locally, you seed a corpus, ask a
   question, and read the answer plus its LangSmith trace.
-- **Modules 1–3** build the architecture: the supervisor, then the specialists,
+- **Modules 1-3** build the architecture: the supervisor, then the specialists,
   each with its own retrieval namespace and isolated state.
 - **Module 4** makes evaluation part of the artifact, routing, citation, and
   grounding evaluators, plus a dataset that grows as you find bugs.

@@ -1,4 +1,4 @@
-# Fit T. Cent 3.0 — Centenarian Coach Multi-Agent
+# Fit T. Cent 3.0: Centenarian Coach Multi-Agent
 
 > **Fit T. Cent 3.0** (the third version of the Fit T. Cent app), also known by its descriptive name **Centenarian Coach Multi-Agent**. Tagline: *Get Fit and Learn Tryin'*.
 
@@ -75,8 +75,8 @@ graph TD
 The verify step is a second, temperature-0 model call that checks every
 substantive claim in the draft against the retrieved sources and tool
 results (the same cite-or-drop rule the compose prompt carries). If it finds
-unsupported claims, the composer gets exactly one revision pass — ground
-each claim or cut it — and the result ships with `citationCheck` telemetry
+unsupported claims, the composer gets exactly one revision pass (ground
+each claim or cut it) and the result ships with `citationCheck` telemetry
 on the finding. A verifier failure never blocks the answer; it is recorded
 as `verifierError` instead.
 
@@ -217,9 +217,9 @@ git checkout course/lesson-04   # the first-run smoke test, ready to run
 | **3 · Specialists #2 + #3** | 3 | Workout + Recovery: the specialist template, and state fan-in without stomping. |
 | **4 · LangSmith evaluation** | 5 | Routing + citation evaluators, an LLM-judge grounding evaluator, and the find-bug → add-example → re-run loop on a growing dataset. |
 | **5 · Deployment + multi-tenant** | 4 | LangGraph Platform deployment, per-user state, and cost/latency dashboards. |
-| **6 · Extension launching pad** | 4 | How to add a new specialist (worked with the `corrective` agent), plus 3–5 extensions with file paths. |
+| **6 · Extension launching pad** | 4 | How to add a new specialist (worked with the `corrective` agent), plus 3-5 extensions with file paths. |
 
-Module 0 is live; Modules 1–6 are being authored on the
+Module 0 is live; Modules 1-6 are being authored on the
 `feat/langchain-academy-project-refactor` branch. The course holds to one
 artifact, the coach, and every lesson contributes to it (no separate transfer
 exercise on an unrelated domain).

@@ -46,7 +46,7 @@ paths the written lessons cite, the video and the prose stay in lockstep.
 - **Script-writing trigger (per module):** once a module's lessons are authored
   and approved, write that module's **verbatim narration and explicit
   screen-recording description** into `script.md`. Module 0 can be written as soon
-  as Module 0's lessons land; Modules 1–6 follow their lessons after the
+  as Module 0's lessons land; Modules 1-6 follow their lessons after the
   tone/citation checkpoint. The runtime budget and structure are fixed up front so
   only the words and the shot list are added.
 

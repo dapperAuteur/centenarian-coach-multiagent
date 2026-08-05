@@ -30,7 +30,7 @@ export function InputSafetyNotice({ className = "" }: InformationalNoticeProps) 
     >
       <p>
         <span className="font-semibold">Informational only.</span> This coach
-        is not medical advice — see a qualified professional before acting on
+        is not medical advice; see a qualified professional before acting on
         anything here. For mental health questions and their other
         specialties, contact{" "}
         <a
@@ -65,7 +65,7 @@ export function ResponseSafetyNotice({
       aria-label="Informational-use notice"
       className={`rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs leading-relaxed text-amber-900 ${className}`.trim()}
     >
-      Informational only — talk to a professional before implementing any of
+      Informational only: talk to a professional before implementing any of
       this. Mental health questions:{" "}
       <a
         href="https://risewellnessofindiana.com"
@@ -75,8 +75,8 @@ export function ResponseSafetyNotice({
       >
         Rise Wellness of Indiana
         <span className="sr-only"> (opens in new tab)</span>
-      </a>{" "}
-      — details in the footer.
+      </a>
+      . Details in the footer.
     </p>
   );
 }
