@@ -66,8 +66,19 @@ graph TD
     TOOLS -->|yes| TOOLCALL[Call tools]
     TOOLS -->|no| ANSWER
     TOOLCALL --> ANSWER[Compose finding with citations]
-    ANSWER --> OUT([Specialist finding])
+    ANSWER --> VERIFY[Verify citation coverage]
+    VERIFY -->|unsupported claims| REVISE[Revise once: ground or cut]
+    VERIFY -->|clean| OUT
+    REVISE --> OUT([Specialist finding])
 ```
+
+The verify step is a second, temperature-0 model call that checks every
+substantive claim in the draft against the retrieved sources and tool
+results (the same cite-or-drop rule the compose prompt carries). If it finds
+unsupported claims, the composer gets exactly one revision pass — ground
+each claim or cut it — and the result ships with `citationCheck` telemetry
+on the finding. A verifier failure never blocks the answer; it is recorded
+as `verifierError` instead.
 
 ---
 

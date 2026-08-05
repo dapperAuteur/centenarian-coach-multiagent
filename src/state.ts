@@ -20,12 +20,27 @@ export interface ToolCallRecord {
   output: unknown;
 }
 
+/**
+ * Telemetry from the citation-coverage verify gate (see
+ * src/agents/verify-citations.ts). Optional so nothing downstream breaks
+ * when the gate is absent; the admin/report surface reads it later.
+ */
+export interface CitationCheck {
+  /** Substantive claims the verifier found unsupported by sources/tools. */
+  unsupportedCount: number;
+  /** True when the one-shot revision pass ran and replaced the draft. */
+  revised: boolean;
+  /** True when the verifier (or reviser) call itself failed; the draft passed through unverified. */
+  verifierError?: boolean;
+}
+
 export interface SpecialistFinding {
   agent: Agent;
   text: string;
   citations: Citation[];
   toolCalls: ToolCallRecord[];
   durationMs: number;
+  citationCheck?: CitationCheck;
 }
 
 export interface RoutingDecision {

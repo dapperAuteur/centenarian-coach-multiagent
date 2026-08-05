@@ -18,6 +18,7 @@ import { coachGraph } from "@/graph";
 import { setTracing } from "@/lib/langsmith";
 import { getSettings } from "@/lib/settings";
 import { persistSession } from "@/lib/sessions";
+import { recordSafetyEvent } from "@/lib/safety-classifier";
 import type {
   CoachState,
   FinalAnswer,
@@ -128,6 +129,7 @@ export async function POST(req: Request): Promise<Response> {
 
         // Persist the completed run. Best-effort: a DB failure must not break
         // the response the user already received.
+        let sessionPersisted = false;
         try {
           await persistSession({
             sessionId,
@@ -137,11 +139,26 @@ export async function POST(req: Request): Promise<Response> {
             finalAnswer: finalAnswer ?? null,
             langsmithRunId,
           });
+          sessionPersisted = true;
         } catch (persistErr) {
           console.error("Failed to persist coach session:", persistErr);
         }
 
         send({ type: "done", langsmithRunId });
+
+        // Safety telemetry (BAM's safety-report requirement): classify the
+        // completed exchange and record a safety_events row when a trigger
+        // fired. Runs after "done" so it adds no perceived latency, but is
+        // awaited so the work finishes before this serverless function
+        // freezes. recordSafetyEvent never throws (logs and swallows), and
+        // is skipped when the session row wasn't persisted (FK target).
+        if (sessionPersisted && finalAnswer?.text) {
+          await recordSafetyEvent({
+            sessionId,
+            userQuery,
+            finalAnswerText: finalAnswer.text,
+          });
+        }
       } catch (err) {
         console.error(`[coach/query] (requestId=${requestId})`, err);
         send({

@@ -142,7 +142,7 @@ export default function SignInForm() {
           <p className="mt-1 text-gray-700">
             We sent a sign-in link to{" "}
             <span className="font-mono">{normalized}</span>. The link expires
-            shortly. You can close this tab once you've signed in.
+            shortly. You can close this tab once you&apos;ve signed in.
           </p>
         </section>
       )}
@@ -153,9 +153,9 @@ export default function SignInForm() {
             This app is private right now
           </p>
           <p className="mt-1 text-gray-700">
-            It's a single-admin demo while we get the rough edges off. If you'd
+            It&apos;s a single-admin demo while we get the rough edges off. If you&apos;d
             like to use it when paid access opens up, drop your email on the
-            waitlist and we'll let you know.
+            waitlist and we&apos;ll let you know.
           </p>
           <button
             type="button"
@@ -166,7 +166,7 @@ export default function SignInForm() {
             Notify me when paid access is available
           </button>
           <p className="mt-2 text-xs text-gray-500">
-            We'll only use <span className="font-mono">{normalized}</span> to
+            We&apos;ll only use <span className="font-mono">{normalized}</span> to
             email you when access opens. No magic link has been sent.
           </p>
         </section>
@@ -178,9 +178,9 @@ export default function SignInForm() {
 
       {status === "waitlisted" && (
         <section className="mt-8 rounded-lg border border-emerald-200 bg-emerald-50 p-5 text-sm">
-          <p className="font-semibold text-gray-900">You're on the list</p>
+          <p className="font-semibold text-gray-900">You&apos;re on the list</p>
           <p className="mt-1 text-gray-700">
-            Thanks, we'll email <span className="font-mono">{normalized}</span>{" "}
+            Thanks, we&apos;ll email <span className="font-mono">{normalized}</span>{" "}
             when paid access opens. Nothing else needed from you.
           </p>
         </section>

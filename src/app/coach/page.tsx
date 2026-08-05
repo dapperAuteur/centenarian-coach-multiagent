@@ -9,6 +9,10 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ErrorNotice from "@/components/ErrorNotice";
+import {
+  InputSafetyNotice,
+  ResponseSafetyNotice,
+} from "@/components/InformationalNotice";
 import { extractApiError } from "@/lib/client-errors";
 import { signOutAction } from "@/app/actions/auth";
 import type {
@@ -176,7 +180,9 @@ export default function CoachPage() {
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="mt-6 flex gap-2">
+      <InputSafetyNotice className="mt-6" />
+
+      <form onSubmit={onSubmit} className="mt-3 flex gap-2">
         <input
           type="text"
           value={query}
@@ -234,6 +240,7 @@ export default function CoachPage() {
 
       {answer && (
         <section className="mt-6">
+          <ResponseSafetyNotice className="mb-3" />
           <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
             Answer
           </h2>
