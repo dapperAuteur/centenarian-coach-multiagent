@@ -322,12 +322,16 @@ export default function CoachPage() {
 }
 
 function CitationList({ citations }: { citations: Citation[] }) {
-  const byAgent = new Map<Agent, Citation[]>();
-  for (const c of citations) {
-    const list = byAgent.get(c.agent) ?? [];
-    list.push(c);
-    byAgent.set(c.agent, list);
-  }
+  // The answer's inline [n] markers refer to positions in this array (the
+  // synthesizer's flatMapped, globally renumbered citations), so each entry
+  // shows its GLOBAL 1-based number. The array is agent-contiguous (fixed
+  // specialist order), so grouping by agent preserves that numbering.
+  const byAgent = new Map<Agent, Array<{ citation: Citation; n: number }>>();
+  citations.forEach((citation, i) => {
+    const list = byAgent.get(citation.agent) ?? [];
+    list.push({ citation, n: i + 1 });
+    byAgent.set(citation.agent, list);
+  });
   return (
     <div className="mt-2 space-y-3">
       {[...byAgent.entries()].map(([agent, list]) => (
@@ -336,13 +340,14 @@ function CitationList({ citations }: { citations: Citation[] }) {
             {agent}
           </p>
           <ul className="mt-1 space-y-1">
-            {list.map((c, i) => (
+            {list.map(({ citation, n }) => (
               <li
-                key={`${agent}-${i}`}
+                key={`${agent}-${n}`}
                 className="rounded border border-gray-200 px-2 py-1 text-xs text-gray-700"
               >
-                <span className="font-medium">{c.source}</span>
-                <span className="text-gray-500">: {c.snippet}</span>
+                <span className="font-mono text-gray-400">[{n}]</span>{" "}
+                <span className="font-medium">{citation.source}</span>
+                <span className="text-gray-500">: {citation.snippet}</span>
               </li>
             ))}
           </ul>

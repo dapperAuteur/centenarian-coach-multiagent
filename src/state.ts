@@ -32,6 +32,12 @@ export interface CitationCheck {
   revised: boolean;
   /** True when the verifier (or reviser) call itself failed; the draft passed through unverified. */
   verifierError?: boolean;
+  /**
+   * Count of DISTINCT inline markers "[n]" in the draft that referenced no
+   * entry of the numbered source list (deterministic pre-check in
+   * src/agents/verify-citations.ts). Present only when > 0.
+   */
+  markersOutOfRange?: number;
 }
 
 export interface SpecialistFinding {

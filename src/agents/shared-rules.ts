@@ -6,9 +6,15 @@
 
 /**
  * Cite-or-drop: the fix for the eval's `cx.no_uncited_claims` finding
- * (57.1% pass on 2026-08-03 — specialists appended uncited closing advice).
+ * (57.1% pass on 2026-08-03 — specialists appended uncited closing advice;
+ * still 66.7% on 2026-08-05 because unmarked prose left claims untraceable
+ * to specific sources). Per BAM's 2026-08-05 decision the rule now ALSO
+ * requires claim-level inline markers, so every claim is traceable to the
+ * numbered source that grounds it.
  */
-export const CITE_OR_DROP_RULE = `Cite-or-drop rule: every substantive recommendation and factual claim in your answer must be supported by the retrieved sources or tool results provided to you. If you cannot ground a piece of advice in them, cut it. Do not append general closing advice, motivational add-ons, or "also consider" suggestions that your sources do not support, no matter how sensible they seem. Conversational framing (greetings, transitions, restating the user's situation) is exempt from this rule.`;
+export const CITE_OR_DROP_RULE = `Cite-or-drop rule: every substantive recommendation and factual claim in your answer must be supported by the retrieved sources or tool results provided to you. If you cannot ground a piece of advice in them, cut it. Do not append general closing advice, motivational add-ons, or "also consider" suggestions that your sources do not support, no matter how sensible they seem.
+
+Inline citation markers: mark every substantive claim or recommendation with the number(s) of the retrieved source(s) that support it, in square brackets immediately after the claim, matching the numbering of the retrieved-sources list you were given (for example: "aim for 1.6 g of protein per kg [2]"). A claim drawing on several sources carries several markers ("[1][3]"). A claim grounded only in a tool result (not a numbered source) needs no marker. Use only numbers that appear in the retrieved-sources list; never invent a number. Conversational framing (greetings, transitions, restating the user's situation) is exempt from this rule and carries no markers.`;
 
 /**
  * Safety escalation: the fix for the eval's scope-safety misses
