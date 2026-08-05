@@ -1,6 +1,6 @@
 // src/agents/recovery/subgraph.ts
 // The Recovery specialist as its own compiled StateGraph:
-//   retrieve -> assess -> (tools | compose) -> compose -> END
+//   retrieve -> assess -> (tools | compose) -> compose -> verify -> END
 //
 // Its state schema has no `findings` channel — the Recovery graph physically
 // cannot read other specialists' findings. The adapter `recoveryNode` runs
@@ -11,11 +11,13 @@ import { z } from "zod";
 import { withRoleFallback } from "@/lib/with-fallback";
 import type {
   Citation,
+  CitationCheck,
   CoachState,
   CoachUpdate,
   SpecialistFinding,
   ToolCallRecord,
 } from "@/state";
+import { makeVerifyReviseNode } from "@/agents/verify-citations";
 import { retrieveRecoveryKb } from "./retrieval";
 import {
   sleepDataMock,
@@ -45,6 +47,7 @@ const RecoveryAnnotation = Annotation.Root({
   sleepArgs: Annotation<SleepDataInput | null>(),
   hrvArgs: Annotation<HrvTrendInput | null>(),
   draftText: Annotation<string>(),
+  citationCheck: Annotation<CitationCheck | undefined>(),
 });
 
 type RecoveryState = typeof RecoveryAnnotation.State;
@@ -137,11 +140,18 @@ async function composeNode(state: RecoveryState): Promise<RecoveryUpdate> {
   return { draftText: result.text };
 }
 
+/** Citation-coverage gate: verify the draft, revise at most once. */
+const verifyNode = makeVerifyReviseNode({
+  composeSystem: RECOVERY_COMPOSE_SYSTEM,
+  includeToolBlock: true,
+});
+
 const recoverySubgraph = new StateGraph(RecoveryAnnotation)
   .addNode("retrieve", retrieveNode)
   .addNode("assess", assessNode)
   .addNode("tools", toolsNode)
   .addNode("compose", composeNode)
+  .addNode("verify", verifyNode)
   .addEdge(START, "retrieve")
   .addEdge("retrieve", "assess")
   .addConditionalEdges(
@@ -150,7 +160,8 @@ const recoverySubgraph = new StateGraph(RecoveryAnnotation)
     { tools: "tools", compose: "compose" },
   )
   .addEdge("tools", "compose")
-  .addEdge("compose", END)
+  .addEdge("compose", "verify")
+  .addEdge("verify", END)
   .compile();
 
 /**
@@ -172,6 +183,7 @@ export async function recoveryNode(state: CoachState): Promise<CoachUpdate> {
     citations: result.citations,
     toolCalls: result.toolCalls,
     durationMs: Date.now() - startedAt,
+    citationCheck: result.citationCheck,
   };
 
   return { findings: { recovery: finding } };

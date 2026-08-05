@@ -1,6 +1,6 @@
 // src/agents/corrective/subgraph.ts
 // The Corrective Exercise specialist as its own compiled StateGraph:
-//   retrieve -> compose -> END
+//   retrieve -> compose -> verify -> END
 //
 // Simpler than the other specialists because the v1 corrective agent has no
 // tools (no wearable mocks; no calculator). Its state schema has no
@@ -13,11 +13,13 @@ import { z } from "zod";
 import { withRoleFallback } from "@/lib/with-fallback";
 import type {
   Citation,
+  CitationCheck,
   CoachState,
   CoachUpdate,
   SpecialistFinding,
   ToolCallRecord,
 } from "@/state";
+import { makeVerifyReviseNode } from "@/agents/verify-citations";
 import { retrieveCorrectiveKb } from "./retrieval";
 import { CORRECTIVE_COMPOSE_SYSTEM } from "./prompts";
 
@@ -35,6 +37,7 @@ const CorrectiveAnnotation = Annotation.Root({
     default: () => [],
   }),
   draftText: Annotation<string>(),
+  citationCheck: Annotation<CitationCheck | undefined>(),
 });
 
 type CorrectiveState = typeof CorrectiveAnnotation.State;
@@ -84,12 +87,24 @@ async function composeNode(state: CorrectiveState): Promise<CorrectiveUpdate> {
   return { draftText: result.text };
 }
 
+/**
+ * Citation-coverage gate: verify the draft, revise at most once. The
+ * corrective compose message has no tool block (v1 has no tools), so the
+ * revision message omits it too.
+ */
+const verifyNode = makeVerifyReviseNode({
+  composeSystem: CORRECTIVE_COMPOSE_SYSTEM,
+  includeToolBlock: false,
+});
+
 const correctiveSubgraph = new StateGraph(CorrectiveAnnotation)
   .addNode("retrieve", retrieveNode)
   .addNode("compose", composeNode)
+  .addNode("verify", verifyNode)
   .addEdge(START, "retrieve")
   .addEdge("retrieve", "compose")
-  .addEdge("compose", END)
+  .addEdge("compose", "verify")
+  .addEdge("verify", END)
   .compile();
 
 /**
@@ -114,6 +129,7 @@ export async function correctiveNode(
     citations: result.citations,
     toolCalls: result.toolCalls,
     durationMs: Date.now() - startedAt,
+    citationCheck: result.citationCheck,
   };
 
   return { findings: { corrective: finding } };

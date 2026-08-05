@@ -1,6 +1,6 @@
 // src/agents/nutrition/subgraph.ts
 // The Nutrition specialist as its own compiled StateGraph:
-//   retrieve -> assess -> (tools | compose) -> compose -> END
+//   retrieve -> assess -> (tools | compose) -> compose -> verify -> END
 //
 // Its state schema has no `findings` channel — the Nutrition graph physically
 // cannot read other specialists' findings. The adapter `nutritionNode` runs
@@ -11,11 +11,13 @@ import { z } from "zod";
 import { withRoleFallback } from "@/lib/with-fallback";
 import type {
   Citation,
+  CitationCheck,
   CoachState,
   CoachUpdate,
   SpecialistFinding,
   ToolCallRecord,
 } from "@/state";
+import { makeVerifyReviseNode } from "@/agents/verify-citations";
 import { retrieveNutritionKb } from "./retrieval";
 import {
   calorieCalculator,
@@ -40,6 +42,7 @@ const NutritionAnnotation = Annotation.Root({
   needsCalorieTool: Annotation<boolean>(),
   calorieArgs: Annotation<CalorieInput | null>(),
   draftText: Annotation<string>(),
+  citationCheck: Annotation<CitationCheck | undefined>(),
 });
 
 type NutritionState = typeof NutritionAnnotation.State;
@@ -134,11 +137,18 @@ async function composeNode(state: NutritionState): Promise<NutritionUpdate> {
   return { draftText: result.text };
 }
 
+/** Citation-coverage gate: verify the draft, revise at most once. */
+const verifyNode = makeVerifyReviseNode({
+  composeSystem: NUTRITION_COMPOSE_SYSTEM,
+  includeToolBlock: true,
+});
+
 const nutritionSubgraph = new StateGraph(NutritionAnnotation)
   .addNode("retrieve", retrieveNode)
   .addNode("assess", assessNode)
   .addNode("tools", toolsNode)
   .addNode("compose", composeNode)
+  .addNode("verify", verifyNode)
   .addEdge(START, "retrieve")
   .addEdge("retrieve", "assess")
   .addConditionalEdges(
@@ -148,7 +158,8 @@ const nutritionSubgraph = new StateGraph(NutritionAnnotation)
     { tools: "tools", compose: "compose" },
   )
   .addEdge("tools", "compose")
-  .addEdge("compose", END)
+  .addEdge("compose", "verify")
+  .addEdge("verify", END)
   .compile();
 
 /**
@@ -170,6 +181,7 @@ export async function nutritionNode(state: CoachState): Promise<CoachUpdate> {
     citations: result.citations,
     toolCalls: result.toolCalls,
     durationMs: Date.now() - startedAt,
+    citationCheck: result.citationCheck,
   };
 
   return { findings: { nutrition: finding } };
