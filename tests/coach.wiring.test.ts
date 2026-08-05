@@ -41,6 +41,9 @@ function makeMockModel() {
               return { sleepArgs: null, hrvArgs: null };
             case "compose_finding":
               return { text: "Mock specialist finding.\n\nSecond paragraph." };
+            case "verify_citations":
+              // Citation-coverage gate passes: no unsupported claims.
+              return { unsupportedClaims: [] };
             case "synthesize_answer":
               return { text: "Mock synthesized answer.\n\nSecond paragraph." };
             default:
@@ -97,6 +100,11 @@ describe("coach graph wiring (mocked — no API keys)", () => {
     expect(result.routing?.agents).toEqual(["nutrition"]);
     expect(result.findings.nutrition?.agent).toBe("nutrition");
     expect(result.findings.nutrition?.citations).toHaveLength(2);
+    // The verify node ran and the adapter mapped its telemetry.
+    expect(result.findings.nutrition?.citationCheck).toEqual({
+      unsupportedCount: 0,
+      revised: false,
+    });
     expect(result.findings.workout).toBeUndefined();
     expect(result.findings.recovery).toBeUndefined();
 
