@@ -512,11 +512,23 @@ I run CentenarianOS, a personal operating system for living a long, healthy life
 
 Twenty of the 21 cases are counted; one errored on the current build and is excluded from both arms rather than scored as a failure. Method and rubric: [`witus-agent-evals`](https://github.com/dapperAuteur/witus-agent-evals), dataset pack `coach_arch_ab`.
 
-**Two things in that table are not the story I used to tell.**
+**The completeness result is not the story I used to tell.**
 
 I used to say cross-domain questions were the problem. They were not, or not mainly. Split by question type, the v2 shape scored 46.7% on **single-domain** questions and 60.0% on multi-domain ones, and the rebuild took single-domain to 100% and multi-domain only to 80%. The old design was shallow on simple questions too, and slightly worse there. My diagnosis was backwards.
 
-And the rebuild cost something. **Actionability fell 10 points.** Answers got more complete and less specific: more of them cover every angle without landing on a number, a set range, or a decision rule. That is a real regression, it is tracked as [an open finding](./plans/11-actionability-regression.md), and I would not have found it if the comparison had only measured the thing I expected to win. Median latency also went from 9.2s to 45.2s per answer, which is what fanning out to a supervisor and four specialists costs.
+Median latency went from 9.2s to 45.2s per answer, which is what fanning out to a supervisor and four specialists costs.
+
+### What I am NOT claiming, and why
+
+The table above showed actionability falling 10 points. **I am withdrawing that as a finding.** Two problems surfaced when I went looking for its cause, and both are mine:
+
+**The judge is not stable enough to support it.** A follow-up run of five of those cases, on an unchanged configuration, scored 3 of 5 on actionability where the original run scored 0 of 5. A criterion that moves that far with nothing changed cannot resolve a 10-point difference. The completeness result survives this, because a 45-point gap is far outside that noise; the 5-point safety difference was never a finding either.
+
+**One arm may not have run entirely on the model I said it did.** `COACH_FALLBACK_PROVIDERS` was set during the run, so a failed Anthropic call inside a specialist would have been answered by a free fallback model without saying so. The single-call arm had no such fallback. "Same model on both arms" is what I intended and not something I verified.
+
+What I found instead, chasing that number, was a real bug: retrieval deduped by page label rather than chunk id, so the highest-ranked chunk on a page reached the model and its siblings were discarded. The prescriptive content in this corpus (rep ranges, sets, %1RM) sits in flattened tables that rank below the conceptual prose on the same page, so the numbers lost that race almost every time. On one case the retrieved page contained "~12-20 repetitions, ~1-3 sets, ~50-70% 1RM" and the model was handed the paragraph next to it instead. That is fixed, with regression tests.
+
+Whether the rebuild costs actionability at all is now an open question rather than a result. Tracking in [plans/11](./plans/11-actionability-regression.md), to be re-measured with a stabilized judge before anything goes back in this table.
 
 I also ran this on both providers. It is one codebase with a provider switch (`COACH_LLM_PROVIDER`), not two builds, and running it on Gemini is what surfaced the structured-output bug documented above. The honest comparison is in the SWOT post linked above. Multi-agent is the workload where the model choice matters most.
 
