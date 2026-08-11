@@ -499,9 +499,9 @@ The three repos together cover the three patterns that show up most in productio
 
 ## Why this exists
 
-I run CentenarianOS, a personal operating system for living a long, healthy life. The AI coach inside it started as one prompt and one retrieval call. Cross-domain questions kept returning shallow answers. Rebuilding the coach as a supervisor with specialist subgraphs took a week and made the answers materially better.
+I run CentenarianOS, a personal operating system for living a long, healthy life. The AI coach inside it started as one prompt and no retrieval at all: a single Gemini call with context assembled from a fixed set of structured Supabase queries, plus any uploaded documents pasted in as plain text. Cross-domain questions kept returning shallow answers. Rebuilding the coach as a supervisor with specialist subgraphs, each with its own pgvector namespace, took a week. I did not run a before-and-after evaluation on that change, so the improvement is my judgment, not a measurement.
 
-I also built this twice, once on Claude, once on Gemini. The Claude version is in this repo. The honest comparison is in the SWOT post linked above. Multi-agent is the workload where the model choice matters most.
+I also ran this on both providers. It is one codebase with a provider switch (`COACH_LLM_PROVIDER`), not two builds, and running it on Gemini is what surfaced the structured-output bug documented above. The honest comparison is in the SWOT post linked above. Multi-agent is the workload where the model choice matters most.
 
 If you are building a domain-spanning agent, a finance assistant, a multi-product support tool, a coding helper that needs to know multiple frameworks, the supervisor + specialist pattern is what you eventually arrive at. The five lessons in `/docs/lessons/` are how I would have wanted to learn this six months ago.
 
