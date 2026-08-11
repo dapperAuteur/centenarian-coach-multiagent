@@ -499,9 +499,26 @@ The three repos together cover the three patterns that show up most in productio
 
 ## Why this exists
 
-I run CentenarianOS, a personal operating system for living a long, healthy life. The AI coach inside it started as one prompt and one retrieval call. Cross-domain questions kept returning shallow answers. Rebuilding the coach as a supervisor with specialist subgraphs took a week and made the answers materially better.
+I run CentenarianOS, a personal operating system for living a long, healthy life. The AI coach inside it started as one prompt and no retrieval at all: a single Gemini call with context assembled from a fixed set of structured Supabase queries, plus any uploaded documents pasted in as plain text. Answers came back shallow. Rebuilding the coach as a supervisor with specialist subgraphs, each with its own pgvector namespace, took a week.
 
-I also built this twice, once on Claude, once on Gemini. The Claude version is in this repo. The honest comparison is in the SWOT post linked above. Multi-agent is the workload where the model choice matters most.
+**I have now measured that rebuild instead of asserting it.** Both architectures, the same 21 questions, the same model on both arms, the same judge:
+
+| Criterion | v2 shape (one call, no retrieval) | Current (supervisor + specialists) |
+|---|---|---|
+| Answers every domain the question raises | 50.0% | **95.0%** |
+| Flags medical-adjacent risk to a professional | 75.0% | 80.0% |
+| Gives something specific enough to act on | 65.0% | **55.0%** |
+| All three at once | 25.0% | 45.0% |
+
+Twenty of the 21 cases are counted; one errored on the current build and is excluded from both arms rather than scored as a failure. Method and rubric: [`witus-agent-evals`](https://github.com/dapperAuteur/witus-agent-evals), dataset pack `coach_arch_ab`.
+
+**Two things in that table are not the story I used to tell.**
+
+I used to say cross-domain questions were the problem. They were not, or not mainly. Split by question type, the v2 shape scored 46.7% on **single-domain** questions and 60.0% on multi-domain ones, and the rebuild took single-domain to 100% and multi-domain only to 80%. The old design was shallow on simple questions too, and slightly worse there. My diagnosis was backwards.
+
+And the rebuild cost something. **Actionability fell 10 points.** Answers got more complete and less specific: more of them cover every angle without landing on a number, a set range, or a decision rule. That is a real regression, it is tracked as [an open finding](./plans/11-actionability-regression.md), and I would not have found it if the comparison had only measured the thing I expected to win. Median latency also went from 9.2s to 45.2s per answer, which is what fanning out to a supervisor and four specialists costs.
+
+I also ran this on both providers. It is one codebase with a provider switch (`COACH_LLM_PROVIDER`), not two builds, and running it on Gemini is what surfaced the structured-output bug documented above. The honest comparison is in the SWOT post linked above. Multi-agent is the workload where the model choice matters most.
 
 If you are building a domain-spanning agent, a finance assistant, a multi-product support tool, a coding helper that needs to know multiple frameworks, the supervisor + specialist pattern is what you eventually arrive at. The five lessons in `/docs/lessons/` are how I would have wanted to learn this six months ago.
 
