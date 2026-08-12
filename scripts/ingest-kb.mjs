@@ -37,6 +37,9 @@ import {
 } from "node:fs";
 import { basename, extname, join, resolve } from "node:path";
 import { getDocumentProxy, extractText } from "unpdf";
+// Chunking lives in its own module so tests can exercise it without running
+// this script's main(). See scripts/chunk-kb.mjs.
+import { MIN_CHUNK_WORDS, splitIntoChunks, wordCount } from "./chunk-kb.mjs";
 
 // ---------------------------------------------------------------------------
 // Inputs. Directories come from env vars (comma-separated, merged per
@@ -58,72 +61,6 @@ const INPUTS = NAMESPACE_INPUTS.flatMap(({ env, namespace, cert }) =>
     .filter(Boolean)
     .map((dir) => ({ dir, namespace, cert })),
 );
-
-// ---------------------------------------------------------------------------
-// Chunking.
-// ---------------------------------------------------------------------------
-
-const MIN_CHUNK_WORDS = 20;
-const TARGET_CHUNK_WORDS = 80;
-const MAX_CHUNK_WORDS = 140;
-
-function wordCount(text) {
-  return (text.match(/\S+/g) ?? []).length;
-}
-
-/** Split one cleaned page into chunks of roughly TARGET_CHUNK_WORDS words,
- * preferring paragraph boundaries and falling back to sentences. Paragraphs
- * shorter than MIN_CHUNK_WORDS are merged forward; paragraphs longer than
- * MAX_CHUNK_WORDS are split at sentence boundaries. */
-function splitIntoChunks(pageText) {
-  const paragraphs = pageText
-    .split(/\n\s*\n/)
-    .map((p) => p.replace(/\s+/g, " ").trim())
-    .filter((p) => p.length > 0);
-
-  const chunks = [];
-  let buf = "";
-  let bufWords = 0;
-
-  function flush() {
-    if (buf && bufWords >= MIN_CHUNK_WORDS) chunks.push(buf);
-    buf = "";
-    bufWords = 0;
-  }
-
-  for (const para of paragraphs) {
-    const w = wordCount(para);
-    if (w >= MAX_CHUNK_WORDS) {
-      flush();
-      const sentences = para.match(/[^.!?]+[.!?]+/g) ?? [para];
-      let s = "";
-      let sw = 0;
-      for (const sent of sentences) {
-        const sentWords = wordCount(sent);
-        if (sw + sentWords > MAX_CHUNK_WORDS && sw >= MIN_CHUNK_WORDS) {
-          chunks.push(s.trim());
-          s = sent;
-          sw = sentWords;
-        } else {
-          s += (s ? " " : "") + sent;
-          sw += sentWords;
-        }
-      }
-      if (s && sw >= MIN_CHUNK_WORDS) chunks.push(s.trim());
-      continue;
-    }
-    if (bufWords + w > TARGET_CHUNK_WORDS && bufWords >= MIN_CHUNK_WORDS) {
-      chunks.push(buf);
-      buf = para;
-      bufWords = w;
-    } else {
-      buf = buf ? `${buf} ${para}` : para;
-      bufWords += w;
-    }
-  }
-  flush();
-  return chunks;
-}
 
 // ---------------------------------------------------------------------------
 // Page cleaning.
