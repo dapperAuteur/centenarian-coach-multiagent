@@ -34,6 +34,10 @@ import { withRoleFallback } from "@/lib/with-fallback";
 import { findOutOfRangeMarkers } from "@/lib/citation-markers";
 import type { Citation, CitationCheck, ToolCallRecord } from "@/state";
 import { CITE_OR_DROP_RULE } from "./shared-rules";
+import {
+  checkSpecificity,
+  specificityRevisionNote,
+} from "./specificity-gate";
 
 export const VERIFY_CITATIONS_SYSTEM = `You are a citation-coverage verifier for a health-coach specialist. The specialist composed a draft answer under this rule:
 
@@ -191,12 +195,23 @@ export function makeVerifyReviseNode(options: {
       toolCalls: state.toolCalls,
     });
 
+    // Deterministic specificity gate, run alongside the citation check. Pure
+    // regex over the retrieved snippets and the draft: no model call, so it
+    // cannot fail for infrastructure reasons the way the LLM verifier can.
+    // Fails only when the sources offered concrete numbers and the draft kept
+    // none of them. See specificity-gate.ts for why this is mechanical rather
+    // than a line in the compose prompt.
+    const specificity = checkSpecificity({
+      draftText: state.draftText,
+      sourceText: state.citations.map((c) => c.snippet).join("\n"),
+    });
+
     const markersOutOfRangeTelemetry =
       check.outOfRangeMarkers.length > 0
         ? { markersOutOfRange: check.outOfRangeMarkers.length }
         : {};
 
-    if (check.pass) {
+    if (check.pass && specificity.pass) {
       return {
         citationCheck: {
           unsupportedCount: check.unsupportedClaims.length,
@@ -213,6 +228,7 @@ export function makeVerifyReviseNode(options: {
       ? `Question: ${state.subQuestion}\n\nRetrieved sources:\n${sourcesBlock}\n\nTool results:\n${formatToolBlock(state.toolCalls)}`
       : `Question: ${state.subQuestion}\n\nRetrieved sources:\n${sourcesBlock}`;
     const problems = [
+      ...(specificity.pass ? [] : [specificityRevisionNote(specificity)]),
       ...check.outOfRangeMarkers.map(
         (n) =>
           `- The inline marker [${n}] does not refer to any of the ${state.citations.length} numbered retrieved sources. Replace it with the correct source number, or cut the claim if no provided source supports it.`,
