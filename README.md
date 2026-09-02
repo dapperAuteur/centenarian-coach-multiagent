@@ -237,7 +237,7 @@ exercise on an unrelated domain).
 | Models           | Claude Sonnet 4.6 + Haiku 4.5, or Gemini 2.5 Flash, switchable |
 | Embeddings       | Gemini `gemini-embedding-001` (768-dim)     |
 | ORM + vector     | Drizzle ORM · Postgres + pgvector (Neon)    |
-| Auth             | Auth.js v5 email magic link (Mailgun), single-admin gate, waitlist for everyone else · optional "Sign in with WitUS" ecosystem OIDC with silent "Continue as <name>" and global sign-out |
+| Auth             | Auth.js v5 email magic link (Mailgun), single-admin gate, waitlist for everyone else (a refused sign-in routes to `/waitlist`) · optional "Sign in with WitUS" ecosystem OIDC with global sign-out ("Continue as <name>" is deliberately off on this admin-gated app) |
 | Observability    | LangSmith (fail-soft) · Better Stack error monitoring via `@sentry/nextjs`, inert without a DSN, health-privacy scrubber in `src/lib/sentry-scrub.ts` |
 | UI streaming     | NDJSON stream from a Next.js route handler  |
 | Testing          | Vitest                                      |
@@ -323,11 +323,27 @@ NEXT_PUBLIC_SENTRY_DSN=          # browser; same value, public by design
 See `.env.example` for the annotated list. LangSmith tracing is on by default but
 fail-soft, the app runs fine without `LANGSMITH_API_KEY`.
 
-### Ecosystem SSO: "Continue as <name>" and global sign-out
+### Ecosystem SSO: global sign-out (and why "Continue as <name>" is off here)
 
 Both features are **completely dark unless `WITUS_OIDC_CLIENT_ID` is set**. With no
 client id there is no probe request, no relabelled button, and sign-out stays purely
 local — an affordance a visitor cannot complete is worse than none.
+
+**"Continue as <name>" is deliberately OFF on this app** (`WITUS_SHOW_CONTINUE_AS = false`
+in [`src/lib/witus-sso.ts`](./src/lib/witus-sso.ts)). Centenarian Coach is admin-gated:
+`src/auth.ts` completes a sign-in only for `ADMIN_EMAIL`, but `/signin` is publicly
+reachable and the app cannot know who the browser is until the OIDC flow has already run.
+The probe answers "there is a WitUS session, and it belongs to Jane" — it **cannot**
+answer "Jane may sign in here", and it must never be asked to, because that answer crosses
+an origin boundary and gating access on it would be a security bug. So the honest option
+is not "probe and filter", it is **don't probe**: a personalized invitation to a door that
+gets slammed is worse than a plain door. Everyone sees the ordinary "Sign in with WitUS"
+button, and a non-admin who clicks it is routed to `/waitlist` (below) rather than a raw
+Auth.js error page. **This is an opt-out, not a deletion** — the probe, its helpers, and
+their tests stay in place as the shared ecosystem implementation for the open apps.
+
+The rest of this section describes that shared mechanism, which runs on apps that pass
+`showContinueAs` (default `true`).
 
 **Silent session check.** `/signin` renders exactly as before and, in parallel, asks
 `<idp-origin>/api/ecosystem/session` (derived from `WITUS_OIDC_DISCOVERY_URL`) whether
@@ -358,7 +374,35 @@ the trailing slash is mandatory, because the IdP exact-matches it against the UR
 registered for this client.
 
 [`tests/silent-sso.test.ts`](./tests/silent-sso.test.ts) pins all of it, including the
-sign-out ordering and the "the name never becomes a credential" assertions.
+sign-out ordering, the "the name never becomes a credential" assertions, and the
+admin-gated opt-out (the probe is skipped, and the mechanism is still intact).
+
+### A refused sign-in goes to `/waitlist`, not a wall
+
+`src/auth.config.ts` sets `pages.error = "/signin"`, so a failed sign-in comes back to
+this app instead of Auth.js's raw `/api/auth/error` page — which offers no message, no
+link back, and no route to anything.
+
+`pages.error` is **one URL for every failure**, so `/signin` reads the `?error=` code and
+branches ([`src/lib/auth-error.ts`](./src/lib/auth-error.ts)):
+
+| `?error=` | What happens |
+| --- | --- |
+| `AccessDenied` — the admin gate refused this account | redirect to `/waitlist?from=sso`: "That account doesn't have access here… want to join the waitlist?" |
+| `Verification` — an expired or already-used magic link | inline notice, "we'll send a fresh one", email form untouched |
+| `Configuration`, `OAuth*`, anything unknown | inline notice saying what happened, with the email form still available |
+
+That branching is **mandatory, not a nicety**: verified in `@auth/core` 0.41.2, both
+`AccessDenied` and `Verification` are plain `AuthError`s whose `kind` is `"error"`, so they
+arrive at the same page. Routing the whole page to the waitlist would tell an admin whose
+link merely expired that they have no access. [`tests/auth-error.test.ts`](./tests/auth-error.test.ts)
+pins the mapping.
+
+`/waitlist` posts to the **existing** `POST /api/waitlist` — the same endpoint the `/signin`
+email form uses, which inserts into the `waitlist` table (unique on email, so re-submitting
+is a no-op) and mirrors the signup to the central WitUS Inbox. No second waitlist mechanism
+was added. It asks for the address because Auth.js hands the error page a *code*, never the
+address that was refused; prefilling would mean guessing.
 
 ---
 

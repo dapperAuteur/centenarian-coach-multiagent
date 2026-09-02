@@ -327,3 +327,68 @@ describe("global sign-out", () => {
     );
   });
 });
+
+describe('the admin-gated opt-out: this app never says "Continue as <name>"', () => {
+  // BAM, 2026-09-01: "dont show them the 'continue as Jane'". Centenarian Coach
+  // admits only ADMIN_EMAIL, and it cannot know who the browser is until the OIDC
+  // flow has already run — so the only honest implementation is to not ask at all.
+  // These pin BOTH halves: the app is opted out, and the mechanism still works for
+  // the apps that keep it.
+
+  it("skips the probe outright when the app opts out, however well configured it is", () => {
+    for (const search of ["", "?sso=tried"]) {
+      for (const signedIn of [false, true]) {
+        expect(
+          silentSsoDecision({
+            endpoint: ENDPOINT,
+            search,
+            signedIn,
+            showContinueAs: false,
+          }),
+        ).toEqual({ attempt: false, skip: "continue-as-disabled" });
+      }
+    }
+  });
+
+  it("still probes for an app that has not opted out (the shared path is intact)", () => {
+    expect(
+      silentSsoDecision({ endpoint: ENDPOINT, search: "", showContinueAs: true }),
+    ).toEqual({ attempt: true });
+    // Omitting the flag keeps today's behaviour for every other ecosystem app.
+    expect(silentSsoDecision({ endpoint: ENDPOINT, search: "" })).toEqual({
+      attempt: true,
+    });
+  });
+
+  it("has this app opted out, and says why in the source", () => {
+    const sso = read("src/lib/witus-sso.ts");
+    expect(stripComments(sso)).toMatch(
+      /export const WITUS_SHOW_CONTINUE_AS = false/,
+    );
+    // The comment is load-bearing: without it a later session "restores" the
+    // personalized label as a missing feature.
+    expect(sso).toMatch(/admin-gated|ADMIN-GATED/i);
+    expect(sso).toMatch(/opt-out, not a deletion|OPT-OUT, NOT A DELETION/i);
+  });
+
+  it("wires the opt-out through the page to the button", () => {
+    const page = stripComments(read("src/app/signin/page.tsx"));
+    expect(page).toMatch(/showContinueAs=\{WITUS_SHOW_CONTINUE_AS\}/);
+    const button = stripComments(read("src/app/signin/WitusSsoButton.tsx"));
+    expect(button).toMatch(/showContinueAs,?\s*$/m);
+    // The flag reaches the decision helper, which is what actually stops the fetch.
+    expect(button).toMatch(/silentSsoDecision\(\{[\s\S]*?showContinueAs,[\s\S]*?\}\)/);
+  });
+
+  it("keeps the probe implementation and its label helper in place, not deleted", () => {
+    // The mechanism is shared with the open apps. An opt-out that deletes the code
+    // is not an opt-out.
+    expect(continueAsLabel({ label: "Jane" })).toBe("Continue as Jane");
+    expect(parseSilentSsoIdentity({ user: { name: "Jane" } })).toEqual({
+      label: "Jane",
+    });
+    expect(stripComments(read("src/app/signin/WitusSsoButton.tsx"))).toMatch(
+      /fetch\(endpoint/,
+    );
+  });
+});

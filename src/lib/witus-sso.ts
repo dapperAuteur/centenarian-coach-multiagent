@@ -64,3 +64,30 @@ export const witusEndSessionEndpoint: string | null = (() => {
   if (!base) return null;
   return `${base}?client_id=${encodeURIComponent(clientId)}`;
 })();
+
+/**
+ * SHOULD THE SIGN-IN PAGE OFFER "Continue as <name>"? NO, ON THIS APP.
+ *
+ * BAM, 2026-09-01: "if non-admin attempts to login, route them to waitlist and ask
+ * them if they want to join waitlist, dont show them the 'continue as Jane'".
+ *
+ * Centenarian Coach is ADMIN-GATED: src/auth.ts's `signIn` callback completes a
+ * sign-in only for ADMIN_EMAIL. /signin, however, is publicly reachable, and this
+ * app cannot know who the browser is until the OIDC flow has already run. The
+ * silent probe answers "there is a WitUS session, and it belongs to Jane" — it
+ * CANNOT answer "Jane may sign in here", and it must never be asked to: the answer
+ * arrives across an origin boundary, so it is display copy, and gating access on it
+ * would be a security bug (see src/lib/silent-sso.ts).
+ *
+ * That leaves exactly one honest option: don't ask. A personalized invitation to a
+ * door that will be slammed is worse than a plain door. Everyone still sees the
+ * ordinary "Sign in with WitUS" button; a non-admin who clicks it is now routed to
+ * /waitlist instead of a raw Auth.js error page (src/lib/auth-error.ts).
+ *
+ * THIS IS AN OPT-OUT, NOT A DELETION. The probe, its helpers, and their tests stay
+ * intact — they are the shared ecosystem implementation, and the open apps
+ * (learn.witus.online and friends) should keep using them. Flipping this to `true`
+ * on Centenarian Coach would restore the slammed-door experience, so don't, unless
+ * this app stops being single-admin.
+ */
+export const WITUS_SHOW_CONTINUE_AS = false;

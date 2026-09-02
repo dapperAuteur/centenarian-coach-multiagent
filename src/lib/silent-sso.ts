@@ -49,6 +49,7 @@ export interface SsoIdentity {
 }
 
 export type SilentSsoSkip =
+  | "continue-as-disabled"
   | "not-configured"
   | "already-attempted"
   | "already-signed-in";
@@ -68,13 +69,34 @@ export type SilentSsoDecision =
  * (Unlike learn.witus.online this app is single-tenant and WitUS-branded, so there
  * is no per-tenant white-label gate to check: every host that serves this app is a
  * WitUS host.)
+ *
+ * WHY AN APP WOULD TURN THIS OFF (`showContinueAs: false`). On an ADMIN-GATED app
+ * the personalized label is a promise the app cannot keep. This module CANNOT and
+ * MUST NOT tell an admin from a non-admin before the flow runs: the probe answer
+ * crosses an origin boundary, so it is client-supplied display copy, and gating
+ * access on it would be a security bug. So the honest alternative is not "probe and
+ * filter" — it is "do not probe". A visitor who is offered "Continue as Jane",
+ * clicks, spends a full OIDC round trip and is then refused has been invited to a
+ * door that gets slammed; the plain "Sign in with WitUS" button makes the same
+ * refusal without the personal invitation. DO NOT "restore" the personalized label
+ * on centenarian-coach-multiagent or witus-inbox as a missing feature — it is
+ * deliberately off there (BAM, 2026-09-01), while the mechanism below stays intact
+ * and shared for the open apps that should use it.
  */
 export function silentSsoDecision(input: {
   endpoint: string | null | undefined;
   search?: string | null;
   attempted?: boolean;
   signedIn?: boolean;
+  showContinueAs?: boolean;
 }): SilentSsoDecision {
+  // APP POLICY, CHECKED FIRST. An app that admits only ADMIN_EMAIL passes
+  // `showContinueAs: false` and the probe never runs at all. See the
+  // "WHY AN APP WOULD TURN THIS OFF" note above `showContinueAs` in the doc
+  // comment, and WITUS_SHOW_CONTINUE_AS in src/lib/witus-sso.ts.
+  if (input.showContinueAs === false) {
+    return { attempt: false, skip: "continue-as-disabled" };
+  }
   if (!input.endpoint) return { attempt: false, skip: "not-configured" };
   if (input.signedIn) return { attempt: false, skip: "already-signed-in" };
   if (input.attempted || hasAttemptMarker(input.search)) {
