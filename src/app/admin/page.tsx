@@ -11,7 +11,8 @@ import { coachFeedback, waitlist } from "@/db/schema";
 import { getStoredSettings, providerOverride } from "@/lib/settings";
 import { COACH_PROVIDERS, type LlmProvider } from "@/lib/llm-config";
 import { SettingsForm } from "./SettingsForm";
-import { signOutAction } from "@/app/actions/auth";
+import SignOutButton from "@/components/SignOutButton";
+import { witusEndSessionEndpoint } from "@/lib/witus-sso";
 
 // Always render fresh — settings and waitlist rows both change at any time.
 export const dynamic = "force-dynamic";
@@ -69,14 +70,7 @@ export default async function AdminPage() {
           >
             History
           </Link>
-          <form action={signOutAction}>
-            <button
-              type="submit"
-              className="cursor-pointer border-0 bg-transparent p-0 text-gray-500 hover:text-gray-800 hover:underline"
-            >
-              Sign out
-            </button>
-          </form>
+          <SignOutButton endSessionUrl={witusEndSessionEndpoint} />
         </nav>
       </div>
 

@@ -237,7 +237,7 @@ exercise on an unrelated domain).
 | Models           | Claude Sonnet 4.6 + Haiku 4.5, or Gemini 2.5 Flash, switchable |
 | Embeddings       | Gemini `gemini-embedding-001` (768-dim)     |
 | ORM + vector     | Drizzle ORM · Postgres + pgvector (Neon)    |
-| Auth             | Auth.js v5 email magic link (Mailgun), single-admin gate, waitlist for everyone else |
+| Auth             | Auth.js v5 email magic link (Mailgun), single-admin gate, waitlist for everyone else · optional "Sign in with WitUS" ecosystem OIDC with silent "Continue as <name>" and global sign-out |
 | Observability    | LangSmith (fail-soft) · Better Stack error monitoring via `@sentry/nextjs`, inert without a DSN, health-privacy scrubber in `src/lib/sentry-scrub.ts` |
 | UI streaming     | NDJSON stream from a Next.js route handler  |
 | Testing          | Vitest                                      |
@@ -310,6 +310,11 @@ ADMIN_EMAIL=                     # the only address allowed to sign in; the
 EMAIL_SERVER=                    # Mailgun SMTP connection string
 EMAIL_FROM="WitUS Inbox <forms@mg.witus.online>"
 
+# Ecosystem SSO (optional): "Sign in with WitUS" + global sign-out
+WITUS_OIDC_CLIENT_ID=            # unset = both SSO features stay completely dark
+WITUS_OIDC_CLIENT_SECRET=
+WITUS_OIDC_DISCOVERY_URL=        # optional override of the accounts.witus.online default
+
 # Error monitoring (optional): Better Stack via the Sentry SDK
 SENTRY_DSN=                      # server + edge; unset = SDK fully inert
 NEXT_PUBLIC_SENTRY_DSN=          # browser; same value, public by design
@@ -317,6 +322,45 @@ NEXT_PUBLIC_SENTRY_DSN=          # browser; same value, public by design
 
 See `.env.example` for the annotated list. LangSmith tracing is on by default but
 fail-soft, the app runs fine without `LANGSMITH_API_KEY`.
+
+### Ecosystem SSO: "Continue as <name>" and global sign-out
+
+Both features are **completely dark unless `WITUS_OIDC_CLIENT_ID` is set**. With no
+client id there is no probe request, no relabelled button, and sign-out stays purely
+local — an affordance a visitor cannot complete is worse than none.
+
+**Silent session check.** `/signin` renders exactly as before and, in parallel, asks
+`<idp-origin>/api/ecosystem/session` (derived from `WITUS_OIDC_DISCOVERY_URL`) whether
+this browser already has a WitUS session. If it does, the existing "Sign in with WitUS"
+button relabels to "Continue as <name>". The probe carries the IdP cookie as a
+**third-party** cookie, so Safari ITP and Firefox Total Cookie Protection answer nothing
+— by design. A failed, blocked, or timed-out probe (4s) is invisible: no error, no
+spinner, no layout shift, and the ordinary button remains.
+
+The name it returns is **display copy, never a credential.** It crosses an origin
+boundary, so it is client-supplied by definition; it is sanitized (control characters
+stripped, trimmed, capped at 48 characters) and used for nothing but the label. Clicking
+the button runs the real OIDC code flow, which is the only thing that establishes
+identity.
+
+A one-shot loop guard (`sessionStorage` key `witus.sso.attempted`, written *before* the
+redirect, plus a `?sso=tried` query param for browsers with no usable storage) stops the
+probe -> click -> IdP declines -> probe cycle that a stale IdP session would otherwise
+cause.
+
+**Global sign-out** (BAM, 2026-08-30: signing out of one WitUS app signs you out of all
+of them). The button destroys the **local** session first and only then navigates to the
+IdP's `end_session_endpoint`. That order is the safety property: if the IdP is
+unreachable or refuses, the person is still signed out here. `client_id` is required on
+that request (better-auth rejects `post_logout_redirect_uri` without it or an
+`id_token_hint`), and `post_logout_redirect_uri` is `window.location.origin` + `"/"` —
+the trailing slash is mandatory, because the IdP exact-matches it against the URLs
+registered for this client.
+
+[`tests/silent-sso.test.ts`](./tests/silent-sso.test.ts) pins all of it, including the
+sign-out ordering and the "the name never becomes a credential" assertions.
+
+---
 
 ### Error monitoring and what it refuses to send
 
