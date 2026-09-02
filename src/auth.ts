@@ -9,6 +9,7 @@ import Nodemailer from "next-auth/providers/nodemailer";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { authConfig } from "@/auth.config";
 import { getDb } from "@/lib/db";
+import { witusDiscoveryUrl } from "@/lib/witus-sso";
 import {
   accounts,
   sessions,
@@ -43,9 +44,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             name: "WitUS",
             type: "oidc" as const,
             issuer: "https://accounts.witus.online/api/idp",
-            wellKnown:
-              process.env.WITUS_OIDC_DISCOVERY_URL ??
-              "https://accounts.witus.online/api/idp/.well-known/openid-configuration",
+            // Discovery URL (and its default) is resolved in one place —
+            // src/lib/witus-sso.ts — so the IdP host is never named twice. The
+            // silent-SSO probe and the global sign-out endpoint derive from the
+            // same value.
+            wellKnown: witusDiscoveryUrl,
             clientId: process.env.WITUS_OIDC_CLIENT_ID,
             clientSecret: process.env.WITUS_OIDC_CLIENT_SECRET ?? "",
             authorization: { params: { scope: "openid email profile" } },
