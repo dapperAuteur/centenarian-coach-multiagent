@@ -11,7 +11,7 @@ import { coachFeedback, waitlist } from "@/db/schema";
 import { getStoredSettings, providerOverride } from "@/lib/settings";
 import { COACH_PROVIDERS, type LlmProvider } from "@/lib/llm-config";
 import { SettingsForm } from "./SettingsForm";
-import SignOutButton from "@/components/SignOutButton";
+import SignOutButton, { SignOutEverywhereButton } from "@/components/SignOutButton";
 import { witusEndSessionEndpoint } from "@/lib/witus-sso";
 
 // Always render fresh — settings and waitlist rows both change at any time.
@@ -60,7 +60,7 @@ export default async function AdminPage() {
             Admin · Dashboard
           </h1>
         </div>
-        <nav className="flex shrink-0 items-center gap-3 text-xs">
+        <nav className="flex shrink-0 items-start gap-3 text-xs">
           <Link href="/admin/safety" className="text-sky-700 hover:underline">
             Safety
           </Link>
@@ -70,7 +70,10 @@ export default async function AdminPage() {
           >
             History
           </Link>
-          <SignOutButton endSessionUrl={witusEndSessionEndpoint} />
+          <SignOutButton />
+          {/* Renders only when this app is a configured WitUS client (BAM,
+              2026-10-29, witus task 128 option (b)). */}
+          <SignOutEverywhereButton endSessionUrl={witusEndSessionEndpoint} />
         </nav>
       </div>
 

@@ -43,9 +43,10 @@ export const witusSilentSsoEndpoint: string | null = witusSsoEnabled
   : null;
 
 /**
- * Where sign-out ends the SHARED WitUS session (BAM, 2026-08-30: signing out of
- * one WitUS app signs you out of all of them). `null` when SSO is not configured,
- * in which case sign-out falls back to today's purely-local behaviour.
+ * Where "Sign out of WitUS everywhere" ends the SHARED WitUS session. The plain
+ * "Sign out" never uses this; it ends only this app's session (BAM, 2026-10-29,
+ * witus task 128 option (b)). `null` when SSO is not configured, in which case
+ * the everywhere control does not render.
  *
  * client_id IS REQUIRED, not optional: better-auth's endsession endpoint rejects a
  * `post_logout_redirect_uri` with `invalid_request` unless the request carries a

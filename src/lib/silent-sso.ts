@@ -1,6 +1,6 @@
 // src/lib/silent-sso.ts
 // Pure helpers for the silent ecosystem-SSO check ("Continue as <name>") and for
-// global sign-out. No env access, no `next/headers`, no window access at module
+// "Sign out of WitUS everywhere". No env access, no `next/headers`, no window access at module
 // scope — the client button, the server pages, and the tests all import from here.
 // Env-derived values live in src/lib/witus-sso.ts (server only).
 //
@@ -180,10 +180,10 @@ export function silentSsoEndpointFromDiscovery(
  * The IdP's RP-initiated logout endpoint: `<basePath>/oauth2/endsession` — the
  * `end_session_endpoint` the discovery document advertises.
  *
- * BAM chose GLOBAL sign-out (2026-08-30): "signout signs out of every app".
- * Ending only this app's session leaves the shared IdP session alive, and with
- * "Continue as <name>" live that means signing out and coming back offers to sign
- * you straight back in — which reads as a broken logout.
+ * Used ONLY by "Sign out of WitUS everywhere". The plain "Sign out" ends this
+ * app's session alone and never navigates here (BAM, 2026-10-29, witus task 128
+ * option (b)); this endpoint ends the shared WitUS session, after which the next
+ * "Sign in with WitUS" shows the WitUS login page again.
  */
 export function endSessionEndpointFromDiscovery(
   discoveryUrl: string | null | undefined,

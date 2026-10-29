@@ -1,5 +1,5 @@
 // tests/silent-sso.test.ts
-// The silent ecosystem-SSO check ("Continue as <name>") and global sign-out.
+// The silent ecosystem-SSO check ("Continue as <name>") and "Sign out of WitUS everywhere".
 //
 // Pinned here in order of what each would cost if it broke:
 //   1. THE NAME IS NOT A CREDENTIAL. It crosses an origin boundary, so it is
@@ -245,7 +245,7 @@ describe("endpoints are derived, never a second hardcoded host", () => {
   });
 });
 
-describe("global sign-out", () => {
+describe("sign out of WitUS everywhere", () => {
   const BASE =
     "https://accounts.witus.online/api/idp/oauth2/endsession?client_id=witus-coach";
 
@@ -285,9 +285,11 @@ describe("global sign-out", () => {
   });
 
   it("destroys the local session BEFORE handing off to the IdP", () => {
-    const src = stripComments(read("src/components/SignOutButton.tsx"));
-    const destroy = src.indexOf("await signOutAction()");
-    const handoff = src.indexOf("window.location.assign");
+    // Behaviour is pinned in tests/sign-out.test.ts; this pins the source shape.
+    const flow = stripComments(read("src/lib/sign-out-flow.ts"));
+    const everywhere = flow.slice(flow.indexOf("export async function signOutEverywhere"));
+    const destroy = everywhere.indexOf("await deps.endLocalSession()");
+    const handoff = everywhere.indexOf("deps.assign(");
     expect(destroy).toBeGreaterThan(-1);
     expect(handoff).toBeGreaterThan(-1);
     // If the IdP is unreachable the person must still be signed out here.
@@ -296,11 +298,8 @@ describe("global sign-out", () => {
 
   it("uses a full navigation, not a router push, to leave this origin", () => {
     const src = stripComments(read("src/components/SignOutButton.tsx"));
-    expect(src).toMatch(/window\.location\.assign\(/);
-    // router.push survives only as the local-only fallback, after the early return.
-    expect(src.indexOf("window.location.assign")).toBeLessThan(
-      src.indexOf("router.push"),
-    );
+    expect(src).toMatch(/window\.location\.assign\(to\)/);
+    expect(src).not.toMatch(/router\.push\([^)]*endSessionUrl/);
   });
 
   it("reads the origin at click time instead of hardcoding a host", () => {
@@ -309,13 +308,15 @@ describe("global sign-out", () => {
     expect(src).not.toMatch(/witus\.online/);
   });
 
-  it("falls back to local-only sign-out when SSO is not configured", () => {
+  it("keeps plain \"Sign out\" local and never renames it (BAM, 2026-10-29, task 128 (b))", () => {
     const src = stripComments(read("src/components/SignOutButton.tsx"));
-    expect(src).toMatch(/if \(endSessionUrl\) \{/);
-    expect(src).toMatch(/router\.push\("\/"\)/);
-    // And the label tells the truth about which one happened.
-    expect(src).toMatch(/"Sign out of WitUS"/);
-    expect(src).toMatch(/"Sign out"/);
+    const plain = src.slice(
+      src.indexOf("export default function SignOutButton"),
+      src.indexOf("export function SignOutEverywhereButton"),
+    );
+    expect(plain).not.toMatch(/endSessionUrl|window\.location/);
+    expect(plain).toMatch(/router\.push\("\/"\)/);
+    expect(src).not.toMatch(/"Sign out of WitUS"/);
   });
 
   it("resolves the endpoint on the server at every call site", () => {

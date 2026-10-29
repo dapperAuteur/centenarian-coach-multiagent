@@ -6,9 +6,9 @@
 // where the GET flow's CSRF + cookie handling differs.
 //
 // `redirect: false` — the action DESTROYS THE SESSION AND RETURNS, it does not
-// navigate. Navigation is the caller's job (SignOutButton), because global
-// sign-out has to leave this origin for the IdP afterwards and a redirect() here
-// would pre-empt that. The session cookies are cleared on this action's response
+// navigate. Navigation is the caller's job (src/components/SignOutButton.tsx),
+// because "Sign out of WitUS everywhere" has to leave this origin for the IdP
+// afterwards and a redirect() here would pre-empt that. The session cookies are cleared on this action's response
 // either way, so by the time the caller's `await` resolves the person is signed
 // out here no matter what happens next.
 

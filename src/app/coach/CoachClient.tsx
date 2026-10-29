@@ -18,7 +18,7 @@ import {
   ResponseSafetyNotice,
 } from "@/components/InformationalNotice";
 import { extractApiError } from "@/lib/client-errors";
-import SignOutButton from "@/components/SignOutButton";
+import SignOutButton, { SignOutEverywhereButton } from "@/components/SignOutButton";
 import type {
   Agent,
   Citation,
@@ -49,7 +49,7 @@ const IMPLEMENTED: Agent[] = [
 export default function CoachClient({
   endSessionUrl,
 }: {
-  /** WitUS IdP end-session endpoint, or null when ecosystem SSO is not configured. */
+  /** WitUS IdP end-session endpoint for "Sign out of WitUS everywhere", or null when ecosystem SSO is not configured. */
   endSessionUrl: string | null;
 }) {
   const [query, setQuery] = useState("");
@@ -174,11 +174,12 @@ export default function CoachClient({
             specialists, each with its own retrieval and tools.
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-3 text-xs">
+        <div className="flex shrink-0 items-start gap-3 text-xs">
           <Link href="/coach/history" className="text-sky-700 hover:underline">
             History
           </Link>
-          <SignOutButton endSessionUrl={endSessionUrl} />
+          <SignOutButton />
+          <SignOutEverywhereButton endSessionUrl={endSessionUrl} />
         </div>
       </div>
 

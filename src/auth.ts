@@ -46,8 +46,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             issuer: "https://accounts.witus.online/api/idp",
             // Discovery URL (and its default) is resolved in one place —
             // src/lib/witus-sso.ts — so the IdP host is never named twice. The
-            // silent-SSO probe and the global sign-out endpoint derive from the
-            // same value.
+            // silent-SSO probe and the "Sign out of WitUS everywhere" endpoint
+            // derive from the same value.
             wellKnown: witusDiscoveryUrl,
             clientId: process.env.WITUS_OIDC_CLIENT_ID,
             clientSecret: process.env.WITUS_OIDC_CLIENT_SECRET ?? "",
