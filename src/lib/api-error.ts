@@ -100,18 +100,28 @@ export function handleRouteError(
  * the generic copy. Never the provider's or LangGraph's own error text.
  */
 export function coachErrorMessage(err: unknown): string {
-  const e = err as { status?: unknown; statusCode?: unknown; name?: unknown; message?: unknown } | null;
+  const e = err as {
+    status?: unknown;
+    statusCode?: unknown;
+    name?: unknown;
+    message?: unknown;
+  } | null;
   const status =
     typeof e?.status === "number"
       ? e.status
       : typeof e?.statusCode === "number"
         ? e.statusCode
         : undefined;
-  if (status === 429 || status === 503 || status === 529) return COACH_BUSY_MESSAGE;
+  if (status === 429 || status === 503 || status === 529)
+    return COACH_BUSY_MESSAGE;
   const text = `${typeof e?.name === "string" ? e.name : ""} ${
     typeof e?.message === "string" ? e.message : ""
   }`;
-  if (/rate.?limit|too many requests|overloaded|quota|resource.?exhausted/i.test(text)) {
+  if (
+    /rate.?limit|too many requests|overloaded|quota|resource.?exhausted/i.test(
+      text,
+    )
+  ) {
     return COACH_BUSY_MESSAGE;
   }
   return COACH_FAILED_MESSAGE;
