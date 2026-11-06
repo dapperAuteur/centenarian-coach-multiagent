@@ -25,7 +25,12 @@ import type {
   FindingsMap,
   RoutingDecision,
 } from "@/state";
-import { apiError, newRequestId } from "@/lib/api-error";
+import {
+  apiError,
+  coachErrorMessage,
+  describeErrorForLog,
+  newRequestId,
+} from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -160,10 +165,15 @@ export async function POST(req: Request): Promise<Response> {
           });
         }
       } catch (err) {
-        console.error(`[coach/query] (requestId=${requestId})`, err);
+        // The provider's or LangGraph's own error text can echo the prompt or
+        // a provider response, so it stays in the (redacted) server log and the
+        // browser gets friendly copy plus the request id.
+        console.error(
+          `[coach/query] (requestId=${requestId}) ${describeErrorForLog(err)}`,
+        );
         send({
           type: "error",
-          message: err instanceof Error ? err.message : "Unknown error",
+          message: coachErrorMessage(err),
           requestId,
         });
       } finally {

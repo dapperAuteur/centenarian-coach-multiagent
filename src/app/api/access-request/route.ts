@@ -56,8 +56,8 @@ export async function POST(req: Request): Promise<Response> {
     // Auth.js wraps the underlying error as { name: "AdapterError", cause },
     // and `err.message` is the bare class name — useless on its own.
     // handleRouteError unwraps one level of `cause` so the failure mode
-    // (missing table, SMTP refused, etc.) appears in both the server logs and
-    // the client response, and attaches a request id.
+    // (missing table, SMTP refused, etc.) appears in the redacted server log
+    // under a request id; the client gets a generic message and that id.
     return handleRouteError("access-request", err, requestId);
   }
 }
