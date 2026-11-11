@@ -28,6 +28,16 @@ export default function GlobalError({
           <p className="mt-2 text-sm text-gray-600">
             The application hit an unexpected error. Please try again.
           </p>
+          {/* The root layout and its header failed, so this minimal shell carries its own links. */}
+          <p style={{ margin: "12px 0", fontSize: 14 }}>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a href="/" style={{ color: "inherit", marginRight: 16 }}>
+              Go home
+            </a>
+            <a href="/signin" style={{ color: "inherit" }}>
+              Sign in
+            </a>
+          </p>
           {error.digest && (
             <p className="mt-3 font-mono text-xs text-gray-400">
               Error ID: {error.digest}
